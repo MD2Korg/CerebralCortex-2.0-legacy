@@ -1,9 +1,9 @@
 from cerebralcortex.kernel.datatypes import DataPoint
 
 
-def dataprocessor(input):
+def dataprocessor(inputString):
     try:
-        [val, ts] = input.split(' ')
+        [val, ts] = inputString.split(' ')
 
         return DataPoint(float(val), long(ts))
     except ValueError:

@@ -1,5 +1,5 @@
 class DataPoint:
-    def __init__(self, sample, timestamp, metadata={}):
+    def __init__(self, sample, timestamp, metadata=None):
         self.id = None
         self.datastream = None
         self.timestamp = timestamp
@@ -11,7 +11,7 @@ class DataPoint:
 
 
 class Window:
-    def __init__(self, sample, startTime, endTime=None, metadata={}):
+    def __init__(self, sample, startTime, endTime=None, metadata=None):
         self.id = None
         self.datastream = None
         self.startTime = startTime
@@ -24,7 +24,7 @@ class Window:
 
 
 class DataStream:
-    def __init__(self, user, processing={}, sharing={}, metadata={}):
+    def __init__(self, user, processing=None, sharing=None, metadata=None):
         self.id = None
         self.user = user
         self.processing = processing
@@ -33,21 +33,21 @@ class DataStream:
 
 
 class User:
-    def __init__(self, user, metadata={}):
+    def __init__(self, user, metadata=None):
         self.id = None
         self.user = user
         self.metadata = metadata
 
 
 class Processing:
-    def __init__(self, user, metadata={}):
+    def __init__(self, user, metadata=None):
         self.id = None
         self.user = user
         self.metadata = metadata
 
 
 class SharingPolicy:
-    def __init__(self, user, metadata={}):
+    def __init__(self, user, metadata=None):
         self.id = None
         self.user = user
         self.metadata = metadata
