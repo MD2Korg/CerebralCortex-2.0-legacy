@@ -22,9 +22,13 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from metadata import Metadata
+
 
 class DataPoint:
-    def __init__(self, sample, timestamp, metadata=None):
+    """A data point class"""
+
+    def __init__(self, sample, timestamp, metadata=Metadata()):
         self.id = None
         self.datastream = None
         self.timestamp = timestamp
@@ -36,7 +40,9 @@ class DataPoint:
 
 
 class Window:
-    def __init__(self, sample, startTime, endTime=None, metadata=None):
+    """A window class"""
+
+    def __init__(self, sample, startTime, endTime=None, metadata=Metadata()):
         self.id = None
         self.datastream = None
         self.startTime = startTime
@@ -49,7 +55,9 @@ class Window:
 
 
 class DataStream:
-    def __init__(self, user, processing=None, sharing=None, metadata=None):
+    """A data stream class"""
+
+    def __init__(self, user, processing=None, sharing=None, metadata=Metadata()):
         self.id = None
         self.user = user
         self.processing = processing
@@ -58,21 +66,25 @@ class DataStream:
 
 
 class User:
-    def __init__(self, user, metadata=None):
+    """A user class"""
+
+    def __init__(self, user, metadata=Metadata()):
         self.id = None
         self.user = user
         self.metadata = metadata
 
 
 class Processing:
-    def __init__(self, user, metadata=None):
+    """A processing  class"""
+
+    def __init__(self, metadata=Metadata()):
         self.id = None
-        self.user = user
         self.metadata = metadata
 
 
 class SharingPolicy:
-    def __init__(self, user, metadata=None):
+    """A sharing policy class"""
+
+    def __init__(self, metadata=Metadata()):
         self.id = None
-        self.user = user
         self.metadata = metadata
