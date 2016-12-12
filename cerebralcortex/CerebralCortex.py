@@ -22,5 +22,18 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from pyspark import SparkContext, SparkConf
 
-from .CerebralCortex import CerebralCortex
+
+class CerebralCortex:
+    def __init__(self, master=None, name=None):
+        self.spark_conf = SparkConf()
+        if master:
+            self.spark_conf.setMaster(master)
+        if name:
+            self.spark_conf.setAppName(name)
+
+        self.sc = SparkContext(conf=self.spark_conf)
+
+    def query(self, searchObject):
+        pass
