@@ -23,7 +23,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from cerebralcortex.kernel.DataPoint import DataPoint
+from cerebralcortex.kernel.datapoint import DataPoint
 
 
 def dataProcessor(inputString):
@@ -37,8 +37,8 @@ def dataProcessor(inputString):
     try:
         [val, ts] = inputString.split(' ')
 
-        return DataPoint(float(val), long(ts))
+        return DataPoint(float(val), int(ts))
     except ValueError:
-        print "ValueError: ", input
+        print("ValueError: " + str(input))
 
         # return datapoint(0L, 0.0)
