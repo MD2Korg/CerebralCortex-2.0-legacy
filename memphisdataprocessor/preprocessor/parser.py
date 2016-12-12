@@ -23,10 +23,17 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from cerebralcortex.kernel.datatypes import DataPoint
+from cerebralcortex.kernel.DataPoint import DataPoint
 
 
-def dataprocessor(inputString):
+def dataProcessor(inputString):
+    # type: (str) -> DataPoint
+    """
+    Legacy data input parser
+    :rtype: DataPoint
+    :param inputString:
+    :return:
+    """
     try:
         [val, ts] = inputString.split(' ')
 

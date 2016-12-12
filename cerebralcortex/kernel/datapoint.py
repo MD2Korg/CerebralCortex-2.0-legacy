@@ -22,7 +22,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from metadata import Metadata
+from cerebralcortex.kernel.metadata import Metadata
 
 
 class DataPoint:
@@ -37,54 +37,3 @@ class DataPoint:
 
     def __str__(self):
         return 'DP: (' + str(self.timestamp) + ',' + str(self.sample) + ')'
-
-
-class Window:
-    """A window class"""
-
-    def __init__(self, sample, startTime, endTime=None, metadata=Metadata()):
-        self.id = None
-        self.datastream = None
-        self.startTime = startTime
-        self.endTime = endTime
-        self.sample = sample
-        self.metadata = metadata
-
-    def __str__(self):
-        return 'Window: (' + str(self.startTime) + ',' + str(self.endTime) + ',' + str(self.sample) + ')'
-
-
-class DataStream:
-    """A data stream class"""
-
-    def __init__(self, user, processing=None, sharing=None, metadata=Metadata()):
-        self.id = None
-        self.user = user
-        self.processing = processing
-        self.sharing = sharing
-        self.metadata = metadata
-
-
-class User:
-    """A user class"""
-
-    def __init__(self, user, metadata=Metadata()):
-        self.id = None
-        self.user = user
-        self.metadata = metadata
-
-
-class Processing:
-    """A processing  class"""
-
-    def __init__(self, metadata=Metadata()):
-        self.id = None
-        self.metadata = metadata
-
-
-class SharingPolicy:
-    """A sharing policy class"""
-
-    def __init__(self, metadata=Metadata()):
-        self.id = None
-        self.metadata = metadata
