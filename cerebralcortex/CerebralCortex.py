@@ -35,5 +35,16 @@ class CerebralCortex:
 
         self.sc = SparkContext(conf=self.spark_conf)
 
-    def query(self, searchObject):
+    def register(self, datastream):
+        """
+        Create a datastream in the system
+        :param datastream: Dictionary
+        """
+        pass
+
+    def find(self, query):
+        """
+        Find and return all matching datastreams
+        :param query: partial dictionary matching
+        """
         pass
