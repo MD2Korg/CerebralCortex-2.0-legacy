@@ -24,4 +24,20 @@
 
 
 def cStress(CC, ecg, rip, accelx, accely, accelz):
+    # print(accelx.map(lambda x: x.sample).reduce(lambda x,y: x+y))
+
+    windowsize = 60000
+    a = accelx.map(lambda x: (int(x.timestamp / windowsize) * windowsize, (x.timestamp, x.sample)))
+
+    mean(a).foreach(print)
     pass
+
+
+def mean(KVrdd):
+    # pprint(a.collect())
+    activityMean = KVrdd.aggregateByKey((0, 0.0),
+                                        lambda x, y: (x[0] + y[1], x[1] + 1),
+                                        lambda rdd1, rdd2: (rdd1[0] + rdd2[0], rdd1[1] + rdd2[1]))
+
+    meanValue = activityMean.mapValues(lambda x: (x[0] / x[1]))
+    return meanValue
