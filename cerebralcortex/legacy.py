@@ -23,12 +23,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from cerebralcortex.kernel.metadata import Metadata
-
-
-class SharingPolicy:
-    """A sharing policy class"""
-
-    def __init__(self, metadata=Metadata()):
-        self.id = None
-        self.metadata = metadata
+def find(directory, metadata):
+    filepath = directory + metadata['participant'] + '/' + metadata['datasource'] + '.txt.gz'
+    return filepath

@@ -1,4 +1,4 @@
-from cerebralcortex.kernel.datapoint import DataPoint
+from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 
 
 class TestDataPoint:

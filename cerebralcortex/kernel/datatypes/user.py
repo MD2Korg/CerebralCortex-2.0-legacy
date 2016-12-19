@@ -23,12 +23,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from cerebralcortex.kernel.metadata import Metadata
+from cerebralcortex.kernel.datatypes.metadata import Metadata
 
 
-class Processing:
-    """A processing  class"""
+class User:
+    """A user class"""
 
-    def __init__(self, metadata=Metadata()):
+    def __init__(self, user, metadata=Metadata()):
         self.id = None
+        self.user = user
         self.metadata = metadata

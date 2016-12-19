@@ -23,23 +23,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from cerebralcortex.kernel.datatypes.datapoint import DataPoint
+from cerebralcortex.kernel.datatypes.metadata import Metadata
 
 
-def dataprocessor(inputString):
-    # type: (str) -> DataPoint
-    """
-    Legacy data input parser
-    :rtype: DataPoint
-    :param inputString:
-    :return:
-    """
-    try:
-        [val, ts] = inputString.split(' ')
+class SharingPolicy:
+    """A sharing policy class"""
 
-        return DataPoint(float(val), int(ts))
-    except ValueError:
-        print("ValueError: " + str(input))
-
-        return
-        # return datapoint(0L, 0.0)
+    def __init__(self, metadata=Metadata()):
+        self.id = None
+        self.metadata = metadata

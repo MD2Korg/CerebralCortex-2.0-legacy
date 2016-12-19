@@ -22,18 +22,19 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from cerebralcortex.kernel.metadata import Metadata
+from cerebralcortex.kernel.datatypes.metadata import Metadata
 
 
-class DataPoint:
-    """A data point class"""
+class Window:
+    """A window class"""
 
-    def __init__(self, sample, timestamp, metadata=Metadata()):
+    def __init__(self, sample, starttime, endtime=None, metadata=Metadata()):
         self.id = None
         self.datastream = None
-        self.timestamp = timestamp
+        self.startTime = starttime
+        self.endTime = endtime
         self.sample = sample
         self.metadata = metadata
 
     def __str__(self):
-        return 'DP: (' + str(self.timestamp) + ',' + str(self.sample) + ')'
+        return 'Window: (' + str(self.startTime) + ',' + str(self.endTime) + ',' + str(self.sample) + ')'

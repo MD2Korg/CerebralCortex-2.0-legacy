@@ -24,29 +24,81 @@
 
 
 import cerebralcortex
+from cerebralcortex.legacy import find
+from memphisdataprocessor.cStress import cStress
+from memphisdataprocessor.preprocessor import parser
 
 CC = cerebralcortex.CerebralCortex(master="local[4]", name="Memphis cStress Development App")
 
+participant = "SI01"
+basedir = "/Users/hnat/Desktop/data/"
+
+ecg = CC.readfile(find(basedir, {"participant": participant, "datasource": "ecg"})).map(parser.dataprocessor)
+rip = CC.readfile(find(basedir, {"participant": participant, "datasource": "rip"})).map(parser.dataprocessor)
+accelx = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelx"})).map(parser.dataprocessor)
+accely = CC.readfile(find(basedir, {"participant": participant, "datasource": "accely"})).map(parser.dataprocessor)
+accelz = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelz"})).map(parser.dataprocessor)
+
+result = cStress(CC, ecg, rip, accelx, accely, accelz)
 
 
-#
-# ecg = sc.textFile('/Users/hnat/Desktop/data/SI01/ecg.txt.gz').map(parser.dataProcessor)  # .filter(lambda x: testDP(x))
-# # ecg = sc.textFile('/Users/hnat/Desktop/data/SI01/stress_marks.txt.gz').map(parseAutoSense)
-# # rip = sc.textFile('/Users/hnat/Desktop/data/SI01/rip.txt.gz').map(parser.dataprocessor)
-#
-# print("Number of ECG samples:" + str(ecg.count()))  # Count the number of samples
-# # print rip.count() # Count the number of samples
-#
-# data = ecg.takeSample(False, 10)
-#
-# for d in data:
-#     print(d)
-#
-# # ft, fv = datafile.first()
-# # et, ev = datafile.collect()[-1]
-# # print ft/1000.0/3600, et/1000.0/3600, (et-ft)/1000.0/3600
+# # from pyspark.sql import Row,Window
+# #
+# # ax = accelx.map(lambda p: Row(timestamp=p.timestamp, sample=p.sample))
+# #
+# # schemaAX = CC.sparkSession.createDataFrame(ax)
+# # schemaAX.createOrReplaceTempView('accelx')
+# #
+# #
+# # schemaAX.printSchema()
+# # schemaAX.select('timestamp').show()
+# # schemaAX.show()
 #
 #
-# print("Number of ECG samples in 10 second window: " + str(
-#     ecg.filter(lambda
-#                    dp: dp.timestamp < 1265665210186 + 60 * 1000).count()))  # Count the number of samples in a 10 second window
+# # win = Window.partitionBy('timestamp')groupBy(window(schemaAX['timestamp'], '1 week'))
+# #
+# # print(win)
+#
+# def window(datapoint, window_length):
+#     minute = int(datapoint.timestamp / window_length) * window_length
+#
+#     return minute
+#
+#
+# def meanFunc(datapoint_array):
+#     pprint(datapoint_array)
+#     return len(datapoint_array)
+
+
+# y = accelx.groupBy(lambda dp: window(dp, 60000))
+# y = accelx.groupBy(lambda dp: window(dp, 60000)).reduceByKey(lambda x, y: x.sample + y.sample)
+#
+#
+# for t in y.collect():
+#     print(t[0], len(t[1]), [i.timestamp for i in t[1]])
+#     # print(t[0], len(t[1]))
+
+
+
+# values = CC.sparkSession.sql("Select * from accelx where timestamp < 1265665212149")
+# for ts in values.collect():
+#     print(ts)
+
+
+# print("Number of ECG samples", ecg.count())
+# print("Number of RIP samples", rip.count())
+# print("Number of AccelX samples", accelx.count())
+# print("Number of AccelY samples", accely.count())
+# print("Number of AccelZ samples", accelz.count())
+
+# def window(x):
+#     print(x)
+#
+# aw = accelx.groupByKey(partitionFunc=window)
+# print(aw.collect())
+
+
+# accelxAverage = rip.map(lambda x: x.getSample()).mean()
+# accelxAverage = accelx.mean()
+
+# print(accelxAverage)

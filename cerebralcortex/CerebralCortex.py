@@ -22,18 +22,28 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from pyspark import SparkContext, SparkConf
 
+from pyspark.sql import SparkSession
 
 class CerebralCortex:
     def __init__(self, master=None, name=None):
-        self.spark_conf = SparkConf()
-        if master:
-            self.spark_conf.setMaster(master)
-        if name:
-            self.spark_conf.setAppName(name)
+        # self.spark_conf = SparkConf()
+        # if master:
+        #     self.spark_conf.setMaster(master)
+        # if name:
+        #     self.spark_conf.setAppName(name)
+        #
+        # self.sc = SparkContext(conf=self.spark_conf)
 
-        self.sc = SparkContext(conf=self.spark_conf)
+        ss = SparkSession.builder
+        if name:
+            ss.appName(name)
+
+        self.sparkSession = ss.getOrCreate()
+
+        self.sc = self.sparkSession.sparkContext
+
+
 
     def register(self, datastream):
         """
@@ -47,4 +57,14 @@ class CerebralCortex:
         Find and return all matching datastreams
         :param query: partial dictionary matching
         """
+        pass
+
+    def readfile(self, datastreamID):
+        # return DataStream(id=datastreamID, data=self.sc.textFile(datastreamID))
+        return self.sc.textFile(datastreamID)
+
+    def read(self):
+        pass
+
+    def insert(self, datastreamID):
         pass

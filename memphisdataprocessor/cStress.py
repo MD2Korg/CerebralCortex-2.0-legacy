@@ -22,15 +22,6 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from cerebralcortex.kernel.metadata import Metadata
 
-
-class DataStream:
-    """A data stream class"""
-
-    def __init__(self, user, processing=None, sharing=None, metadata=Metadata()):
-        self.id = None
-        self.user = user
-        self.processing = processing
-        self.sharing = sharing
-        self.metadata = metadata
+def cStress(CC, ecg, rip, accelx, accely, accelz):
+    pass

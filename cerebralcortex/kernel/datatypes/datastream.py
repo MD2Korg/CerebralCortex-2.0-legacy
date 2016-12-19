@@ -22,24 +22,16 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from cerebralcortex.kernel.datatypes.metadata import Metadata
 
-from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 
+class DataStream:
+    """A data stream class"""
 
-def dataprocessor(inputString):
-    # type: (str) -> DataPoint
-    """
-    Legacy data input parser
-    :rtype: DataPoint
-    :param inputString:
-    :return:
-    """
-    try:
-        [val, ts] = inputString.split(' ')
-
-        return DataPoint(float(val), int(ts))
-    except ValueError:
-        print("ValueError: " + str(input))
-
-        return
-        # return datapoint(0L, 0.0)
+    def __init__(self, id=None, data=None, user=None, processing=None, sharing=None, metadata=Metadata()):
+        self.id = id
+        self.user = user
+        self.processing = processing
+        self.sharing = sharing
+        self.metadata = metadata
+        self.rdd = data
