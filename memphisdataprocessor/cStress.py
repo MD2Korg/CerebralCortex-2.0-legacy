@@ -25,7 +25,7 @@
 from memphisdataprocessor.alignment import timestampCorrect, timestampCorrectAndSequenceAlign
 
 
-def AccelerometerFeatures(CC, accel, activityThreshold, windowsize):
+def windowMagDeviation(accel, windowsize):
     # Normalize X,Y,Z axis
     accelNormalized = normalize(accel)
 
@@ -36,6 +36,12 @@ def AccelerometerFeatures(CC, accel, activityThreshold, windowsize):
 
     magStdDev = accelWindowed.foreach(magnitude)
 
+
+
+    pass
+
+
+def activityLabel(magStdDev, activityThreshold):
     lowLimit = percentile(magStdDev, 1)
     highLimit = percentile(magStdDev, 99)
 
@@ -48,6 +54,7 @@ def AccelerometerFeatures(CC, accel, activityThreshold, windowsize):
     # mean(winE).foreach(print)
 
     pass
+
 
 
 def cStress(CC, rawecg, rawrip, rawaccelx, rawaccely, rawaccelz):
@@ -99,9 +106,10 @@ def cStress(CC, rawecg, rawrip, rawaccelx, rawaccely, rawaccelz):
                             )
     CC.save(ripDataQuality)
 
-    accelFeatures = AccelerometerFeatures(CC, accel, activityThreshold=0.21, windowsize=10000)
-    ecgFeatures = ECGFeatures(CC, ecg, ecgDataQuality)
-    ripFeatures = RIPFeatures(CC, rip, ripDataQuality)
+    windowedStdevMag = DataStream([accel], meta, windowMagDeviation(accel, windowsize=10000))
+
+    # ecgFeatures = ECGFeatures(CC, ecg, ecgDataQuality)
+    # ripFeatures = RIPFeatures(CC, rip, ripDataQuality)
 
     pass
 
