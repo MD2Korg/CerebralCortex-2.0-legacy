@@ -22,19 +22,95 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from memphisdataprocessor.alignment import timestampCorrect, timestampCorrectAndSequenceAlign
 
-def cStress(CC, ecg, rip, accelx, accely, accelz):
-    # print(accelx.map(lambda x: x.sample).reduce(lambda x,y: x+y))
 
-    windowsize = 60000
-    a = accelx.map(lambda x: (int(x.timestamp / windowsize) * windowsize, (x.timestamp, x.sample)))
+def AccelerometerFeatures(CC, accel, activityThreshold, windowsize):
+    # Normalize X,Y,Z axis
+    accelNormalized = normalize(accel)
 
-    mean(a).foreach(print)
+    accelMagnitude = magnitude(accelNormalized)
+
+    # Window into chunks
+    accelWindowed = window(accelMagnitude, windowsize)
+
+    magStdDev = accelWindowed.foreach(magnitude)
+
+    lowLimit = percentile(magStdDev, 1)
+    highLimit = percentile(magStdDev, 99)
+
+    range = highLimit - lowLimit
+
+    # mean(winA).foreach(print)
+    # mean(winB).foreach(print)
+    # mean(winC).foreach(print)
+    # mean(winD).foreach(print)
+    # mean(winE).foreach(print)
+
     pass
 
 
+def cStress(CC, rawecg, rawrip, rawaccelx, rawaccely, rawaccelz):
+    # Algorithm Constants
+    ecgSamplingFrequency = 64.0
+    ripSamplingFrequency = 64.0 / 3.0
+    accelSamplingFrequency = 64.0 / 6.0
+
+    # Timestamp correct signals
+    ecgMeta = cerebralcortex.metadata.generate()
+    ecg = DataStream([rawecg], ecgMeta, timestampCorrect(rawecg, samplingfrequency=ecgSamplingFrequency))
+    CC.save(ecg)
+
+    ripMeta = cerebralcortex.metadata.generate()
+    rip = DataStream([rawecg], ripMeta, timestampCorrect(rawrip, samplingfrequency=ripSamplingFrequency))
+    CC.save(ecg)
+
+    accelMeta = cerebralcortex.metadata.generate()
+    accel = DataStream([rawaccelx, rawaccely, rawaccelz], accelMeta,
+                       timestampCorrectAndSequenceAlign(rawaccelx, rawaccely, rawaccelz,
+                                                        samplingfrequency=accelSamplingFrequency))
+    CC.save(accel)
+
+    # ECG and RIP signal morphology dataquality
+    ecgDQMeta = cerebralcortex.metadata.generate()
+    # ecgDataQuality is a set of windows represented as an RDD 
+    ecgDataQuality = Window([ecg], ecgDQMeta,
+                            ECGDataQuality(window(ecg, windowsize=5000),  # What does windowsize mean here?
+                                           bufferLength=3,
+                                           acceptableOutlierPercent=50,
+                                           outlierThresholdHigh=4500,
+                                           outlierThresholdLow=20,
+                                           badSegmentThreshod=2,
+                                           ecgBandLooseThreshold=47)
+                            )
+    CC.save(ecgDataQuality)
+
+    ripDQMeta = cerebralcortex.metadata.generate()
+    # ripDataQuality is a set of windows represented as an RDD 
+    ripDataQuality = Window([rip], ripDQMeta,
+                            RIPDataQuality(window(rip, windowsize=5000),  # What does windowsize mean here?
+                                           bufferLength=5,
+                                           acceptableOutlierPercent=50,
+                                           outlierThresholdHigh=4500,
+                                           outlierThresholdLow=20,
+                                           badSegmentThreshod=2,
+                                           ripBandOffThreshold=20,
+                                           ripBandLooseThreshold=150)
+                            )
+    CC.save(ripDataQuality)
+
+    accelFeatures = AccelerometerFeatures(CC, accel, activityThreshold=0.21, windowsize=10000)
+    ecgFeatures = ECGFeatures(CC, ecg, ecgDataQuality)
+    ripFeatures = RIPFeatures(CC, rip, ripDataQuality)
+
+    pass
+
+
+def window(rdd, windowsize):
+    return rdd.map(lambda x: (int(x.timestamp / windowsize) * windowsize, (x.timestamp, x.sample)))
+
+
 def mean(KVrdd):
-    # pprint(a.collect())
     activityMean = KVrdd.aggregateByKey((0, 0.0),
                                         lambda x, y: (x[0] + y[1], x[1] + 1),
                                         lambda rdd1, rdd2: (rdd1[0] + rdd2[0], rdd1[1] + rdd2[1]))
