@@ -41,6 +41,8 @@ accelz = CC.readfile(find(basedir, {"participant": participant, "datasource": "a
 
 result = cStress(CC, ecg, rip, accelx, accely, accelz)
 
+print(ecg.count())
+
 
 # # from pyspark.sql import Row,Window
 # #

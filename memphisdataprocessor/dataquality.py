@@ -23,40 +23,22 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from pyspark.sql import SparkSession
-
-class CerebralCortex:
-    def __init__(self, master=None, name=None):
-        ss = SparkSession.builder
-        if name:
-            ss.appName(name)
-
-        self.sparkSession = ss.getOrCreate()
-
-        self.sc = self.sparkSession.sparkContext
+def ECGDataQuality(windows,
+                   bufferLength=3,
+                   acceptableOutlierPercent=50,
+                   outlierThresholdHigh=4500,
+                   outlierThresholdLow=20,
+                   badSegmentThreshod=2,
+                   ecgBandLooseThreshold=47):
+    return None
 
 
-
-    def register(self, datastream):
-        """
-        Create a datastream in the system
-        :param datastream: Dictionary
-        """
-        pass
-
-    def find(self, query):
-        """
-        Find and return all matching datastreams
-        :param query: partial dictionary matching
-        """
-        pass
-
-    def readfile(self, datastreamID):
-        # return DataStream(id=datastreamID, data=self.sc.textFile(datastreamID))
-        return self.sc.textFile(datastreamID)
-
-    def read(self):
-        pass
-
-    def save(self, datastreamID):
-        pass
+def RIPDataQuality(windows,
+                   bufferLength=5,
+                   acceptableOutlierPercent=50,
+                   outlierThresholdHigh=4500,
+                   outlierThresholdLow=20,
+                   badSegmentThreshod=2,
+                   ripBandOffThreshold=20,
+                   ripBandLooseThreshold=150):
+    return None

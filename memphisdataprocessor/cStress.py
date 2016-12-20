@@ -21,8 +21,11 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+from cerebralcortex.kernel.datatypes.datastream import DataStream
+from cerebralcortex.kernel.datatypes.window import Window
+from cerebralcortex.kernel.window import window
 from memphisdataprocessor.alignment import timestampCorrect, timestampCorrectAndSequenceAlign
+from memphisdataprocessor.dataquality import ECGDataQuality, RIPDataQuality
 
 
 def windowMagDeviation(accel, windowsize):
@@ -36,8 +39,6 @@ def windowMagDeviation(accel, windowsize):
 
     magStdDev = accelWindowed.foreach(magnitude)
 
-
-
     pass
 
 
@@ -47,14 +48,16 @@ def activityLabel(magStdDev, activityThreshold):
 
     range = highLimit - lowLimit
 
-    # mean(winA).foreach(print)
-    # mean(winB).foreach(print)
-    # mean(winC).foreach(print)
-    # mean(winD).foreach(print)
-    # mean(winE).foreach(print)
-
     pass
 
+
+def mean(KVrdd):
+    activityMean = KVrdd.aggregateByKey((0, 0.0),
+                                        lambda x, y: (x[0] + y[1], x[1] + 1),
+                                        lambda rdd1, rdd2: (rdd1[0] + rdd2[0], rdd1[1] + rdd2[1]))
+
+    meanValue = activityMean.mapValues(lambda x: (x[0] / x[1]))
+    return meanValue
 
 
 def cStress(CC, rawecg, rawrip, rawaccelx, rawaccely, rawaccelz):
@@ -68,13 +71,13 @@ def cStress(CC, rawecg, rawrip, rawaccelx, rawaccely, rawaccelz):
     ecg = DataStream([rawecg], ecgMeta, timestampCorrect(rawecg, samplingfrequency=ecgSamplingFrequency))
     CC.save(ecg)
 
-    ripMeta = cerebralcortex.metadata.generate()
+    ripMeta = CC.metadata.generate()
     rip = DataStream([rawecg], ripMeta, timestampCorrect(rawrip, samplingfrequency=ripSamplingFrequency))
     CC.save(ecg)
 
-    accelMeta = cerebralcortex.metadata.generate()
+    accelMeta = CC.metadata.generate()
     accel = DataStream([rawaccelx, rawaccely, rawaccelz], accelMeta,
-                       timestampCorrectAndSequenceAlign(rawaccelx, rawaccely, rawaccelz,
+                       timestampCorrectAndSequenceAlign([rawaccelx, rawaccely, rawaccelz],
                                                         samplingfrequency=accelSamplingFrequency))
     CC.save(accel)
 
@@ -92,7 +95,7 @@ def cStress(CC, rawecg, rawrip, rawaccelx, rawaccely, rawaccelz):
                             )
     CC.save(ecgDataQuality)
 
-    ripDQMeta = cerebralcortex.metadata.generate()
+    ripDQMeta = CC.metadata.generate()
     # ripDataQuality is a set of windows represented as an RDD 
     ripDataQuality = Window([rip], ripDQMeta,
                             RIPDataQuality(window(rip, windowsize=5000),  # What does windowsize mean here?
@@ -112,16 +115,3 @@ def cStress(CC, rawecg, rawrip, rawaccelx, rawaccely, rawaccelz):
     # ripFeatures = RIPFeatures(CC, rip, ripDataQuality)
 
     pass
-
-
-def window(rdd, windowsize):
-    return rdd.map(lambda x: (int(x.timestamp / windowsize) * windowsize, (x.timestamp, x.sample)))
-
-
-def mean(KVrdd):
-    activityMean = KVrdd.aggregateByKey((0, 0.0),
-                                        lambda x, y: (x[0] + y[1], x[1] + 1),
-                                        lambda rdd1, rdd2: (rdd1[0] + rdd2[0], rdd1[1] + rdd2[1]))
-
-    meanValue = activityMean.mapValues(lambda x: (x[0] / x[1]))
-    return meanValue
