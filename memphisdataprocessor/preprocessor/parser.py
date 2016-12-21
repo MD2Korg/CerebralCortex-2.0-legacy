@@ -27,19 +27,11 @@ from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 
 
 def dataprocessor(inputString):
-    # type: (str) -> DataPoint
-    """
-    Legacy data input parser
-    :rtype: DataPoint
-    :param inputString:
-    :return:
-    """
     try:
         [val, ts] = inputString.split(' ')
 
-        return DataPoint(float(val), int(ts))
+        return DataPoint(int(ts), float(val))
     except ValueError:
         print("ValueError: " + str(input))
 
         return
-        # return datapoint(0L, 0.0)

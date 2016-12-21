@@ -51,9 +51,8 @@ class CerebralCortex:
         """
         pass
 
-    def readfile(self, datastreamID):
-        # return DataStream(id=datastreamID, data=self.sc.textFile(datastreamID))
-        return self.sc.textFile(datastreamID)
+    def readfile(self, filename):
+        return self.sc.textFile(filename)
 
     def read(self):
         pass

@@ -21,15 +21,16 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from cerebralcortex.kernel.datatypes.datastream import DataStream
 
 
-def ECGDataQuality(windows,
-                   bufferLength=3,
-                   acceptableOutlierPercent=50,
-                   outlierThresholdHigh=4500,
-                   outlierThresholdLow=20,
-                   badSegmentThreshod=2,
-                   ecgBandLooseThreshold=47):
+def ECGDataQuality(windows: object,
+                   bufferLength: int = 3,
+                   acceptableOutlierPercent: int = 50,
+                   outlierThresholdHigh: int = 4500,
+                   outlierThresholdLow: int = 20,
+                   badSegmentThreshod: int = 2,
+                   ecgBandLooseThreshold: int = 47) -> DataStream:
     return None
 
 

@@ -28,7 +28,7 @@ from cerebralcortex.kernel.datatypes.metadata import Metadata
 class Window:
     """A window class"""
 
-    def __init__(self, sample, starttime, endtime=None, metadata=Metadata()):
+    def __init__(self, starttime, endtime, sample, metadata=Metadata()):
         self.id = None
         self.datastream = None
         self.startTime = starttime

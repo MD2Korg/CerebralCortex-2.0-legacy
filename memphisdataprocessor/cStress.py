@@ -21,6 +21,7 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.kernel.datatypes.window import Window
 from cerebralcortex.kernel.window import window
@@ -60,25 +61,68 @@ def mean(KVrdd):
     return meanValue
 
 
+def classifyECGwindow(datapoints):
+    values = np.array([i.sample for i in datapoints])
+
+    if max(values) - min(values) < 200:
+        return False
+    if max(values) > 4000:
+        return False
+    if max(diff(values)) > 50:
+        return False
+
+    return True
+
+
+def filterBadECG(datastream: DataStream, windowsize: int = 2000) -> DataStream:
+    KVrdd = window(datastream, windowsize)
+    labels = KVrdd.foreach(classifyECGwindow)  # [(TS, False), (TS2, True) ... ]
+
+    meta = {x[1]}
+    labeledWindows = labels.map(lambda x: Window(x[0], x[0] + windowsize, meta))
+    compressedWindows = mergeWindows(labeledWindows)
+    return compressedWindows
+
+
+def computeRRMean(rrInterval, windowsize, slidinglength):
+    KVmeans = mean(slidingWindow(rrInterval, windowsize, slidinglength))
+
+    rdd = KVmeans.map(lambda k, v: DataPoint(k, v))
+    labels = KVmeans.map(lambda k, v: Window(k, k + slidinglength, metadata={'Window'}))
+
+    return DataStream(data=rdd, windowList=[labels], metadata={'datastream': 'RR Interval Mean over Sliding Windows'})
+
+
+def joinDataStreams(datastreams, metadata):
+    baseRDD = datastreams[0].rdd
+    for i in datastreams[1:]:
+        baseRDD.join(i.rdd)
+
+    pass
+
+
+
 def cStress(CC, rawecg, rawrip, rawaccelx, rawaccely, rawaccelz):
     # Algorithm Constants
-    ecgSamplingFrequency = 64.0
-    ripSamplingFrequency = 64.0 / 3.0
-    accelSamplingFrequency = 64.0 / 6.0
+    ecgSamplingFrequency = rawecg.metadata['samplingFrequency']  # 64.0
+    ripSamplingFrequency = rawrip.metadata['samplingFrequency']  # 64.0 / 3.0
+    accelSamplingFrequency = rawaccelx.metadata['samplingFrequency']  # 64.0 / 6.0
 
     # Timestamp correct signals
-    ecgMeta = cerebralcortex.metadata.generate()
-    ecg = DataStream([rawecg], ecgMeta, timestampCorrect(rawecg, samplingfrequency=ecgSamplingFrequency))
+    ecgMeta = CC.metadata.generate()
+    ecg = timestampCorrect(rawecg, samplingfrequency=ecgSamplingFrequency)
+    ecg.updateMetadata(ecgMeta)
     CC.save(ecg)
 
     ripMeta = CC.metadata.generate()
-    rip = DataStream([rawecg], ripMeta, timestampCorrect(rawrip, samplingfrequency=ripSamplingFrequency))
+    rip = timestampCorrect(rawrip, samplingfrequency=ripSamplingFrequency)
+    rip.updateMetadata(ripMeta)
     CC.save(ecg)
 
     accelMeta = CC.metadata.generate()
-    accel = DataStream([rawaccelx, rawaccely, rawaccelz], accelMeta,
-                       timestampCorrectAndSequenceAlign([rawaccelx, rawaccely, rawaccelz],
-                                                        samplingfrequency=accelSamplingFrequency))
+    accel = timestampCorrectAndSequenceAlign([rawaccelx, rawaccely, rawaccelz],
+                                             samplingfrequency=accelSamplingFrequency)
+    accel.updateMetadata(accelMeta)
     CC.save(accel)
 
     # ECG and RIP signal morphology dataquality
@@ -110,6 +154,23 @@ def cStress(CC, rawecg, rawrip, rawaccelx, rawaccely, rawaccelz):
     CC.save(ripDataQuality)
 
     windowedStdevMag = DataStream([accel], meta, windowMagDeviation(accel, windowsize=10000))
+
+    # ECG filtering
+
+    ecgLabel = filterBadECG(ecg, windowsize=2000)
+    ecg.link(ecgLabel, new_metadata)
+    ecgLabel.save()
+
+    # Sliding Windows
+
+    rrMean = computeRRMean(rrInterval, windowsize=60000, slidinglength=1000)
+    rr80percent = computeRR80Percent(rrInterval, windowsize=60000, slidinglength=1000)
+
+    KVfv = joinDataStreams([rrMean, rr80percent], metadata)
+
+
+
+
 
     # ecgFeatures = ECGFeatures(CC, ecg, ecgDataQuality)
     # ripFeatures = RIPFeatures(CC, rip, ripDataQuality)

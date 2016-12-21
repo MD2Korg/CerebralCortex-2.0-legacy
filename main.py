@@ -24,83 +24,34 @@
 
 
 import cerebralcortex
+from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.legacy import find
 from memphisdataprocessor.cStress import cStress
 from memphisdataprocessor.preprocessor import parser
 
-CC = cerebralcortex.CerebralCortex(master="local[4]", name="Memphis cStress Development App")
+CC = cerebralcortex.CerebralCortex(master="local[*]", name="Memphis cStress Development App")
 
-participant = "SI01"
 basedir = "/Users/hnat/Desktop/data/"
 
-ecg = CC.readfile(find(basedir, {"participant": participant, "datasource": "ecg"})).map(parser.dataprocessor)
-rip = CC.readfile(find(basedir, {"participant": participant, "datasource": "rip"})).map(parser.dataprocessor)
-accelx = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelx"})).map(parser.dataprocessor)
-accely = CC.readfile(find(basedir, {"participant": participant, "datasource": "accely"})).map(parser.dataprocessor)
-accelz = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelz"})).map(parser.dataprocessor)
+for i in range(1, 2):
+    participant = "SI%02d" % i
 
-result = cStress(CC, ecg, rip, accelx, accely, accelz)
+    try:
+        ecg = DataStream(data=CC.readfile(find(basedir, {"participant": participant, "datasource": "ecg"})).map(
+            parser.dataprocessor))
+        rip = DataStream(data=CC.readfile(find(basedir, {"participant": participant, "datasource": "rip"})).map(
+            parser.dataprocessor))
+        accelx = DataStream(data=CC.readfile(find(basedir, {"participant": participant, "datasource": "accelx"})).map(
+            parser.dataprocessor))
+        accely = DataStream(data=CC.readfile(find(basedir, {"participant": participant, "datasource": "accely"})).map(
+            parser.dataprocessor))
+        accelz = DataStream(data=CC.readfile(find(basedir, {"participant": participant, "datasource": "accelz"})).map(
+            parser.dataprocessor))
 
-print(ecg.count())
+        result = cStress(CC, ecg, rip, accelx, accely, accelz)
 
+        # resultPuff = puffMarker(CC, rip, accelx, accely, accelz, lwAccel, lwGyro, rwAccel, rwGyro)
 
-# # from pyspark.sql import Row,Window
-# #
-# # ax = accelx.map(lambda p: Row(timestamp=p.timestamp, sample=p.sample))
-# #
-# # schemaAX = CC.sparkSession.createDataFrame(ax)
-# # schemaAX.createOrReplaceTempView('accelx')
-# #
-# #
-# # schemaAX.printSchema()
-# # schemaAX.select('timestamp').show()
-# # schemaAX.show()
-#
-#
-# # win = Window.partitionBy('timestamp')groupBy(window(schemaAX['timestamp'], '1 week'))
-# #
-# # print(win)
-#
-# def window(datapoint, window_length):
-#     minute = int(datapoint.timestamp / window_length) * window_length
-#
-#     return minute
-#
-#
-# def meanFunc(datapoint_array):
-#     pprint(datapoint_array)
-#     return len(datapoint_array)
-
-
-# y = accelx.groupBy(lambda dp: window(dp, 60000))
-# y = accelx.groupBy(lambda dp: window(dp, 60000)).reduceByKey(lambda x, y: x.sample + y.sample)
-#
-#
-# for t in y.collect():
-#     print(t[0], len(t[1]), [i.timestamp for i in t[1]])
-#     # print(t[0], len(t[1]))
-
-
-
-# values = CC.sparkSession.sql("Select * from accelx where timestamp < 1265665212149")
-# for ts in values.collect():
-#     print(ts)
-
-
-# print("Number of ECG samples", ecg.count())
-# print("Number of RIP samples", rip.count())
-# print("Number of AccelX samples", accelx.count())
-# print("Number of AccelY samples", accely.count())
-# print("Number of AccelZ samples", accelz.count())
-
-# def window(x):
-#     print(x)
-#
-# aw = accelx.groupByKey(partitionFunc=window)
-# print(aw.collect())
-
-
-# accelxAverage = rip.map(lambda x: x.getSample()).mean()
-# accelxAverage = accelx.mean()
-
-# print(accelxAverage)
+        # print(participant, ecg.rdd.count())
+    except e:
+        print("File missing for %s" % participant)

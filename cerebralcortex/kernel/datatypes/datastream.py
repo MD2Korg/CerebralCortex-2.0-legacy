@@ -21,7 +21,7 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+import cerebralcortex
 from cerebralcortex.kernel.datatypes.metadata import Metadata
 
 
@@ -35,3 +35,9 @@ class DataStream:
         self.sharing = sharing
         self.metadata = metadata
         self.rdd = data
+
+    def __init__(self, datastream_array, metadata, datastream):
+        self = datastream
+        self.metadata = cerebralcortex.metadata.generate(datastream_array, metadata)
+
+    pass

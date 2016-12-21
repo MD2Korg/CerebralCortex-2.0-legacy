@@ -21,11 +21,26 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from cerebralcortex.kernel.datatypes.datastream import DataStream
 
 
-def timestampCorrect(datastream, samplingfrequency=None):
+def timestampCorrect(datastream: DataStream, samplingfrequency: float = None) -> DataStream:
+    """
+
+    :param datastream:
+    :param samplingfrequency:
+    :return:
+    """
+
     return datastream
 
 
-def timestampCorrectAndSequenceAlign(datastreamArray, samplingfrequency=None):
+def timestampCorrectAndSequenceAlign(datastreamArray, samplingfrequency=None) -> DataStream:
+    """
+
+    :param datastreamArray:
+    :param samplingfrequency:
+    :return:
+    """
+
     return datastreamArray[0]

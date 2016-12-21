@@ -22,18 +22,14 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from cerebralcortex.kernel.datatypes.metadata import Metadata
-
-
 class DataPoint:
     """A data point class"""
 
-    def __init__(self, sample, timestamp, metadata=Metadata()):
+    def __init__(self, timestamp, sample):
         self.id = None
         self.datastream = None
         self.timestamp = timestamp
         self.sample = sample
-        self.metadata = metadata
 
     def getSample(self):
         return self.sample
@@ -41,20 +37,20 @@ class DataPoint:
     def getTimestamp(self):
         return self.timestamp
 
-    def __eq__(self, other):
-        return self.sample == other.sample
-
-    def __gt__(self, other):
-        return self.sample > other.sample
-
-    def __ge__(self, other):
-        return self.sample >= other.sample
-
-    def __lt__(self, other):
-        return self.sample < other.sample
-
-    def __le__(self, other):
-        return self.sample <= other.sample
+    # def __eq__(self, other):
+    #     return self.sample == other.sample
+    #
+    # def __gt__(self, other):
+    #     return self.sample > other.sample
+    #
+    # def __ge__(self, other):
+    #     return self.sample >= other.sample
+    #
+    # def __lt__(self, other):
+    #     return self.sample < other.sample
+    #
+    # def __le__(self, other):
+    #     return self.sample <= other.sample
 
     def __str__(self):
         return 'DP: (' + str(self.timestamp) + ',' + str(self.sample) + ')'
