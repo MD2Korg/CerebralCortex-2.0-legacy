@@ -60,6 +60,8 @@ def mean(KVrdd):
     meanValue = activityMean.mapValues(lambda x: (x[0] / x[1]))
     return meanValue
 
+    rrinterval.rdd.map(lambda x: x.sample).mean()
+
 
 def classifyECGwindow(datapoints):
     values = np.array([i.sample for i in datapoints])
