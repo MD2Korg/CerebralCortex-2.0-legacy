@@ -26,7 +26,6 @@
 import cerebralcortex
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.legacy import find
-from memphisdataprocessor.cStress import cStress
 from memphisdataprocessor.preprocessor import parser
 
 CC = cerebralcortex.CerebralCortex(master="local[*]", name="Memphis cStress Development App")
@@ -48,7 +47,7 @@ for i in range(1, 2):
         accelz = DataStream(data=CC.readfile(find(basedir, {"participant": participant, "datasource": "accelz"})).map(
             parser.dataprocessor))
 
-        result = cStress(CC, ecg, rip, accelx, accely, accelz)
+        # result = cStress(CC, ecg, rip, accelx, accely, accelz)
 
         # resultPuff = puffMarker(CC, rip, accelx, accely, accelz, lwAccel, lwGyro, rwAccel, rwGyro)
 
