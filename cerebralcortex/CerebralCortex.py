@@ -51,7 +51,7 @@ class CerebralCortex:
         pass
 
     def readfile(self, filename):
-        return self.sc.textFile(filename)
+        return self.sctextFile(filename)
 
     def read(self):
         pass

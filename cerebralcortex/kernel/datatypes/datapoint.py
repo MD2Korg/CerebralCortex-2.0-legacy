@@ -21,36 +21,40 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from datetime import datetime, timezone
+
 
 class DataPoint:
-    """A data point class"""
+    def __init__(self,
+                 id: int = None,
+                 datastream: int = None,
+                 timestamp: datetime = None,
+                 sample: object = None):
+        """
 
-    def __init__(self, timestamp, sample):
-        self.id = None
-        self.datastream = None
-        self.timestamp = timestamp
-        self.sample = sample
+        :param id: Database provided element index
+        :param datastream: Cerebral Cortex provided data stream identifier
+        :param timestamp: Python datetime object with timezone information
+        :param sample: Python object representing any data
+        """
 
-    def getSample(self):
-        return self.sample
+        self._id = id
+        self._datastreamID = datastream
+        self._timestamp = timestamp
+        self._sample = sample
 
-    def getTimestamp(self):
-        return self.timestamp
+    def get_sample(self) -> object:
+        return self._sample
 
-    # def __eq__(self, other):
-    #     return self.sample == other.sample
-    #
-    # def __gt__(self, other):
-    #     return self.sample > other.sample
-    #
-    # def __ge__(self, other):
-    #     return self.sample >= other.sample
-    #
-    # def __lt__(self, other):
-    #     return self.sample < other.sample
-    #
-    # def __le__(self, other):
-    #     return self.sample <= other.sample
+    def get_timestamp(self) -> datetime:
+        return self._timestamp
+
+    def get_timestamp_epoch(self, tzinfo=timezone.utc) -> int:
+        # TODO: Handle timezone information
+        return int(self._timestamp.timestamp() * 1e6)
+
+    def get_datastream_id(self) -> int:
+        return self._datastreamID
 
     def __str__(self):
-        return 'DP: (' + str(self.timestamp) + ',' + str(self.sample) + ')'
+        return '(' + str(self._datastreamID) + ',' + str(self._timestamp) + ',' + str(self.sample) + ')'

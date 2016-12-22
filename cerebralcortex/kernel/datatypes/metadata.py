@@ -33,3 +33,6 @@ class Metadata:
 
     def dump(self):
         return json.dumps(self.metadata)
+
+    def add_window_to_metadata(self, windowMetadata):
+        pass

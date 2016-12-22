@@ -22,19 +22,38 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from cerebralcortex.kernel.datatypes.metadata import Metadata
-
 
 class Window:
-    """A window class"""
+    def __init__(self,
+                 id: int = None,
+                 starttime: datetime = None,
+                 endtime: datetime = None,
+                 metadata: dict = None):
+        """
 
-    def __init__(self, starttime, endtime, sample, metadata=Metadata()):
-        self.id = None
-        self.datastream = None
-        self.startTime = starttime
-        self.endTime = endtime
-        self.sample = sample
-        self.metadata = metadata
+        :param id: Database provided element index
+        :param starttime: Python datetime object with timezone information
+        :param endtime: Python datetime object with timezone information
+        :param metadata: Python dictionary containing all metadata
+        """
+
+        self._id = None
+        self._datastream = None
+        self._starttime = starttime
+        self._endtime = endtime
+        self._metadata = metadata
+
+    def get_time_tuple(self):
+        result = (self._starttime, self._endtime)
+        return result
+
+    def get_metadata(self):
+        return self._metadata
+
+    def add_metadata(self, new_metadata):
+        # TODO: Provide metadata merging
+        # TODO: Question from Tim, is this necessary?
+        pass
 
     def __str__(self):
-        return 'Window: (' + str(self.startTime) + ',' + str(self.endTime) + ',' + str(self.sample) + ')'
+        return '(' + str(self._starttime) + ',' + str(self._endtime) + ',' + str(self._metadata) + ')'

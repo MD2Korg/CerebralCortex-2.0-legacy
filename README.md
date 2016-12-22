@@ -3,6 +3,10 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/b1d2febd95a74ade9ecb7bbc7e968292)](https://www.codacy.com/app/twhnat/CerebralCortex?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=MD2Korg/CerebralCortex&amp;utm_campaign=Badge_Grade)
 
 
+## Coding Guidelines
+Please utilize [https://www.python.org/dev/peps/pep-0008/](https://www.python.org/dev/peps/pep-0008/) for coding guides.  IntelliJ defaults to this style for python as well.
+
+
 ## Intellij Setup
 Environment Variables in Run Configuration
 

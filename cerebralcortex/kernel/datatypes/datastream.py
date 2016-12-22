@@ -21,23 +21,43 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-import cerebralcortex
+
+from uuid import UUID
+
+from pyspark.sql import SparkSession
+
 from cerebralcortex.kernel.datatypes.metadata import Metadata
 
 
 class DataStream:
-    """A data stream class"""
+    def __init__(self,
+                 id: int = None,
+                 data: SparkSession = None,
+                 user: UUID = None,
+                 processing: dict = None,
+                 sharing: dict = None,
+                 metadata: dict = Metadata(),
+                 windows: list[SparkSession] = None):
+        """
 
-    def __init__(self, id=None, data=None, user=None, processing=None, sharing=None, metadata=Metadata()):
-        self.id = id
-        self.user = user
-        self.processing = processing
-        self.sharing = sharing
-        self.metadata = metadata
-        self.rdd = data
+        :param id:
+        :param data:
+        :param user:
+        :param processing:
+        :param sharing:
+        :param metadata:
+        :param windows:
+        """
+        self._id = id
+        self._user = user
+        self._processing = processing
+        self._sharing = sharing
+        self._metadata = metadata
+        self._datapoints = data
+        self._windows = windows
 
-    def __init__(self, datastream_array, metadata, datastream):
-        self = datastream
-        self.metadata = cerebralcortex.metadata.generate(datastream_array, metadata)
-
-    pass
+    def add_window(self,
+                   window_rdd: SparkSession,
+                   window_metadata: dict):
+        self.windows.append(window_rdd)
+        self.metadata.add_window_to_metadata(window_metadata)
