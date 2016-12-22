@@ -25,6 +25,7 @@
 
 from pyspark.sql import SparkSession
 
+
 class CerebralCortex:
     def __init__(self, master=None, name=None):
         ss = SparkSession.builder
@@ -34,8 +35,6 @@ class CerebralCortex:
         self.sparkSession = ss.getOrCreate()
 
         self.sc = self.sparkSession.sparkContext
-
-
 
     def register(self, datastream):
         """
