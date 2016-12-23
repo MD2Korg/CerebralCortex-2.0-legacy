@@ -22,6 +22,9 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from datetime import datetime
+
+import pytz
 
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 
@@ -29,9 +32,9 @@ from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 def dataprocessor(inputString):
     try:
         [val, ts] = inputString.split(' ')
-
-        return DataPoint(int(ts), float(val))
+        timestamp = datetime.fromtimestamp(float(ts) / 1000.0, pytz.timezone('US/Central'))
+        return DataPoint.from_tuple(timestamp, float(val))
     except ValueError:
-        print("ValueError: " + str(input))
-
+        # Skip bad values and filter them later
+        # print("ValueError: " + str(input))
         return

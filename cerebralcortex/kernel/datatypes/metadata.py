@@ -26,13 +26,11 @@ import json
 
 
 class Metadata:
-    """A metadata class"""
-
-    def __init__(self):
-        self.metadata = {}
+    def __init__(self, metadata: dict = {}):
+        self._metadata = metadata
 
     def dump(self):
-        return json.dumps(self.metadata)
+        return json.dumps(self._metadata)
 
-    def add_window_to_metadata(self, windowMetadata):
+    def add_window_to_metadata(self, window_metadata):
         pass

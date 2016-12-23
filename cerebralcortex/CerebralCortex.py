@@ -36,12 +36,12 @@ class CerebralCortex:
 
         self.sc = self.sparkSession.sparkContext
 
-    def register(self, datastream):
-        """
-        Create a datastream in the system
-        :param datastream: Dictionary
-        """
-        pass
+    # def register(self, datastream):
+    #     """
+    #     Create a datastream in the system
+    #     :param datastream: Dictionary
+    #     """
+    #     pass
 
     def find(self, query):
         """
@@ -51,7 +51,7 @@ class CerebralCortex:
         pass
 
     def readfile(self, filename):
-        return self.sctextFile(filename)
+        return self.sc.textFile(filename)
 
     def read(self):
         pass

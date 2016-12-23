@@ -58,3 +58,7 @@ class DataPoint:
 
     def __str__(self):
         return '(' + str(self._datastreamID) + ',' + str(self._timestamp) + ',' + str(self.sample) + ')'
+
+    @classmethod
+    def from_tuple(cls, timestamp, value):
+        return DataPoint(timestamp=timestamp, sample=value)

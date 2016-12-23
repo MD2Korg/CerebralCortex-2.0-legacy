@@ -21,9 +21,10 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+from pprint import pprint
 from uuid import UUID
 
+from pyspark import RDD
 from pyspark.sql import SparkSession
 
 from cerebralcortex.kernel.datatypes.metadata import Metadata
@@ -31,15 +32,15 @@ from cerebralcortex.kernel.datatypes.metadata import Metadata
 
 class DataStream:
     def __init__(self,
+                 user: UUID,
                  id: int = None,
-                 data: SparkSession = None,
-                 user: UUID = None,
+                 data: RDD = None,
                  processing: dict = None,
                  sharing: dict = None,
-                 metadata: dict = Metadata(),
-                 windows: list[SparkSession] = None):
+                 metadata: Metadata = Metadata(),
+                 windows: list = None):
         """
-
+        The primary object in Cerebral Cortex which represents data
         :param id:
         :param data:
         :param user:
@@ -56,8 +57,40 @@ class DataStream:
         self._datapoints = data
         self._windows = windows
 
+    def get_datapoints(self):
+        return self._datapoints
+
+
     def add_window(self,
                    window_rdd: SparkSession,
                    window_metadata: dict):
-        self.windows.append(window_rdd)
-        self.metadata.add_window_to_metadata(window_metadata)
+        self._windows.append(window_rdd)
+        self._metadata.add_window_to_metadata(window_metadata)
+
+    def get_metadata(self, search_param=None):
+        return search_param
+
+    def save(self):
+        """
+        Persist this datastream object to the datastores
+        """
+
+        print(self._user)
+        pprint(self._datapoints.map(lambda dp: dp.get_timestamp()).takeSample(False, 10))
+
+        pass
+
+    def update_metadata(self, metadata):
+        # Use metadata to update self._metadata
+
+        pass
+
+    def get_user(self):
+        return self._user
+
+    @classmethod
+    def from_datastream(self, datastream):
+        result = DataStream(user=datastream._user,
+                            data=datastream._datapoints)
+
+        return result
