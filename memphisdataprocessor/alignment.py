@@ -32,5 +32,7 @@ def timestamp_correct(datastream: DataStream,
 
 
 def timestampCorrectAndSequenceAlign(datastreamArray: list,
-                                     samplingfrequency: float = None) -> DataStream:
-    return datastreamArray[0]
+                                     sampling_frequency: float = None) -> DataStream:
+    result = DataStream.from_datastream(datastreamArray[0])
+
+    return result

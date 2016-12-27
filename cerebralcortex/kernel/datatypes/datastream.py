@@ -25,7 +25,6 @@ from pprint import pprint
 from uuid import UUID
 
 from pyspark import RDD
-from pyspark.sql import SparkSession
 
 from cerebralcortex.kernel.datatypes.metadata import Metadata
 
@@ -62,7 +61,7 @@ class DataStream:
 
 
     def add_window(self,
-                   window_rdd: SparkSession,
+                   window_rdd: RDD,
                    window_metadata: dict):
         self._windows.append(window_rdd)
         self._metadata.add_window_to_metadata(window_metadata)

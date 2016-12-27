@@ -51,6 +51,9 @@ class DataPoint:
 
     def get_timestamp_epoch(self, tzinfo=timezone.utc) -> int:
         # TODO: Handle timezone information
+        if self._timestamp is None:
+            return self._timestamp
+
         return int(self._timestamp.timestamp() * 1e6)
 
     def get_datastream_id(self) -> int:
