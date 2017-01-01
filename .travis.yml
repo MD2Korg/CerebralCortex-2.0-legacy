@@ -4,7 +4,7 @@ python:
 
 env:
     global:
-        - SPARK_HOME=/tmp/spark-1.5.1-bin-hadoop2.4
+        - SPARK_HOME=/tmp/spark-2.0.2-bin-hadoop2.7
 
 # command to install dependencies
 install:
