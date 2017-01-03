@@ -87,3 +87,10 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+
+
+# IntelliJ
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/find.xml
