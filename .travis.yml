@@ -13,4 +13,6 @@ install:
 
 
 # command to run tests
-script: python -m unittest discover
+script:
+  - export PYTHONPATH=$SPARK_HOME/python/lib/py4j-0.10.3-src.zip:$PYTHONPATH
+  - python -m unittest discover

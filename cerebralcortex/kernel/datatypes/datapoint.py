@@ -21,6 +21,7 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 from datetime import datetime, timezone
 
 
@@ -52,7 +53,7 @@ class DataPoint:
     def get_timestamp_epoch(self, tzinfo=timezone.utc) -> int:
         # TODO: Handle timezone information
         if self._timestamp is None:
-            return self._timestamp
+            raise ValueError
 
         return int(self._timestamp.timestamp() * 1e6)
 

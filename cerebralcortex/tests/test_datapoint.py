@@ -34,7 +34,7 @@ class TestDataPoint(unittest.TestCase):
         self.assertIsNone(dp.get_sample())
         self.assertIsNone(dp.get_datastream_id())
         self.assertIsNone(dp.get_timestamp())
-        self.assertIsNone(dp.get_timestamp_epoch())
+        self.assertRaises(ValueError, dp.get_timestamp_epoch)
 
     def test_DataPoint(self):
         ts = datetime.datetime.now()
