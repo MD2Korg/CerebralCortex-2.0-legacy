@@ -118,9 +118,9 @@ def cStress(rawecg: DataStream,
 
     # Algorithm Constants
     # TODO: Once metadata is implemented
-    ecgSamplingFrequency = rawecg.get_metadata('samplingFrequency')  # 64.0
-    ripSamplingFrequency = rawrip.get_metadata('samplingFrequency')  # 64.0 / 3.0
-    accelSamplingFrequency = rawaccelx.get_metadata('samplingFrequency')  # 64.0 / 6.0
+    # ecgSamplingFrequency = rawecg.get_metadata('samplingFrequency')  # 64.0
+    # ripSamplingFrequency = rawrip.get_metadata('samplingFrequency')  # 64.0 / 3.0
+    # accelSamplingFrequency = rawaccelx.get_metadata('samplingFrequency')  # 64.0 / 6.0
 
     # TODO: TWH Temporary
     ecgSamplingFrequency = 64.0
