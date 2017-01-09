@@ -8,20 +8,28 @@ from pyspark.sql import SparkSession
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext
 from pyspark.sql.functions import col, when
-from ReadData import ReadData
-from WriteData import WriteData
+#from .WriteData import WriteDataToCassandra
+from .ReadData import ReadDataFromCassandra
 
 
 
 def main():
 
-    conf = SparkConf().setAppName("DataStore Sample Main")
+    conf = SparkConf().setAppName("DataStore")
     sc = SparkContext(conf=conf)
     sqlContext = SQLContext(sc)
 
-    df = ReadData(sqlContext,"test","kv").getDataByStreamID(12)
+    jsonQueryParam = {
+        "columnNames": "*",
+        "whereClause": "",
+        "orderedByColumnName": "",
+        "sortingOrder":"",
+        "limitBy": ""
+    }
 
-    WriteData(sqlContext,"test","kv2").storeData(df)
+    df = ReadDataFromCassandra(sqlContext,"test","kv").cassandraQueryBuilder(jsonQueryParam)
+
+    #WriteDataToCassandra(sqlContext,"test","kv2").storeData(df)
 
 if __name__ == "__main__":
     main()

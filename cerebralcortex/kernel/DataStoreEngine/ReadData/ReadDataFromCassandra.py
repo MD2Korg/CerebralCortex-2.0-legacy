@@ -7,50 +7,50 @@ class ReadDataFromCassandra:
                                                                                    keyspace=keyspaceName).load()
         self.df.registerTempTable("tmp_" + tableName)
 
-    '''
-    :param datastreamID
-    Retrieve all the data for a datastream from Cassandra
-    '''
-    def getDataByStreamID(self, datastreamID):
-        return self.sqlContext.sql("select * from tmp_" + self.tableName + " where value>1 order by key Desc")
+    """
+    This method accepts a json object to build a datastore query. Use the following json schema:
+        jsonQueryParam = {
+            "columnNames": "col1, col2",
+            "whereClause": "",
+            "orderedByColumnName": "",
+            "sortingOrder":"",
+            "limitBy": ""
+        }
+    Where
+        "columnNames" are the names of the columns you want to retrieve. Please pass * if you want to retrieve all the columns of a table. "columnNames" is a mandatory field and cannot be empty.
+        "whereClause" is any condition you want to put on a query. For example, "datastream_id=1 and participant_id=2". This field is option and can be empty.
+        "orderedByColumnName" is the name of a column that you want data to be sorted by. This field is option and can be empty.
+        "sortingOrder" is the sorting order. Available sorting arguments ASC and DESC. This field is option and can be empty.
+        "limitBy" is the number of records you want to retrieve. For example, 10. This field is option and can be empty.
 
-    '''
-    :param datastreamID
-    :param participantID
-    Retrieve a datastream by  a participant ID from Cassandra
-    '''
-    def getDatastreamByParticipantID(self, datastreamID, participantID):
-        return self.sqlContext.sql("select * from tmp_" + self.tableName + " where value>1 order by key Desc")
+    Note: Please look at Cassandra database schema for available column names per table.
 
-    '''
-    :param datastreamID
-    Retrieve all the datastreams for a participant from Cassandra
-    '''
-    def getDataByParticipantID(self, participantID):
-        return self.sqlContext.sql("select * from tmp_" + self.tableName + " where value>1 order by key Desc")
+    """
+    def cassandraQueryBuilder(self,jsonQueryParam):
 
-    '''
-    :param dayMonthYear (e.g., 25/03/2017)
-    Retrieve all the datastreams of all the participants of a day from Cassandra
-    '''
-    def getDataByDay(self, dayMonthYear):
-        return self.sqlContext.sql("select * from tmp_" + self.tableName + " where value>1 order by key Desc")
+        if(jsonQueryParam["columnNames"].strip()!= ""):
+            columnNames = jsonQueryParam["columnNames"].strip()
+        else:
+            raise ValueError("No column name(s) has been defined.")
 
+        if(jsonQueryParam["whereClause"].strip()!= ""):
+            whereClause = "where " + jsonQueryParam["whereClause"].strip()
+        else:
+            whereClause = ""
 
+        if(jsonQueryParam["orderedByColumnName"].strip()!= ""):
+            orderedByColumnName = "ordered by " + jsonQueryParam["orderedByColumnName"].strip()
+        else:
+            orderedByColumnName = ""
 
-    #NEED TO DEFINE SOME DYNAMIC METHODS TO GET ALL KIND OF DATA
-    #FOR EXAMPLE, START-END TIME PER DATASTREAM-ID OR PARTICIPANT-ID
+        if(jsonQueryParam["sortingOrder"].strip()!= ""):
+            sortingOrder = jsonQueryParam["sortingOrder"].strip()
+        else:
+            sortingOrder = ""
 
-    '''
-    :param datastreamID
-    Retrieve all the data for a datastream ID from Cassandra
-    '''
-    def getDataByTimeRange(self, startTime, endTime):
-        return self.sqlContext.sql("select * from tmp_" + self.tableName + " where value>1 order by key Desc")
+        if(jsonQueryParam["sortingOrder"].strip()!= ""):
+            limitBy = jsonQueryParam["limitBy"].strip()
+        else:
+            limitBy = ""
 
-    '''
-    :param datastreamID
-    Retrieve all the data for a datastream ID from Cassandra
-    '''
-    def getDataByWindowID(self, windowID):
-        return self.sqlContext.sql("select * from tmp_" + self.tableName + " where value>1 order by key Desc")
+        return "Select " + columnNames + " from " + self.tableName + " "+ whereClause +" "+orderedByColumnName+" "+sortingOrder+" "+limitBy
