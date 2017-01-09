@@ -53,4 +53,7 @@ class ReadDataFromCassandra:
         else:
             limitBy = ""
 
-        return "Select " + columnNames + " from " + self.tableName + " "+ whereClause +" "+orderedByColumnName+" "+sortingOrder+" "+limitBy
+        qry = "Select " + columnNames + " from tmp_" + self.tableName + " "+ whereClause +" "+orderedByColumnName+" "+sortingOrder+" "+limitBy
+
+        return self.sqlContext.sql(qry)
+

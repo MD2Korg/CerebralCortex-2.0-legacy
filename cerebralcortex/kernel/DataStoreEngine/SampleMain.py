@@ -1,16 +1,15 @@
 
-
-# --packages datastax:spark-cassandra-connector:1.6.3-s_2.11
-# from pyspark import SparkContext, SparkConf
-
-
 from pyspark.sql import SparkSession
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext
 from pyspark.sql.functions import col, when
-#from .WriteData import WriteDataToCassandra
-from .ReadData import ReadDataFromCassandra
+from pyspark.sql.functions import lit
 
+from cerebralcortex.kernel.DataStoreEngine.ReadData.ReadDataFromCassandra import ReadDataFromCassandra
+from cerebralcortex.kernel.DataStoreEngine.WriteData.WriteDataToCassandra import WriteDataToCassandra
+
+from cerebralcortex.kernel.DataStoreEngine.ReadData.ReadDataFromMySql import ReadDataFromMySql
+from cerebralcortex.kernel.DataStoreEngine.WriteData.WriteDataToMySql import WriteDataToMySql
 
 
 def main():
@@ -27,9 +26,16 @@ def main():
         "limitBy": ""
     }
 
-    df = ReadDataFromCassandra(sqlContext,"test","kv").cassandraQueryBuilder(jsonQueryParam)
+    #df = ReadDataFromCassandra(sqlContext,"test","kv").executeQuery(jsonQueryParam)
+   # df.show()
+   # WriteDataToCassandra(sqlContext,"test","kv2").storeData(df)
 
-    #WriteDataToCassandra(sqlContext,"test","kv2").storeData(df)
+    df = ReadDataFromMySql(sqlContext,"cortex","configuration","root","pass").mySqlQueryBuilder(jsonQueryParam)
+    df.show()
+
+    new_df = df.withColumn('id', lit(0))
+    new_df.show()
+    WriteDataToMySql(sqlContext, "cortex", "configuration").storeData(new_df)
 
 if __name__ == "__main__":
     main()

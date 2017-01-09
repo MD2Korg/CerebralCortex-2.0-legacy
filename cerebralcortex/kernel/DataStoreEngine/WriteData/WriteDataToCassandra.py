@@ -1,4 +1,4 @@
-class WriteData:
+class WriteDataToCassandra:
     def __init__(self, sqlContext, keyspaceName, tableName):
         self.sqlContext = sqlContext
         self.tableName = tableName

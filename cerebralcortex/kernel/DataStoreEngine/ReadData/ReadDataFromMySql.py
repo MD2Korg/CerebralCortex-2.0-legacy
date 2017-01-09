@@ -3,7 +3,7 @@ class ReadDataFromMySql:
         self.sqlContext = sqlContext
         self.tableName = tableName
         self.databaseName = databaseName
-        self.df.sqlContext.read.format("jdbc").options(
+        self.df = sqlContext.read.format("jdbc").options(
             url ="jdbc:mysql://localhost/"+databaseName,
             driver="com.mysql.jdbc.Driver",
             dbtable=tableName,
@@ -58,4 +58,7 @@ class ReadDataFromMySql:
         else:
             limitBy = ""
 
-        return "Select " + columnNames + " from " + self.tableName + " "+ whereClause +" "+orderedByColumnName+" "+sortingOrder+" "+limitBy
+        qry = "Select " + columnNames + " from tmp_" + self.tableName + " "+ whereClause +" "+orderedByColumnName+" "+sortingOrder+" "+limitBy
+
+        return self.sqlContext.sql(qry)
+
