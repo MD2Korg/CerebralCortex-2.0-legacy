@@ -21,8 +21,6 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-import argparse
-import os
 import uuid
 
 import cerebralcortex
@@ -32,46 +30,37 @@ from cerebralcortex.legacy import find
 from memphisdataprocessor.cStress import cStress
 from memphisdataprocessor.preprocessor import parser
 
-argparser = argparse.ArgumentParser(description="Cerebral Cortex Test Application")
-argparser.add_argument('--base_directory')
-args = argparser.parse_args()
+CC = cerebralcortex.CerebralCortex(master="local[*]", name="Memphis cStress Development App")
 
-# To run this program, please specific a program argument for base_directory that is the path to the test data files.
-# e.g. --base_directory /Users/hnat/data/
-basedir = args.base_directory
-
-configuration_file = os.path.join(os.path.dirname(__file__), 'cerebralcortex.yml')
-
-CC = cerebralcortex.CerebralCortex(configuration_file, master="local[*]", name="Memphis cStress Development App")
-
-for i in range(1, 2):
+basedir = "/home/aungkon/Desktop/data/"
+datastream_array=[]
+for i in range(1, 3):
     participant = "SI%02d" % i
 
     participant_UUID = uuid.uuid4()
-    print(participant, participant_UUID)
     try:
-        ecgRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "ecg"})).map(
-            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
-        ecg = DataStream(CC, participant_UUID, data=ecgRDD.collect())
+        ecgarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "ecg"})).map(
+            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
+        ecg = DataStream(participant_UUID, data=ecgarray)
 
-        ripRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "rip"})).map(
-            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
-        rip = DataStream(CC, participant_UUID, data=ripRDD.collect())
+        riparray = CC.readfile(find(basedir, {"participant": participant, "datasource": "rip"})).map(
+            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
+        rip = DataStream(participant_UUID, data=riparray)
 
-        accelxRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelx"})).map(
-            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
-        accelx = DataStream(CC, participant_UUID, data=accelxRDD.collect())
+        accelxarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelx"})).map(
+            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
+        accelx = DataStream(participant_UUID, data=accelxarray)
 
-        accelyRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "accely"})).map(
-            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
-        accely = DataStream(CC, participant_UUID, data=accelyRDD.collect())
+        accelyarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "accely"})).map(
+            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
+        accely = DataStream(participant_UUID, data=accelyarray)
 
-        accelzRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelz"})).map(
-            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
-        accelz = DataStream(CC, participant_UUID, data=accelzRDD.collect())
-
-        cStressFeatures = cStress(ecg, rip, accelx, accely, accelz)
-
+        accelzarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelz"})).map(
+            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
+        accelz = DataStream(participant_UUID, data=accelzarray)
+        datastream_array.append((ecg,rip,accelx,accely,accelz))
     except Exception as e:
         print("File missing for %s" % participant)
         print(e)
+datastream_array_rdd=CC.sc.parallelize(datastream_array)
+# datastream_array_rdd.map(lambda x:cStress(x[0],x[1],x[2],x[3],x[4]))
