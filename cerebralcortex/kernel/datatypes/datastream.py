@@ -79,7 +79,6 @@ class DataStream:
         """
         Persist this datastream object to the datastores
         """
-
         print(self._user)
         pprint(self._datapoints.map(lambda dp: dp.get_timestamp()).takeSample(False, 10))
 
