@@ -32,43 +32,35 @@ from memphisdataprocessor.preprocessor import parser
 
 CC = cerebralcortex.CerebralCortex(master="local[*]", name="Memphis cStress Development App")
 
-basedir = "/Users/hnat/Desktop/data/"
-
-for i in range(1, 2):
+basedir = "/home/aungkon/Desktop/data/"
+datastream_array=[]
+for i in range(1, 3):
     participant = "SI%02d" % i
 
     participant_UUID = uuid.uuid4()
     try:
-        ecgRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "ecg"})).map(
-            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
-        ecgRDD.persist()
-        ecg = DataStream(participant_UUID, data=ecgRDD)
+        ecgarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "ecg"})).map(
+            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
+        ecg = DataStream(participant_UUID, data=ecgarray)
 
-        ripRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "rip"})).map(
-            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
-        ripRDD.persist()
-        rip = DataStream(participant_UUID, data=ripRDD)
+        riparray = CC.readfile(find(basedir, {"participant": participant, "datasource": "rip"})).map(
+            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
+        rip = DataStream(participant_UUID, data=riparray)
 
-        accelxRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelx"})).map(
-            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
-        accelxRDD.persist()
-        accelx = DataStream(participant_UUID, data=accelxRDD)
+        accelxarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelx"})).map(
+            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
+        accelx = DataStream(participant_UUID, data=accelxarray)
 
-        accelyRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "accely"})).map(
-            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
-        accelyRDD.persist()
-        accely = DataStream(participant_UUID, data=accelyRDD)
+        accelyarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "accely"})).map(
+            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
+        accely = DataStream(participant_UUID, data=accelyarray)
 
-        accelzRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelz"})).map(
-            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
-        accelzRDD.persist()
-        accelz = DataStream(participant_UUID, data=accelzRDD)
-
-        cStressFeatures = cStress(ecg, rip, accelx, accely, accelz)
-
-        # resultPuff = puffMarker(CC, rip, accelx, accely, accelz, lwAccel, lwGyro, rwAccel, rwGyro)
-
-        # print(participant, participant_UUID, cStressFeatures.get_datapoints().count())
+        accelzarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelz"})).map(
+            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
+        accelz = DataStream(participant_UUID, data=accelzarray)
+        datastream_array.append((ecg,rip,accelx,accely,accelz))
     except Exception as e:
         print("File missing for %s" % participant)
         print(e)
+datastream_array_rdd=CC.sc.parallelize(datastream_array)
+# datastream_array_rdd.map(lambda x:cStress(x[0],x[1],x[2],x[3],x[4]))
