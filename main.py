@@ -62,5 +62,5 @@ for i in range(1, 3):
     except Exception as e:
         print("File missing for %s" % participant)
         print(e)
-datastream_array_rdd=CC.sc.parallelize(datastream_array)
+datastream_array_rdd= CC.sc.parallelize(datastream_array)
 # datastream_array_rdd.map(lambda x:cStress(x[0],x[1],x[2],x[3],x[4]))
