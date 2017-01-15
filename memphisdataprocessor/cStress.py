@@ -26,7 +26,8 @@ from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.kernel.datatypes.window import Window
 from cerebralcortex.kernel.window import window
 from memphisdataprocessor.alignment import timestamp_correct, timestampCorrectAndSequenceAlign
-
+from memphisdataprocessor.preprocessor.ecg_processor import compute_rr_datastream
+import numpy as np
 
 def windowMagDeviation(accel, windowsize):
     # Normalize X,Y,Z axis
@@ -102,11 +103,12 @@ def joinDataStreams(datastreams, metadata):
     pass
 
 
-def cStress(rawecg: DataStream,
-            rawrip: DataStream,
-            rawaccelx: DataStream,
-            rawaccely: DataStream,
-            rawaccelz: DataStream) -> DataStream:
+def cStress(x):
+    rawecg = x
+    # rawrip = x[1]
+    # rawaccelx = x[2]
+    # rawaccely = x[3]
+    # rawaccelz = x[4]
     """
 
     :param rawecg:
@@ -126,43 +128,43 @@ def cStress(rawecg: DataStream,
     ecgSamplingFrequency = 64.0
     ripSamplingFrequency = 64.0 / 3.0
     accelSamplingFrequency = 64.0 / 6.0
-
     # Timestamp correct signals
     ecgMeta = rawecg.get_metadata()
-    ecg = timestamp_correct(rawecg, sampling_frequency=ecgSamplingFrequency)
-    ecg.update_metadata(ecgMeta)
-    ecg.save()
+    # ecg = timestamp_correct(rawecg, sampling_frequency=ecgSamplingFrequency)     # timestamp correction to be done
+    rawecg.update_metadata(ecgMeta)
+    ecg_rr_datastream = compute_rr_datastream(rawecg,ecgSamplingFrequency)
+    print(ecg_rr_datastream.get_datapoints()[0:10])
 
-    ripMeta = rawrip.get_metadata()
-    rip = timestamp_correct(rawrip, sampling_frequency=ripSamplingFrequency)
-    rip.update_metadata(ripMeta)
-    rip.save()
-
-    accelxMeta = rawaccelx.get_metadata()
-    accelyMeta = rawaccely.get_metadata()
-    accelzMeta = rawaccelz.get_metadata()
-    accel = timestampCorrectAndSequenceAlign([rawaccelx, rawaccely, rawaccelz],
-                                             sampling_frequency=accelSamplingFrequency)
-    accel.update_metadata(accelxMeta)
-    accel.update_metadata(accelyMeta)
-    accel.update_metadata(accelzMeta)
-    accel.save()
-
-    # ECG and RIP signal morphology dataquality
-    ecgDataQualityMeta = ecg.get_metadata()
-    # ecgDataQuality is a set of windows represented as an RDD
-    ecgDataQuality = Window([ecg], ecgDQMeta,
-                            ECGDataQuality(window(ecg, windowsize=5000),  # What does windowsize mean here?
-                                           bufferLength=3,
-                                           acceptableOutlierPercent=50,
-                                           outlierThresholdHigh=4500,
-                                           outlierThresholdLow=20,
-                                           badSegmentThreshod=2,
-                                           ecgBandLooseThreshold=47)
-                            )
-
-    ecg.add_window(ecgDataQuality, ecgDataQualityMeta)
-    ecg.save()
+    # ripMeta = rawrip.get_metadata()
+    # rip = timestamp_correct(rawrip, sampling_frequency=ripSamplingFrequency)
+    # rip.update_metadata(ripMeta)
+    # rip.save()
+    #
+    # accelxMeta = rawaccelx.get_metadata()
+    # accelyMeta = rawaccely.get_metadata()
+    # accelzMeta = rawaccelz.get_metadata()
+    # accel = timestampCorrectAndSequenceAlign([rawaccelx, rawaccely, rawaccelz],
+    #                                          sampling_frequency=accelSamplingFrequency)
+    # accel.update_metadata(accelxMeta)
+    # accel.update_metadata(accelyMeta)
+    # accel.update_metadata(accelzMeta)
+    # accel.save()
+    #
+    # # ECG and RIP signal morphology dataquality
+    # ecgDataQualityMeta = ecg.get_metadata()
+    # # ecgDataQuality is a set of windows represented as an RDD
+    # ecgDataQuality = Window([ecg], ecgDQMeta,
+    #                         ECGDataQuality(window(ecg, windowsize=5000),  # What does windowsize mean here?
+    #                                        bufferLength=3,
+    #                                        acceptableOutlierPercent=50,
+    #                                        outlierThresholdHigh=4500,
+    #                                        outlierThresholdLow=20,
+    #                                        badSegmentThreshod=2,
+    #                                        ecgBandLooseThreshold=47)
+    #                         )
+    #
+    # ecg.add_window(ecgDataQuality, ecgDataQualityMeta)
+    # ecg.save()
     #
     # ripDQMeta = CC.metadata.generate()
     # # ripDataQuality is a set of windows represented as an RDD
@@ -180,12 +182,6 @@ def cStress(rawecg: DataStream,
     #
     # windowedStdevMag = DataStream([accel], meta, windowMagDeviation(accel, windowsize=10000))
     #
-    # # ECG filtering
-    #
-    # ecgLabel = filterBadECG(ecg, windowsize=2000)
-    # ecg.link(ecgLabel, new_metadata)
-    # ecgLabel.save()
-    #
     # # Sliding Windows
     #
     # rrMean = computeRRMean(rrInterval, windowsize=60000, slidinglength=1000)
@@ -197,4 +193,4 @@ def cStress(rawecg: DataStream,
     # # ripFeatures = RIPFeatures(CC, rip, ripDataQuality)
 
     # TODO: TWH Fix when feature vector result is available
-    return rawecg
+    # return rawecg
