@@ -25,12 +25,11 @@ import numpy as np
 from scipy import signal
 
 def rr_interval_update(rpeak_temp1, rr_ave):
-    '''
-
+    """
     :param rpeak_temp1: R peak locations
     :param rr_ave: previous rr-interval average
     :return: the new rr-interval average of the previously detected 8 R peak locations
-    '''
+    """
     R=[0]+rpeak_temp1
     peak_interval = np.diff(R)
     if len(peak_interval) <= 7:
@@ -41,14 +40,14 @@ def rr_interval_update(rpeak_temp1, rr_ave):
 
 
 def compute_moving_window_int(sample,fs,blackmanWinlen):
-    '''
+    """
 
     :param sample: ecg sample array
     :param fs: sampling frequency
     :param blackmanWinlen: length of the blackman window on which to compute the moving window integration
 
     :return: the Moving window integration of the sample array
-    '''
+    """
     f = 2 / fs
     Del=.02
     F = [0, 4.5 * f, 5 * f, 20 * f, 20.5 * f, 1] #filter edges
@@ -73,13 +72,13 @@ def compute_moving_window_int(sample,fs,blackmanWinlen):
     return mov_win_int_signal
 
 def check_peak(y,i):
-    '''
+    """
     This is a function to check the condition of a simple peak of signal y in index i
-    '''
+    """
     return y[i - 2] < y[i - 1] and y[i - 1] < y[i] and y[i] >= y[i + 1] and y[i + 1] > y[i + 2]
 
 def compute_r_peaks(rpeak_temp1,pkt_loc,sig_lev,noise_lev,thr1,thr2,rr_ave,mov_win_int_signal,valuepks,pkt):
-    '''
+    """
     This function does the adaptive thresholding of the signal to get the R-peak locations
     :param rpeak_temp1: The location of the R peaks in the signal sample array once found this is returned
     :param pkt_loc: location of the R peaks in the simple peak array detected in the process before
@@ -92,14 +91,14 @@ def compute_r_peaks(rpeak_temp1,pkt_loc,sig_lev,noise_lev,thr1,thr2,rr_ave,mov_w
     :param valuepks: simple peaks of the process done before
     :param pkt: location of the simple peaks in signal array
 
-    '''
+    """
     i=0
     while i < len (pkt):
         if len(rpeak_temp1) >= 8 and pkt[i] - pkt[pkt_loc[-1]] > 1.66 * rr_ave and i - pkt_loc[-1] > 1:
-            '''
-            if for 166 percent of the present RR interval no peak is detected as R peak then thr2 is taken as the
-            R peak threshold and the maximum of the range is taken as a R peak and RR interval is updated accordingly
-            '''
+            #
+            # if for 166 percent of the present RR interval no peak is detected as R peak then thr2 is taken as the
+            # R peak threshold and the maximum of the range is taken as a R peak and RR interval is updated accordingly
+            #
             searchback_array_inrange_values=[valuepks[k] for k in range(pkt_loc[-1]+1,i) if valuepks[k] < 3*sig_lev and valuepks[k]> thr2]
             searchback_array_inrange_index=[k-pkt_loc[-1] for k in range(pkt_loc[-1]+1,i) if valuepks[k] < 3*sig_lev and valuepks[k]> thr2]
             if len(searchback_array_inrange_values) > 0:
@@ -128,10 +127,10 @@ def compute_r_peaks(rpeak_temp1,pkt_loc,sig_lev,noise_lev,thr1,thr2,rr_ave,mov_w
     return rpeak_temp1
 
 def remove_close_peaks(rpeak_temp1,sample,fs):
-    '''
+    """
     This function removes one of two peaks from the detected R peaks
     if difference among them is less than the minimum possible for two consecutive R peaks
-    '''
+    """
     def check_min(sample,rpeak_temp1,i):
         return i if sample[rpeak_temp1[i]] > sample[rpeak_temp1[i+1]] else i+1
     temp_ind=[1,2]
@@ -145,9 +144,10 @@ def remove_close_peaks(rpeak_temp1,sample,fs):
     return rpeak_temp1
 
 def confirm_peaks(rpeak_temp1,sample,fs):
-    '''
+    """
     This function does the final check on the R peaks detected and
-    finds the maximum in a range of fs/10 of the detected peak location and assigns it to be the peak    '''
+    finds the maximum in a range of fs/10 of the detected peak location and assigns it to be the peak
+    """
     count=1
     for i in range(1,len(rpeak_temp1)-1):
         index=np.argmax(sample[int(rpeak_temp1[i]-np.ceil(fs/10)):int(rpeak_temp1[i]+np.ceil(fs/10)+1)])
@@ -157,7 +157,7 @@ def confirm_peaks(rpeak_temp1,sample,fs):
 
 
 def detect_rpeak(ecg,fs:int=64,threshold:float=0.5):
-    '''
+    """
     This program implements the Pan Tomkins algorithm on ECG signal to detect the R peaks
 
     Since the ecg array can have discontinuity in the timestamp arrays the rr-interval calculated
@@ -169,7 +169,7 @@ def detect_rpeak(ecg,fs:int=64,threshold:float=0.5):
     2. compute all the peaks of the moving window integration signal
     3. adaptive thresholding with dynamic signal and noise thresholds applied to filter out the R peak locations
     4. confirm the R peaks through differntiation from the nearby peaks and remove the false peaks
-    '''
+    """
     sample=np.array([i[1] for i in ecg])
     timestamp=np.array([i[0] for i in ecg])
 
