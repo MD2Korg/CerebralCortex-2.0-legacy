@@ -1,5 +1,5 @@
 class WriteDataToCassandra:
-    def __init__(self, sqlContext, keyspaceName, tableName):
+    def __init__(self, sqlContext, keyspaceName="cortex", tableName="datapoint2"):
         self.sqlContext = sqlContext
         self.tableName = tableName
         self.keyspaceName = keyspaceName
