@@ -29,28 +29,25 @@ from pyspark import RDD
 
 from cerebralcortex.kernel.datatypes.metadata import Metadata
 
-from cerebralcortex import CerebralCortex
-
 class DataStream:
     def __init__(self,
-                    user: UUID,
-                              id: int = None,
-                                         data: RDD = None,
-                                                 processing: dict = None,
-                                                                    sharing: dict = None,
-                                                                                    metadata: Metadata = Metadata(),
-                                                                                                         windows: list = None):
-        """
-        The primary object in Cerebral Cortex which represents data
-        :param id:
-        :param data:
-        :param user:
-        :param processing:
-        :param sharing:
-        :param metadata:
-        :param windows:
-        """
-        # self._cc = cerebralcortex
+                user: UUID,
+                id: int = None,
+                data: RDD = None,
+                processing: dict = None,
+                sharing: dict = None,
+                metadata: Metadata = Metadata(),
+                windows: list = None):
+    """
+    The primary object in Cerebral Cortex which represents data
+    :param id:
+    :param data:
+    :param user:
+    :param processing:
+    :param sharing:
+    :param metadata:
+    :param windows:
+    """
         self._id = id
         self._user = user
         self._processing = processing
@@ -62,15 +59,12 @@ class DataStream:
     def get_datapoints(self):
         return self._datapoints
 
-    def set_datapoints(self, rdd):
-        pass
-
 
     def add_window(self,
                    window_rdd: RDD,
                                window_metadata: dict):
-        self._windows.append(window_rdd)
-        self._metadata.add_window_to_metadata(window_metadata)
+    self._windows.append(window_rdd)
+    self._metadata.add_window_to_metadata(window_metadata)
 
     def get_metadata(self, search_param=None):
         return search_param
@@ -79,6 +73,7 @@ class DataStream:
         """
         Persist this datastream object to the datastores
         """
+
         print(self._user)
         pprint(self._datapoints.map(lambda dp: dp.get_timestamp()).takeSample(False, 10))
 
@@ -91,12 +86,10 @@ class DataStream:
 
     def get_user(self):
         return self._user
-    #
-    # def get_cerebralcortex(self):
-    #     return self._cc
 
     @classmethod
     def from_datastream(self, datastream):
-        result = DataStream(cerebralcortex=datastream.get_cerebralcortex(),
-                            user=datastream._user)
-        return result
+        result = DataStream(user=datastream._user,
+                            data=datastream._datapoints)
+
+    return result
