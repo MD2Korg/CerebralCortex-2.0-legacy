@@ -31,23 +31,13 @@ from cerebralcortex.kernel.datatypes.metadata import Metadata
 
 class DataStream:
     def __init__(self,
-                user: UUID,
-                id: int = None,
-                data: RDD = None,
-                processing: dict = None,
-                sharing: dict = None,
-                metadata: Metadata = Metadata(),
-                windows: list = None):
-    """
-    The primary object in Cerebral Cortex which represents data
-    :param id:
-    :param data:
-    :param user:
-    :param processing:
-    :param sharing:
-    :param metadata:
-    :param windows:
-    """
+                 user: UUID = None,
+                 id: int = None,
+                 data: RDD = None,
+                 processing: dict = None,
+                 sharing: dict = None,
+                 metadata: Metadata = Metadata(),
+                 windows: list = None):
         self._id = id
         self._user = user
         self._processing = processing
@@ -62,9 +52,9 @@ class DataStream:
 
     def add_window(self,
                    window_rdd: RDD,
-                               window_metadata: dict):
-    self._windows.append(window_rdd)
-    self._metadata.add_window_to_metadata(window_metadata)
+                   window_metadata: dict):
+        self._windows.append(window_rdd)
+        self._metadata.add_window_to_metadata(window_metadata)
 
     def get_metadata(self, search_param=None):
         return search_param
@@ -92,4 +82,4 @@ class DataStream:
         result = DataStream(user=datastream._user,
                             data=datastream._datapoints)
 
-    return result
+        return result
