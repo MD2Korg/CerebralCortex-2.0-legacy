@@ -1,7 +1,7 @@
 import mysql.connector
 
 
-class WriteDataToMySql:
+class StoreMetadata:
     def __init__(self, databaseName="cortex", dbUserName="root", dbPassword="pass"):
         self.dbConnection = mysql.connector.connect(user=dbUserName,password=dbPassword, database=databaseName)
         self.cursor = self.dbConnection.cursor()
