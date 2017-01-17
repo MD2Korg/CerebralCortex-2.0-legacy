@@ -25,7 +25,7 @@ from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.kernel.datatypes.window import Window
 from cerebralcortex.kernel.window import window
-from memphisdataprocessor.alignment import timestamp_correct, timestampCorrectAndSequenceAlign
+# from memphisdataprocessor.alignment import timestamp_correct, timestampCorrectAndSequenceAlign
 from memphisdataprocessor.preprocessor.ecg_processor import compute_rr_datastream
 import numpy as np
 
@@ -109,14 +109,6 @@ def cStress(x):
     # rawaccelx = x[2]
     # rawaccely = x[3]
     # rawaccelz = x[4]
-    """
-
-    :param rawecg:
-    :param rawrip:
-    :param rawaccelx:
-    :param rawaccely:
-    :param rawaccelz:
-    """
 
     # Algorithm Constants
     # TODO: Once metadata is implemented
@@ -126,8 +118,8 @@ def cStress(x):
 
     # TODO: TWH Temporary
     ecgSamplingFrequency = 64.0
-    ripSamplingFrequency = 64.0 / 3.0
-    accelSamplingFrequency = 64.0 / 6.0
+    # ripSamplingFrequency = 64.0 / 3.0
+    # accelSamplingFrequency = 64.0 / 6.0
     # Timestamp correct signals
     ecgMeta = rawecg.get_metadata()
     # ecg = timestamp_correct(rawecg, sampling_frequency=ecgSamplingFrequency)     # timestamp correction to be done
