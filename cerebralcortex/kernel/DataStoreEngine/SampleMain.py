@@ -5,6 +5,8 @@ from pyspark.sql import SQLContext
 from pyspark.sql.functions import col, when
 from pyspark.sql.functions import lit
 
+
+
 from cerebralcortex.kernel.DataStoreEngine.ReadData.ReadDataFromCassandra import ReadDataFromCassandra
 from cerebralcortex.kernel.DataStoreEngine.WriteData.WriteDataToCassandra import WriteDataToCassandra
 
@@ -26,16 +28,17 @@ def main():
         "limitBy": ""
     }
 
-    #df = ReadDataFromCassandra(sqlContext,"test","kv").executeQuery(jsonQueryParam)
-   # df.show()
-   # WriteDataToCassandra(sqlContext,"test","kv2").storeData(df)
-
-    df = ReadDataFromMySql(sqlContext,"cortex","configuration","root","pass").mySqlQueryBuilder(jsonQueryParam)
+    df = ReadDataFromCassandra(sqlContext).getDatastream(1992)
+    #print(df)
     df.show()
+    WriteDataToCassandra(sqlContext).storeData(df)
 
-    new_df = df.withColumn('id', lit(0))
-    new_df.show()
-    WriteDataToMySql(sqlContext, "cortex", "configuration").storeData(new_df)
+    #print(ReadDataFromMySql().getAllDatastreamIDs())
+
+    #new_df = df.withColumn('id', lit(0))
+   # new_df.show()
+    #WriteDataToMySql(sqlContext, "cortex", "configuration").storeData(new_df)
 
 if __name__ == "__main__":
     main()
+

@@ -1,64 +1,113 @@
+import mysql.connector
+
+
 class ReadDataFromMySql:
-    def __init__(self, sqlContext, databaseName, tableName, dbUserName, dbPassword):
-        self.sqlContext = sqlContext
-        self.tableName = tableName
-        self.databaseName = databaseName
-        self.df = sqlContext.read.format("jdbc").options(
-            url ="jdbc:mysql://localhost/"+databaseName,
-            driver="com.mysql.jdbc.Driver",
-            dbtable=tableName,
-            user=dbUserName,
-            password=dbPassword
-        ).load()
-        self.df.registerTempTable("tmp_" + tableName)
+    def __init__(self, databaseName="cortex", dbUserName="root", dbPassword="pass"):
+        self.dbConnection = mysql.connector.connect(user=dbUserName,password=dbPassword, database=databaseName)
+        self.cursor = self.dbConnection.cursor()
 
-    """
-    This method accepts a json object to build a datastore query. Use the following json schema:
-        jsonQueryParam = {
-            "columnNames": "col1, col2",
-            "whereClause": "",
-            "orderedByColumnName": "",
-            "sortingOrder":"",
-            "limitBy": ""
-        }
-    Where
-        "columnNames" are the names of the columns you want to retrieve. Please pass * if you want to retrieve all the columns of a table. "columnNames" is a mandatory field and cannot be empty.
-        "whereClause" is any condition you want to put on a query. For example, "datastream_id=1 and participant_id=2". This field is option and can be empty.
-        "orderedByColumnName" is the name of a column that you want data to be sorted by. This field is option and can be empty.
-        "sortingOrder" is the sorting order. Available sorting arguments ASC and DESC. This field is option and can be empty.
-        "limitBy" is the number of records you want to retrieve. For example, 0, 10. This field is option and can be empty.
+    '''
+    :param datastreamType (optional) type of a datastream, for example, ECG
+    :return a list of all available datastream IDs
+    '''
+    def getAllDatastreamIDs(self, datastreamType=""):
+        qry = "SELECT id FROM datastream"
+        if not datastreamType=="":
+            qry = qry+" where metadata->'$.'"
 
-    Note: Please look at Cassandra database schema for available column names per table.
+        return self.executeQuery(qry)
 
-    """
-    def mySqlQueryBuilder(self,jsonQueryParam):
+    '''
+    :param datastreamType (optional) type of a datastream, for example, ECG
+    :return a list of all available datastream IDs of a user
+    '''
+    def getAllDatastreamIDsByUserID(self, participantID, datastreamType=""):
+        qry = "SELECT id FROM datastream"
+        if not datastreamType=="":
+            qry = qry+" where metadata->'$.'"
 
-        if(jsonQueryParam["columnNames"].strip()!= ""):
-            columnNames = jsonQueryParam["columnNames"].strip()
-        else:
-            raise ValueError("No column name(s) has been defined.")
+        return self.executeQuery(qry)
 
-        if(jsonQueryParam["whereClause"].strip()!= ""):
-            whereClause = "where " + jsonQueryParam["whereClause"].strip()
-        else:
-            whereClause = ""
+    '''
+    :param datastreamID
+    :return metadata of a datastream
+    '''
+    def getDatastreamMetadata(self, datastreamID):
+        qry = "SELECT metadata FROM datastream where id="+datastreamID
+        return self.executeQuery(qry)
 
-        if(jsonQueryParam["orderedByColumnName"].strip()!= ""):
-            orderedByColumnName = "ordered by " + jsonQueryParam["orderedByColumnName"].strip()
-        else:
-            orderedByColumnName = ""
+    '''
+    :param studyID (optional)
+    :return a list of all available configuration IDs
+    '''
+    def getAllConfigurationIDs(self, studyID=""):
+        qry = "SELECT id FROM datastream"
+        if not studyID=="":
+            qry = qry+" where metadata->'$.'"
 
-        if(jsonQueryParam["sortingOrder"].strip()!= ""):
-            sortingOrder = jsonQueryParam["sortingOrder"].strip()
-        else:
-            sortingOrder = ""
+        return self.executeQuery(qry)
 
-        if(jsonQueryParam["sortingOrder"].strip()!= ""):
-            limitBy = jsonQueryParam["limitBy"].strip()
-        else:
-            limitBy = ""
+    '''
+    :param configurationID
+    :return metadata of a configuration
+    '''
+    def getConfigurationMetadata(self, configurationID):
+        qry = ("SELECT id FROM country_list group by id")
+        return self.executeQuery(qry)
 
-        qry = "Select " + columnNames + " from tmp_" + self.tableName + " "+ whereClause +" "+orderedByColumnName+" "+sortingOrder+" "+limitBy
+    '''
+    :param processingModuleType (optional) type of a processing module, for example, stress
+    :return a list of all available processing module IDs
+    '''
+    def getAllProcessingModuleIDs(self, processingModuleType=""):
+        qry = "SELECT id FROM configuration"
+        if not processingModuleType=="":
+            qry = qry+" where metadata->'$.'"
 
-        return self.sqlContext.sql(qry)
+        return self.executeQuery(qry)
 
+    '''
+    :param processingModuleID processing module ID
+    :return metadata of a processing module
+    '''
+    def getProcessingModuleMetadata(self, processingModuleID):
+        qry = "SELECT id FROM configuration where id"+processingModuleID
+        return self.executeQuery(qry)
+
+    '''
+    :param userID
+    :param datastreamID (optional)
+    :param startTime (optional)
+    :param endTime (optional)
+    :return SQL query
+    '''
+    def getUserDatastreams(userID, datastreamID="", startTime="", endTime=""):
+        qry = "Select * from data_points where participant_id="+participantID
+        if not datastreamID=="":
+            qry = qry+" and datastream_id="+datastreamID
+        if not startTime=="":
+            qry = qry+" and timestamp<"+startTime
+        if not endTime=="":
+            qry = qry+" and timestamp<="+endTime
+
+        return qry
+
+    def getUserMetadata(self, userID):
+        qry = ("SELECT id FROM country_list group by id")
+        return self.executeQuery(qry)
+
+    '''
+    :param SQL query
+    :return
+    '''
+    def executeQuery(self,qry):
+        self.cursor.execute(qry)
+        results = self.cursor.fetchall()
+        self.cursor.close()
+        self.dbConnection.close()
+        return results
+
+#TO-DO
+
+    def getAllStudyIDs(self, datastreamType=""):
+        pass
