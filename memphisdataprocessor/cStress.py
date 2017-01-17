@@ -25,7 +25,7 @@ from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.kernel.datatypes.window import Window
 from cerebralcortex.kernel.window import window
-from memphisdataprocessor.alignment import timestamp_correct, timestampCorrectAndSequenceAlign
+# from memphisdataprocessor.alignment import timestamp_correct, timestampCorrectAndSequenceAlign
 from memphisdataprocessor.preprocessor.ecg_processor import compute_rr_datastream
 import numpy as np
 
