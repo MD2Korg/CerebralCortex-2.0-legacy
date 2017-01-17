@@ -72,9 +72,12 @@ class ReadDataFromCassandra:
         if (datastreamID == ""):
             raise "datastreamID cannot be empty"
         if (startTime != ""):
-            whereClause += " and timestamp>=" + startTime
+            whereClause += " and timestamp>='" + startTime+"'"
         if (endTime != ""):
-            whereClause += " and timestamp<=" + endTime
+            whereClause += " and timestamp<='" + endTime+"'"
+
+        #if(whereClause!=""):
+         #   whereClause += " ALLOW FILTERING"
 
         jsonQueryParam = {
             "columnNames": "*",
@@ -86,7 +89,7 @@ class ReadDataFromCassandra:
 
         return self.cassandraQueryBuilder(jsonQueryParam)
 
-    def getSpanByID(self, spanID, startTime, endTime):
+    def getSpan(self, spanID, startTime="", endTime=""):
         """
         :param spanID:
         :param startTime:
