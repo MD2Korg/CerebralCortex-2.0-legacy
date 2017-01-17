@@ -1,4 +1,4 @@
-class ReadDataFromCassandra:
+class RetrieveSensorData:
     def __init__(self, sqlContext, keyspaceName="cortex", tableName="datapoint"):
         self.sqlContext = sqlContext
         self.tableName = tableName
