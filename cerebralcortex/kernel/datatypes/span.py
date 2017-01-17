@@ -24,37 +24,30 @@
 from datetime import datetime
 
 
-class Window:
+class Span:
     def __init__(self,
                  id: int = None,
                  starttime: datetime = None,
                  endtime: datetime = None,
-                 metadata: dict = None):
+                 label: object = None):
         """
 
         :param id: Database provided element index
         :param starttime: Python datetime object with timezone information
         :param endtime: Python datetime object with timezone information
-        :param metadata: Python dictionary containing all metadata
         """
 
         self._id = None
-        self._datastream = None
         self._starttime = starttime
         self._endtime = endtime
-        self._metadata = metadata
+        self._label = label
 
     def get_time_tuple(self):
         result = (self._starttime, self._endtime)
         return result
 
-    def get_metadata(self):
-        return self._metadata
-
-    def add_metadata(self, new_metadata):
-        # TODO: Provide metadata merging
-        # TODO: Question from Tim, is this necessary?
-        pass
+    def get_label(self):
+        return self._label
 
     def __str__(self):
         return '(' + str(self._starttime) + ',' + str(self._endtime) + ',' + str(self._metadata) + ')'

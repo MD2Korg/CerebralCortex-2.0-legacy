@@ -41,34 +41,26 @@ for i in range(1, 2):
     try:
         ecgRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "ecg"})).map(
             parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
-        ecgRDD.persist()
-        ecg = DataStream(participant_UUID, data=ecgRDD)
+        ecg = DataStream(CC, participant_UUID, data=ecgRDD.collect())
 
         ripRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "rip"})).map(
             parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
-        ripRDD.persist()
-        rip = DataStream(participant_UUID, data=ripRDD)
+        rip = DataStream(CC, participant_UUID, data=ripRDD.collect())
 
         accelxRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelx"})).map(
             parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
-        accelxRDD.persist()
-        accelx = DataStream(participant_UUID, data=accelxRDD)
+        accelx = DataStream(CC, participant_UUID, data=accelxRDD.collect())
 
         accelyRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "accely"})).map(
             parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
-        accelyRDD.persist()
-        accely = DataStream(participant_UUID, data=accelyRDD)
+        accely = DataStream(CC, participant_UUID, data=accelyRDD.collect())
 
         accelzRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelz"})).map(
             parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
-        accelzRDD.persist()
-        accelz = DataStream(participant_UUID, data=accelzRDD)
+        accelz = DataStream(CC, participant_UUID, data=accelzRDD.collect())
 
         cStressFeatures = cStress(ecg, rip, accelx, accely, accelz)
 
-        # resultPuff = puffMarker(CC, rip, accelx, accely, accelz, lwAccel, lwGyro, rwAccel, rwGyro)
-
-        # print(participant, participant_UUID, cStressFeatures.get_datapoints().count())
     except Exception as e:
         print("File missing for %s" % participant)
         print(e)

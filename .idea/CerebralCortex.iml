@@ -14,10 +14,9 @@
     <orderEntry type="library" name="pyspark" level="project" />
   </component>
   <component name="PackageRequirementsSettings">
-    <option name="requirementsPath" value="" />
+    <option name="requirementsPath" value="$MODULE_DIR$/requirements.txt" />
   </component>
   <component name="TestRunnerService">
-    <option name="projectConfiguration" value="py.test" />
-    <option name="PROJECT_TEST_RUNNER" value="py.test" />
+    <option name="PROJECT_TEST_RUNNER" value="Unittests" />
   </component>
 </module>

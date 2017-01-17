@@ -21,13 +21,45 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from cerebralcortex.kernel.datatypes.span import Span
+
+from pyspark import RDD
+
+from cerebralcortex import CerebralCortex
+from cerebralcortex.kernel.datatypes.metadata import Metadata
 
 
-def window(datastream, windowsize):
-    rdd = datastream.rdd
-    result = rdd.map(lambda x: (int(x.timestamp / windowsize) * windowsize, (x.timestamp, x.sample)))
+class SpanStream:
+    def __init__(self,
+                 cerebralcortex: CerebralCortex,
+                 id: int = None,
+                 data: RDD = None,
+                 processing: dict = None,
+                 metadata: Metadata = Metadata()):
+        """
+        The primary object in Cerebral Cortex which represents data
+        :param cerebralcortex: Reference to the Cerebral Cortex object
+        :param id:
+        :param data:
+        :param processing:
+        :param metadata:
+        """
 
-    newMeta = {}
+        self._cc = cerebralcortex
+        self._id = id
+        self._processing = processing
+        self._metadata = metadata
+        self._spans = data
 
-    return Span([datastream], newMeta, result)
+    def set_spans(self, spandata):
+        self._spans = spandata
+
+    def getID(self):
+        return self._id
+
+    @classmethod
+    def from_stream(cls, inputstreams: list, data: list) -> SpanStream:
+        result = SpanStream(cerebralcortex=inputstreams[0]._cc,
+                            user=inputstreams[0]._user,
+                            data=data)
+
+        return result

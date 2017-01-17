@@ -26,13 +26,12 @@ from cerebralcortex.kernel.datatypes.datastream import DataStream
 
 def timestamp_correct(datastream: DataStream,
                       sampling_frequency: float = None) -> DataStream:
-    result = DataStream.from_datastream(datastream)
-
+    result = DataStream.from_datastream(datastream=[datastream], data=datastream.get_datapoints())
     return result
 
 
 def timestampCorrectAndSequenceAlign(datastreamArray: list,
                                      sampling_frequency: float = None) -> DataStream:
-    result = DataStream.from_datastream(datastreamArray[0])
+    result = DataStream.from_datastream(datastream=datastreamArray, data=datastreamArray[0].get_datapoints())
 
     return result

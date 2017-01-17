@@ -1,4 +1,4 @@
-# Copyright (c) 2016, MD2K Center of Excellence
+# Copyright (c) 2017, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -21,25 +21,27 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+import numpy as np
+from numpy.linalg import norm
+from sklearn import preprocessing
+
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 
 
-def ECGDataQuality(windows: object,
-                   bufferLength: int = 3,
-                   acceptableOutlierPercent: int = 50,
-                   outlierThresholdHigh: int = 4500,
-                   outlierThresholdLow: int = 20,
-                   badSegmentThreshod: int = 2,
-                   ecgBandLooseThreshold: int = 47) -> DataStream:
-    return None
+def normalize(datastream: DataStream):
+    data = np.array(datastream.get_datapoints())
+    preprocessing.normalize(data)
+
+    data = data.tolist()
+    result = DataStream.from_datastream(datastream=[datastream], data=data)
+
+    return result
 
 
-def RIPDataQuality(windows,
-                   bufferLength=5,
-                   acceptableOutlierPercent=50,
-                   outlierThresholdHigh=4500,
-                   outlierThresholdLow=20,
-                   badSegmentThreshod=2,
-                   ripBandOffThreshold=20,
-                   ripBandLooseThreshold=150):
-    return None
+def magnitude(datastream: DataStream):
+    data = norm(np.array(datastream.get_datapoints())).tolist()
+
+    result = DataStream.from_datastream(datastream=[datastream], data=data)
+
+    return result
