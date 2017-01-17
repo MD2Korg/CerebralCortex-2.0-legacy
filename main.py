@@ -21,6 +21,56 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+import uuid
+
+import cerebralcortex
+from cerebralcortex.kernel.datatypes.datapoint import DataPoint
+from cerebralcortex.kernel.datatypes.datastream import DataStream
+from cerebralcortex.legacy import find
+from cerebralcortex.kernel.window import window_sliding
+# from memphisdataprocessor.cStress import cStress
+from memphisdataprocessor.preprocessor import parser
+import numpy as np
+
+CC = cerebralcortex.CerebralCortex(master="local[*]", name="Memphis cStress Development App")
+
+basedir = "/home/cloudera/Desktop/data/"
+datastream_array=[]
+for i in range(1, 2):
+    participant = "SI%02d" % i
+
+    participant_UUID = uuid.uuid4()
+    try:
+        ecgarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "ecg"})).map(
+            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
+        ecg = DataStream(CC,participant_UUID, data=ecgarray)
+
+        # riparray = CC.readfile(find(basedir, {"participant": participant, "datasource": "rip"})).map(
+        #     parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
+        # rip = DataStream(participant_UUID, data=riparray)
+        #
+        # accelxarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelx"})).map(
+        #     parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
+        # accelx = DataStream(participant_UUID, data=accelxarray)
+        #
+        # accelyarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "accely"})).map(
+        #     parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
+        # accely = DataStream(participant_UUID, data=accelyarray)
+        #
+        # accelzarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelz"})).map(
+        #     parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
+        # accelz = DataStream(participant_UUID, data=accelzarray)
+        data_samples = np.array([(x.get_timestamp_epoch()/1000, x.get_sample()) for x in ecg.get_datapoints()])
+        windowed_ds = window_sliding(data_samples,120000,60000)
+        print (windowed_ds[1])
+    except Exception as e:
+        print("File missing for %s" % participant)
+        print(e)
+# datastream_array_rdd= CC.sc.parallelize(datastream_array)
+# datastream_array_rdd.foreach(cStress)
+
+
 # import uuid
 #
 # import cerebralcortex
@@ -79,50 +129,3 @@
 #         print("File missing for %s" % participant)
 #         # print(e)
 
-import uuid
-
-import cerebralcortex
-from cerebralcortex.kernel.datatypes.datapoint import DataPoint
-from cerebralcortex.kernel.datatypes.datastream import DataStream
-from cerebralcortex.legacy import find
-from cerebralcortex.kernel.window import window_sliding
-# from memphisdataprocessor.cStress import cStress
-from memphisdataprocessor.preprocessor import parser
-import numpy as np
-
-CC = cerebralcortex.CerebralCortex(master="local[*]", name="Memphis cStress Development App")
-
-basedir = "/home/cloudera/Desktop/data/"
-datastream_array=[]
-for i in range(1, 2):
-    participant = "SI%02d" % i
-
-    participant_UUID = uuid.uuid4()
-    try:
-        ecgarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "ecg"})).map(
-            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
-        ecg = DataStream(CC,participant_UUID, data=ecgarray)
-
-        # riparray = CC.readfile(find(basedir, {"participant": participant, "datasource": "rip"})).map(
-        #     parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
-        # rip = DataStream(participant_UUID, data=riparray)
-        #
-        # accelxarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelx"})).map(
-        #     parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
-        # accelx = DataStream(participant_UUID, data=accelxarray)
-        #
-        # accelyarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "accely"})).map(
-        #     parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
-        # accely = DataStream(participant_UUID, data=accelyarray)
-        #
-        # accelzarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelz"})).map(
-        #     parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
-        # accelz = DataStream(participant_UUID, data=accelzarray)
-        data_samples = np.array([(x.get_timestamp_epoch()/1000, x.get_sample()) for x in ecg.get_datapoints()])
-        windowed_ds = window_sliding(data_samples,120000,60000)
-        print (windowed_ds[1])
-    except Exception as e:
-        print("File missing for %s" % participant)
-        print(e)
-# datastream_array_rdd= CC.sc.parallelize(datastream_array)
-# datastream_array_rdd.foreach(cStress)
