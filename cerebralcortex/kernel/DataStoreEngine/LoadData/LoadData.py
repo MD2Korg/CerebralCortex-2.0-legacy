@@ -22,20 +22,20 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import cerebralcortex.kernel.DataStoreEngine.Configuration.DataStoreConfiguration as Config
+from pyspark.sql.types import *
+from pyspark.sql.functions import col, split
 
 class LoadData:
-    def __init__(self, sqlContext):
+    def __init__(self, sqlContext, keyspaceName="cortex"):
         """
         Constructor
         :param sqlContext:
         :param keyspaceName:
         """
-        self.keyspaceName = Config.Cassandra["KEYSPACE"]
+        self.keyspaceName = keyspaceName
         self.sqlContext = sqlContext
 
-
-    def loadData(self, tableName: str, whereClause: str) -> object:
+    def loadData(self, tableName: str, whereClause: str):
         """
         Establish connection with cassandra, load data, and filter based on the condition passed in whereClause argument
         :param tableName:
@@ -43,18 +43,17 @@ class LoadData:
         :return: spark dataframe
         """
         df = self.sqlContext.read.format("org.apache.spark.sql.cassandra").options(table=tableName,
-                                                                                   keyspace=self.keyspaceName).load().filter(
-            whereClause)
-
+                                                                                   keyspace=self.keyspaceName).load().filter(whereClause)
+        df = df.withColumn("sample",split(col("sample"), ",").cast(ArrayType(DoubleType())).alias("sample"))
 
         return df
 
     def datastream(self, datastreamID: int, startTime: int = "", endTime: int = "") -> object:
         """
-        :param datastreamID:
-        :param startTime:
-        :param endTime:
-        :return: spark dataframe
+        :param datastreamID: 
+        :param startTime: 
+        :param endTime: 
+        :return: spark dataframe 
         """
         datastreamID = str(datastreamID)
         startTime = str(startTime)
@@ -65,11 +64,11 @@ class LoadData:
         if (datastreamID == ""):
             raise "datastreamID cannot be empty"
         if (startTime != ""):
-            whereClause += " and datetime>='" + startTime + "'"
+            whereClause += " and timestamp>='" + startTime+"'"
         if (endTime != ""):
-            whereClause += " and datetime<='" + endTime + "'"
+            whereClause += " and timestamp<='" + endTime+"'"
 
-        return self.loadData(Config.Cassandra["DATAPOINT_TABLE"], whereClause)
+        return self.loadData("datapoint", whereClause)
 
     def span(self, spanID: int, startTime: int = "", endTime: int = "") -> object:
         """
@@ -87,8 +86,9 @@ class LoadData:
         if (spanID == ""):
             raise "spanID cannot be empty"
         if (startTime != ""):
-            whereClause += " and datetime>=" + startTime
+            whereClause += " and timestamp>=" + startTime
         if (endTime != ""):
-            whereClause += " and datetime<=" + endTime
+            whereClause += " and timestamp<=" + endTime
 
-        return self.loadData(Config.Cassandra["SPAN_TABLE"], whereClause)
+        return self.loadData("span", whereClause)
+
