@@ -32,7 +32,7 @@ from memphisdataprocessor.preprocessor import parser
 
 CC = cerebralcortex.CerebralCortex(master="local[*]", name="Memphis cStress Development App")
 
-basedir = "/Users/hnat/Desktop/data/"
+basedir = "/home/cloudera/Desktop/data/"
 
 for i in range(1, 2):
     participant = "SI%02d" % i

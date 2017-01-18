@@ -22,7 +22,8 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from cerebralcortex.kernel.datatypes.span import Span
-
+from collections import OrderedDict
+import numpy as np
 
 def window(datastream, windowsize):
     rdd = datastream.rdd
@@ -31,3 +32,39 @@ def window(datastream, windowsize):
     newMeta = {}
 
     return Span([datastream], newMeta, result)
+
+
+def epochAlign(timestamp, offset, after=False):
+
+    newTimestamp = Math.floor(timestamp / offset)*offset
+
+    if after:
+        newTimestamp += offset
+
+    return newTimestamp
+
+def window_sliding(data: list,
+                   window_size: int,
+                   window_offset: int):
+    """
+    Sliding Window Implementation
+
+    :param data: list
+    :param window_size: int
+    :param window_offset: int
+    :return: [(st,et),[dp,dp,dp,dp...],
+              (st,et),[dp,dp,dp,dp...],
+              ...]
+    """
+    if data==None:
+        return None
+    else:
+        starttime = data[0].get_timestamp_epoch()/1000
+        endtime = data[-1].get_timestamp_epoch()/1000
+        windowed_datastream = OrderedDict()
+
+        for ts in np.arange(starttime,endtime,window_offset):
+            key = (ts,ts+window_size)
+            values = [dp for dp in data if ts <= dp.get_timestamp_epoch()/1000 < ts+window_size]
+            windowed_datastream[key] = values
+    return windowed_datastream
