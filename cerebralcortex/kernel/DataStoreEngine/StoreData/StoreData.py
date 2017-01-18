@@ -23,18 +23,27 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class StoreData:
-    def __init__(self, sqlContext, dataType, keyspaceName="cortex"):
-        if(dataType=="raw"):
-            tableName = "datapoint2"
-        else:
-            tableName = "span"
-
-        self.sqlContext = sqlContext
-        self.tableName = tableName
+    def __init__(self, keyspaceName="cortex"):
         self.keyspaceName = keyspaceName
 
-    def storeData(self, df):
-        df.write.format("org.apache.spark.sql.cassandra") \
+    def storeData(self, dfData: object, tableName: str):
+        """
+        :param dfData:
+        :param tableName:
+        """
+        dfData.write.format("org.apache.spark.sql.cassandra") \
             .mode('append') \
-            .options(table=self.tableName, keyspace=self.keyspaceName) \
+            .options(table=tableName, keyspace=self.keyspaceName) \
             .save()
+
+    def datapoint(self, df: object):
+        """
+        :param df:
+        """
+        self.storeData(df, "datapoint2")
+
+    def span(self, df: object):
+        """
+        :param df:
+        """
+        self.storeData(df, "span")
