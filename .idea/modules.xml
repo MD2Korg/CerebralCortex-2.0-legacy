@@ -4,7 +4,6 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/CerebralCortex.iml" filepath="$PROJECT_DIR$/.idea/CerebralCortex.iml" />
       <module fileurl="file://$PROJECT_DIR$/cerebralcortex/kernel/DataStoreEngine/DataStoreDrivers.iml" filepath="$PROJECT_DIR$/cerebralcortex/kernel/DataStoreEngine/DataStoreDrivers.iml" />
-      <module fileurl="file://$PROJECT_DIR$/cerebralcortex/kernel/DataStoreEngine/tt.iml" filepath="$PROJECT_DIR$/cerebralcortex/kernel/DataStoreEngine/tt.iml" />
     </modules>
   </component>
 </project>
