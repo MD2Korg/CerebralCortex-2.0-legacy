@@ -25,7 +25,7 @@
 from pyspark.sql.types import *
 from pyspark.sql.functions import col, split
 
-class RetrieveData:
+class LoadData:
     def __init__(self, sqlContext, keyspaceName="cortex"):
         """
         Constructor
@@ -35,8 +35,20 @@ class RetrieveData:
         self.keyspaceName = keyspaceName
         self.sqlContext = sqlContext
 
-    # Retrieve Datastream(s) Data
-    def getDatastream(self, datastreamID: int, startTime: int = "", endTime: int = "") -> object:
+    def loadData(self, tableName: str, whereClause: str):
+        """
+        Establish connection with cassandra, load data, and filter based on the condition passed in whereClause argument
+        :param tableName:
+        :param whereClause:
+        :return: spark dataframe
+        """
+        df = self.sqlContext.read.format("org.apache.spark.sql.cassandra").options(table=tableName,
+                                                                                   keyspace=self.keyspaceName).load().filter(whereClause)
+        df = df.withColumn("sample",split(col("sample"), ",").cast(ArrayType(DoubleType())).alias("sample"))
+
+        return df
+
+    def datastream(self, datastreamID: int, startTime: int = "", endTime: int = "") -> object:
         """
         :param datastreamID: 
         :param startTime: 
@@ -58,7 +70,7 @@ class RetrieveData:
 
         return self.loadData("datapoint", whereClause)
 
-    def getSpan(self, spanID: int, startTime: int = "", endTime: int = "") -> object:
+    def span(self, spanID: int, startTime: int = "", endTime: int = "") -> object:
         """
         :param spanID:
         :param startTime:
@@ -80,15 +92,3 @@ class RetrieveData:
 
         return self.loadData("span", whereClause)
 
-    def loadData(self, tableName: str, whereClause: str):
-        """
-        Establish connection with cassandra, load data, and filter based on the condition passed in whereClause argument
-        :param tableName:
-        :param whereClause:
-        :return: spark dataframe
-        """
-        df = self.sqlContext.read.format("org.apache.spark.sql.cassandra").options(table=tableName,
-                                                                                   keyspace=self.keyspaceName).load().filter(whereClause)
-        df = df.withColumn("sample",split(col("sample"), ",").cast(ArrayType(DoubleType())).alias("sample"))
-
-        return df

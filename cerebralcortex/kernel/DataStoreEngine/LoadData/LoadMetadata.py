@@ -25,7 +25,7 @@
 import mysql.connector
 
 
-class RetrieveMetadata:
+class LoadMetadata:
     def __init__(self, databaseName="cortex", dbUserName="root", dbPassword="pass"):
         self.dbConnection = mysql.connector.connect(user=dbUserName,password=dbPassword, database=databaseName)
         self.cursor = self.dbConnection.cursor()
