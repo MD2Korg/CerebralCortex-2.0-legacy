@@ -43,12 +43,13 @@ def epochAlign(timestamp, offset, after=False):
 
     return newTimestamp
 
-#Sliding window function
 def window_sliding(data: list,
                    window_size: int,
                    window_offset: int):
     """
-    :param datastream: list
+    Sliding Window Implementation
+
+    :param data: list
     :param window_size: int
     :param window_offset: int
     :return: [(st,et),[dp,dp,dp,dp...],
