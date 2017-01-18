@@ -22,11 +22,10 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from memphisdataprocessor.dataquality import ECGDataQuality
-
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-from cerebralcortex.kernel.window import window
+
 from memphisdataprocessor.alignment import timestamp_correct, timestampCorrectAndSequenceAlign
+from memphisdataprocessor.signalprocessing.dataquality import ECGDataQuality, RIPDataQuality
 from memphisdataprocessor.signalprocessing.vector import normalize, magnitude
 
 
@@ -47,9 +46,9 @@ def cStress(rawecg: DataStream,
 
     # Algorithm Constants
     # TODO: Once metadata is implemented
-    ecgSamplingFrequency = rawecg.get_metadata('samplingFrequency')  # 64.0
-    ripSamplingFrequency = rawrip.get_metadata('samplingFrequency')  # 64.0 / 3.0
-    accelSamplingFrequency = rawaccelx.get_metadata('samplingFrequency')  # 64.0 / 6.0
+    # ecgSamplingFrequency = rawecg.get_metadata('samplingFrequency')  # 64.0
+    # ripSamplingFrequency = rawrip.get_metadata('samplingFrequency')  # 64.0 / 3.0
+    # accelSamplingFrequency = rawaccelx.get_metadata('samplingFrequency')  # 64.0 / 6.0
 
     # TODO: TWH Temporary
     ecgSamplingFrequency = 64.0
@@ -88,7 +87,7 @@ def cStress(rawecg: DataStream,
 
     accelerometerMagnitude = magnitude(normalize(accel))
 
-    windowMagnitudeSpans = window(accelerometerMagnitude, 10000)
+    # windowMagnitudeSpans = window(accelerometerMagnitude, 10000)
 
 
 

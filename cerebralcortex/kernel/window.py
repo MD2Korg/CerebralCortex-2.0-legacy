@@ -35,6 +35,17 @@ def epochAlign(timestamp, offset, after=False):
     return newTimestamp
 
 
+def window(data: list,
+           window_size: int):
+    """
+    Special case of a sliding window with no overlaps
+    :param data:
+    :param window_size:
+    :return:
+    """
+    return window_sliding(data, window_size=window_size, window_offset=window_size)
+
+
 def window_sliding(data: list,
                    window_size: int,
                    window_offset: int):
@@ -44,9 +55,9 @@ def window_sliding(data: list,
     :param data: list
     :param window_size: int
     :param window_offset: int
-    :return: [(st,et),[dp,dp,dp,dp...],
-              (st,et),[dp,dp,dp,dp...],
-              ...]
+    :return: OrderedDict representing [(st,et),[dp,dp,dp,dp...],
+                                       (st,et),[dp,dp,dp,dp...],
+                                        ...]
     """
     if data is None:
         return None

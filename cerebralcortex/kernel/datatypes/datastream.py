@@ -25,6 +25,7 @@ from uuid import UUID
 
 from cerebralcortex import CerebralCortex
 from cerebralcortex.kernel.datatypes.metadata import Metadata
+from cerebralcortex.kernel.datatypes.spanstream import SpanStream
 
 
 class DataStream:
@@ -65,16 +66,18 @@ class DataStream:
         return self._user
 
     @classmethod
-    def from_datastream(cls, datastream: list, data: list) -> DataStream:
+    def from_datastream(cls, inputstreams: list, data: list):
         """
 
-        :param datastream:
+        :param inputstreams:
         :param data:
         :return:
         """
-        result = DataStream(cerebralcortex=datastream._cc,
-                            user=datastream._user,
-                            data=data)
+        result = cls(cerebralcortex=inputstreams[0]._cc,
+                     user=inputstreams[0]._user,
+                     data=data)
+
+        # TODO: Something with provenance tracking from datastream list
 
         return result
 

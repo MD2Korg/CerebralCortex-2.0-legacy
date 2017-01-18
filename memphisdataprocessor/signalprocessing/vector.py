@@ -34,7 +34,7 @@ def normalize(datastream: DataStream):
     preprocessing.normalize(data)
 
     data = data.tolist()
-    result = DataStream.from_datastream(datastream=[datastream], data=data)
+    result = DataStream.from_datastream(inputstreams=[datastream], data=data)
 
     return result
 
@@ -42,6 +42,6 @@ def normalize(datastream: DataStream):
 def magnitude(datastream: DataStream):
     data = norm(np.array(datastream.get_datapoints())).tolist()
 
-    result = DataStream.from_datastream(datastream=[datastream], data=data)
+    result = DataStream.from_datastream(inputstreams=[datastream], data=data)
 
     return result

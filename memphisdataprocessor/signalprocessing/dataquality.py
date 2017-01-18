@@ -55,7 +55,9 @@ def ECGDataQuality(datastream: DataStream,
     :param ecgBandLooseThreshold:
     :return:
     """
-    windows = window(datastream.get_datapoints(), windowsize=windowsize)
+    windows = window(datastream.get_datapoints(), window_size=windowsize)
+
+    # TODO: Do something with windows here
 
     result = SpanStream.from_stream(inputstreams=[datastream])
 
@@ -94,7 +96,9 @@ def RIPDataQuality(datastream: DataStream,
     :param ripBandLooseThreshold:
     :return:
     """
-    windows = window(datastream.get_datapoints(), windowsize=windowsize)
+    windows = window(datastream.get_datapoints(), window_size=windowsize)
+
+    # TODO: Do something with windows here
 
     result = SpanStream.from_stream(inputstreams=[datastream])
 
