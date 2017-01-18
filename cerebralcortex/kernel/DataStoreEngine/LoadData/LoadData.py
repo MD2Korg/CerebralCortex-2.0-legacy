@@ -35,7 +35,7 @@ class LoadData:
         self.keyspaceName = keyspaceName
         self.sqlContext = sqlContext
 
-    def loadData(self, tableName: str, whereClause: str):
+    def loadData(self, tableName: str, whereClause: str)-> object:
         """
         Establish connection with cassandra, load data, and filter based on the condition passed in whereClause argument
         :param tableName:

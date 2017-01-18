@@ -26,13 +26,20 @@ import mysql.connector
 
 
 class LoadMetadata:
-    def __init__(self, databaseName="cortex", dbUserName="root", dbPassword="pass"):
-        self.dbConnection = mysql.connector.connect(user=dbUserName,password=dbPassword, database=databaseName)
+    def __init__(self, databaseName: str = "cortex", dbUserName: str = "root", dbPassword: str = "pass") -> object:
+        """
+        Constructor
+        :param databaseName:
+        :param dbUserName:
+        :param dbPassword:
+        """
+        self.dbConnection = mysql.connector.connect(user=dbUserName, password=dbPassword, database=databaseName)
         self.cursor = self.dbConnection.cursor()
 
-    def mySQLQueryBuilder(self, jsonQueryParam):
+    def mySQLQueryBuilder(self, jsonQueryParam: dict) -> str:
         """
-        This method accepts a json object to build a datastore query. Use the following json schema:
+        :param jsonQueryParam:
+            This method accepts a json object to build a datastore query. Use the following json schema:
             jsonQueryParam = {
                 "columnNames": "col1, col2",
                 "tableName": "table_name"
@@ -50,7 +57,7 @@ class LoadMetadata:
             "limitBy" is the number of records you want to retrieve. For example, 1, 10. This field is option and can be empty.
 
         Note: Please look at Cassandra database schema for available column names per table.
-
+        :return SQL Query (string)
         """
 
         if (jsonQueryParam["columnNames"].strip() != ""):
@@ -81,14 +88,12 @@ class LoadMetadata:
         else:
             limitBy = ""
 
-        qry = "Select " + columnNames + " from " + jsonQueryParam["tableName"] + " " + whereClause + " " + orderedByColumnName + " " + sortingOrder + " " + limitBy
+        qry = "Select " + columnNames + " from " + jsonQueryParam[
+            "tableName"] + " " + whereClause + " " + orderedByColumnName + " " + sortingOrder + " " + limitBy
         return qry
 
-#SELECT metadata->"$.DataStream.Metadata.Description" FROM `users`
-
-    #Retrieve metadata
-
-    def getDatastreamMetadata(self, datastreamID="", userID="", processinModuleID="", limitRecords=""):
+    def getDatastreamMetadata(self, datastreamID: int = "", userID: int = "", processinModuleID: int = "",
+                              limitRecords: str = "") -> list:
         """
         :param datastreamID:
         :param userID:
@@ -98,24 +103,25 @@ class LoadMetadata:
         """
         whereClause = ""
 
-        if(datastreamID!=""):
-            whereClause += "id="+datastreamID
-        if(userID!=""):
-            whereClause += " and user_id="+userID
-        if(processinModuleID!=""):
-            whereClause += " and processing_module_id="+processinModuleID
+        if (datastreamID != ""):
+            whereClause += "id=" + str(datastreamID)
+        if (userID != ""):
+            whereClause += " and user_id=" + str(userID)
+        if (processinModuleID != ""):
+            whereClause += " and processing_module_id=" + str(processinModuleID)
 
         jsonQueryParam = {
             "columnNames": "metadata",
             "tableName": "datastream",
             "whereClause": whereClause,
             "orderedByColumnName": "id",
-            "sortingOrder":"ASC",
+            "sortingOrder": "ASC",
             "limitBy": limitRecords
         }
         return self.executeQuery(self.mySQLQueryBuilder(jsonQueryParam))
 
-    def getSpanstreamMetadata(self, spanID="", sourceID="", processinModuleID="", limitRecords=""):
+    def getSpanstreamMetadata(self, spanID: int = "", sourceID: int = "", processinModuleID: int = "",
+                              limitRecords: str = "") -> list:
         """
         :param spanID:
         :param sourceID:
@@ -125,24 +131,24 @@ class LoadMetadata:
         """
         whereClause = ""
 
-        if(spanID!=""):
-            whereClause += "id="+spanID
-        if(sourceID!=""):
-            whereClause += " and source_id="+sourceID
-        if(processinModuleID!=""):
-            whereClause += " and processing_module_id="+processinModuleID
+        if (spanID != ""):
+            whereClause += "id=" + str(spanID)
+        if (sourceID != ""):
+            whereClause += " and source_id=" + str(sourceID)
+        if (processinModuleID != ""):
+            whereClause += " and processing_module_id=" + str(processinModuleID)
 
         jsonQueryParam = {
             "columnNames": "metadata",
             "tableName": "spanstream",
             "whereClause": whereClause,
             "orderedByColumnName": "id",
-            "sortingOrder":"ASC",
+            "sortingOrder": "ASC",
             "limitBy": limitRecords
         }
         return self.executeQuery(self.mySQLQueryBuilder(jsonQueryParam))
 
-    def getUserMetadata(self, userID="", limitRecords=""):
+    def getUserMetadata(self, userID: int = "", limitRecords: str = "") -> list:
         """
         :param userID:
         :param limitRecords: range (e.g., 1,10 or 130,200)
@@ -150,21 +156,20 @@ class LoadMetadata:
         """
         whereClause = ""
 
-        if(userID!=""):
-            whereClause += "id="+userID
+        if (userID != ""):
+            whereClause += "id=" + str(userID)
 
         jsonQueryParam = {
             "columnNames": "metadata",
             "tableName": "users",
             "whereClause": whereClause,
             "orderedByColumnName": "id",
-            "sortingOrder":"ASC",
+            "sortingOrder": "ASC",
             "limitBy": limitRecords
         }
         return self.executeQuery(self.mySQLQueryBuilder(jsonQueryParam))
 
-
-    def getProcessingModulemetadata(self, processinModuleID="", limitRecords=""):
+    def getProcessingModulemetadata(self, processinModuleID: int = "", limitRecords: str = "") -> list:
         """
         :param processinModuleID:
         :param limitRecords: range (e.g., 1,10 or 130,200)
@@ -172,21 +177,20 @@ class LoadMetadata:
         """
         whereClause = ""
 
-        if(processinModuleID!=""):
-            whereClause += "id="+processinModuleID
+        if (processinModuleID != ""):
+            whereClause += "id=" + str(processinModuleID)
 
         jsonQueryParam = {
             "columnNames": "metadata",
             "tableName": "processing_module",
             "whereClause": whereClause,
             "orderedByColumnName": "id",
-            "sortingOrder":"ASC",
+            "sortingOrder": "ASC",
             "limitBy": limitRecords
         }
         return self.executeQuery(self.mySQLQueryBuilder(jsonQueryParam))
 
-
-    def executeQuery(self,qry):
+    def executeQuery(self, qry: str) -> list:
         """
         :param qry: SQL Query
         :return: results of a query
@@ -196,4 +200,3 @@ class LoadMetadata:
         self.cursor.close()
         self.dbConnection.close()
         return results
-
