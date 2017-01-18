@@ -48,23 +48,22 @@ def window_sliding(data: list,
                    window_size: int,
                    window_offset: int):
     """
-
-    [(st,et),[dp,dp,dp,dp...],
-     (st,et),[dp,dp,dp,dp...],
-     ...]
     :param datastream: list
     :param window_size: int
     :param window_offset: int
-    :return:
+    :return: [(st,et),[dp,dp,dp,dp...],
+              (st,et),[dp,dp,dp,dp...],
+              ...]
     """
+    if data==None:
+        return None
+    else:
+        starttime = data[0].get_timestamp_epoch()/1000
+        endtime = data[-1].get_timestamp_epoch()/1000
+        windowed_datastream = OrderedDict()
 
-    starttime = data[0].get_timestamp_epoch()/1000
-    endtime = data[-1].get_timestamp_epoch()/1000
-    windowed_datastream = OrderedDict()
-
-    for ts in np.arange(starttime,endtime,window_offset):
-        key = (ts,ts+window_size)
-        values = [dp for dp in data if ts <= dp.get_timestamp_epoch()/1000 < ts+window_size]
-        # print (values)
-        windowed_datastream[key] = values
+        for ts in np.arange(starttime,endtime,window_offset):
+            key = (ts,ts+window_size)
+            values = [dp for dp in data if ts <= dp.get_timestamp_epoch()/1000 < ts+window_size]
+            windowed_datastream[key] = values
     return windowed_datastream
