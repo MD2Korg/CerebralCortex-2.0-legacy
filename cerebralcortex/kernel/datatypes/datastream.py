@@ -23,8 +23,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from uuid import UUID
 
-from pyspark import RDD
-
 from cerebralcortex import CerebralCortex
 from cerebralcortex.kernel.datatypes.metadata import Metadata
 
@@ -34,7 +32,7 @@ class DataStream:
                  cerebralcortex: CerebralCortex,
                  user: UUID,
                  id: int = None,
-                 data: RDD = None,
+                 data: list = None,
                  processing: dict = None,
                  sharing: dict = None,
                  metadata: Metadata = Metadata(),
