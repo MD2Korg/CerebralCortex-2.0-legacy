@@ -21,6 +21,7 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+import argparse
 import uuid
 
 import cerebralcortex
@@ -32,7 +33,14 @@ from memphisdataprocessor.preprocessor import parser
 
 CC = cerebralcortex.CerebralCortex(master="local[*]", name="Memphis cStress Development App")
 
-basedir = "/Users/hnat/Desktop/data/"
+argparser = argparse.ArgumentParser(description="Cerebral Cortex Test Application")
+argparser.add_argument('--base_directory')
+
+args = argparser.parse_args()
+
+# To run this program, please specific a program argument for base_directory that is the path to the test data files.
+# e.g. --base_directory /Users/hnat/data/
+basedir = args.base_directory
 
 for i in range(1, 2):
     participant = "SI%02d" % i
