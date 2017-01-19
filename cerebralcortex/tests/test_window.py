@@ -29,7 +29,7 @@ from random import random
 from time import sleep
 
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
-from cerebralcortex.kernel.window import window_sliding
+from cerebralcortex.kernel.window import window_sliding, epoch_align
 
 
 class TestWindowing(unittest.TestCase):
@@ -46,13 +46,26 @@ class TestWindowing(unittest.TestCase):
     def test_Window_Valid(self):
         data = []
         for i in range(0, 10):
-            data.append(DataPoint(i, 1, datetime.now(), random()))
+            data.append(DataPoint(1, datetime.now(), random()))
             sleep(0.1)
 
-        self.assertEquals(10, len(data))
+        self.assertEqual(10, len(data))
         result = window_sliding(data, window_size=500, window_offset=100)
+        # TODO: check results of function output
 
         self.assertIsInstance(result, OrderedDict)
+
+    def test_epoch_align(self):
+        timestamps = [(12345, 10, 12340),
+                      (12345, 100, 12300),
+                      (12345, 1000, 12000),
+                      (12345, 10000, 10000),
+                      (1234.5678, 100, 1200)
+                      ]
+        for ts, offset, correct in timestamps:
+            self.assertEqual(correct, epoch_align(ts, offset))
+            self.assertEqual(correct + offset, epoch_align(ts, offset, after=True))
+            self.assertNotEqual(correct, epoch_align(ts, offset + 1))
 
 
 if __name__ == '__main__':

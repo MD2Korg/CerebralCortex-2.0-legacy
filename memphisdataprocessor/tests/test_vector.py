@@ -22,41 +22,43 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import datetime
+import unittest
+from random import random
 
-from pyspark.sql import SparkSession
+import numpy as np
+
+from cerebralcortex.kernel.datatypes.datapoint import DataPoint
+from cerebralcortex.kernel.datatypes.datastream import DataStream
+from memphisdataprocessor.signalprocessing.vector import normalize, magnitude
 
 
-class CerebralCortex:
-    def __init__(self, master=None, name=None):
-        ss = SparkSession.builder
-        if name:
-            ss.appName(name)
-        if master:
-            ss.master(master)
+class TestVector(unittest.TestCase):
+    def setUp(self):
+        self.size = 100
+        self.ds = DataStream(None, None)
+        data = [DataPoint.from_tuple(self.ds, datetime.datetime.now(), [random() * 100, random() * 10, random()]) for i
+                in range(0, self.size)]
+        self.ds.set_datapoints(data)
 
-        self.sparkSession = ss.getOrCreate()
+    def test_normalize(self):
+        self.assertIsInstance(self.ds, DataStream)
+        self.assertEqual(len(self.ds.get_datapoints()), self.size)
 
-        self.sc = self.sparkSession.sparkContext
+        n = normalize(self.ds)
+        self.assertIsInstance(n, DataStream)
+        for dp in n.get_datapoints():
+            self.assertAlmostEqual(np.linalg.norm(dp.get_sample()), 1.0, delta=1e-6)
 
-    # def register(self, datastream):
-    #     """
-    #     Create a datastream in the system
-    #     :param datastream: Dictionary
-    #     """
-    #     pass
+    def test_magnitude(self):
+        self.assertIsInstance(self.ds, DataStream)
+        self.assertEqual(len(self.ds.get_datapoints()), self.size)
 
-    def find(self, query):
-        """
-        Find and return all matching datastreams
-        :param query: partial dictionary matching
-        """
-        pass
+        m = magnitude(normalize(self.ds))
+        self.assertIsInstance(m, DataStream)
+        for sample in m.get_datapoints():
+            self.assertAlmostEqual(sample.get_sample(), 1.0, delta=1e-6)
 
-    def readfile(self, filename):
-        return self.sc.textFile(filename)
 
-    def read(self):
-        pass
-
-    def save(self, datastreamID):
-        pass
+if __name__ == '__main__':
+    unittest.main()

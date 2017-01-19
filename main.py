@@ -46,6 +46,7 @@ for i in range(1, 2):
     participant = "SI%02d" % i
 
     participant_UUID = uuid.uuid4()
+    print(participant, participant_UUID)
     try:
         ecgRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "ecg"})).map(
             parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))

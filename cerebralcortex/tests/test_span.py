@@ -21,30 +21,33 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from datetime import datetime
+
+import datetime
+import unittest
+
+from cerebralcortex.kernel.datatypes.span import Span
 
 
-class Span:
-    def __init__(self,
-                 spanstream: int = None,
-                 starttime: datetime = None,
-                 endtime: datetime = None,
-                 label: object = None):
-        """
+class TestSpan(unittest.TestCase):
+    def test_Span_None(self):
+        dp = Span()
 
-        :param spanstream:
-        :param starttime: Python datetime object with timezone information
-        :param endtime: Python datetime object with timezone information
-        """
+        (starttime, endtime) = dp.get_time_tuple()
 
-        self._spanstream = spanstream
-        self._starttime = starttime
-        self._endtime = endtime
-        self._label = label
+        self.assertIsNone(starttime)
+        self.assertIsNone(endtime)
+        self.assertIsNone(dp.get_label())
 
-    def get_time_tuple(self):
-        result = (self._starttime, self._endtime)
-        return result
+    def test_Span(self):
+        ts = datetime.datetime.now()
+        dp = Span(spanstream=123, starttime=ts, endtime=ts + datetime.timedelta(hours=1), label='RED')
 
-    def get_label(self):
-        return self._label
+        (starttime, endtime) = dp.get_time_tuple()
+
+        self.assertEqual(ts, starttime)
+        self.assertEqual(ts + datetime.timedelta(hours=1), endtime)
+        self.assertEqual(dp.get_label(), 'RED')
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -21,18 +21,19 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+import math
 from collections import OrderedDict
 
 import numpy as np
 
 
-def epochAlign(timestamp, offset, after=False):
-    newTimestamp = Math.floor(timestamp / offset) * offset
+def epoch_align(timestamp, offset, after=False):
+    new_timestamp = math.floor(timestamp / offset) * offset
 
     if after:
-        newTimestamp += offset
+        new_timestamp += offset
 
-    return newTimestamp
+    return new_timestamp
 
 
 def window(data: list,
