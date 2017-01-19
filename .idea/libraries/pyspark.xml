@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="pyspark">
-    <CLASSES>
-      <root url="jar://$USER_HOME$/Downloads/spark-2.0.2-bin-hadoop2.7/python/lib/pyspark.zip!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
