@@ -94,8 +94,7 @@ def compute_r_peaks(thr1:float,
                     mov_win_int_signal:list,
                     valuepks: list,
                     pkt: list,
-                    rpeak_temp1:list=[],
-                    pkt_loc:list = [])->list:
+                    )->list:
     """
     This function does the adaptive thresholding of the signal to get the R-peak locations
 
@@ -114,6 +113,8 @@ def compute_r_peaks(thr1:float,
     sig_lev = 4 * thr1    # current signal level -any signal above thrice the signal level is discarded as a spurious value
     noise_lev = 0.1 * sig_lev #current noise level of the signal
     i=0
+    rpeak_temp1 = []
+    pkt_loc = []
     while i < len (pkt):
         # if for 166 percent of the present RR interval no peak is detected as R peak then thr2 is taken as the
         # R peak threshold and the maximum of the range is taken as a R peak and RR interval is updated accordingly
@@ -225,8 +226,7 @@ def detect_rpeak(ecg:list,fs:int=64,threshold:float=0.5)->list:
     :param threshold: initial threshold to detect the R peak in a signal normalized by the 90th percentile. .5 is default.
     :return: R peak array of tuples (timestamp, Rpeak interval)
     """
-    """
-    """
+
     sample=np.array([i[1] for i in ecg])
     timestamp=np.array([i[0] for i in ecg])
 
