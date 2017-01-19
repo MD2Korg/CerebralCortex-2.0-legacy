@@ -26,18 +26,18 @@ from datetime import datetime
 
 class Span:
     def __init__(self,
-                 id: int = None,
+                 spanstream: int = None,
                  starttime: datetime = None,
                  endtime: datetime = None,
                  label: object = None):
         """
 
-        :param id: Database provided element index
+        :param spanstream:
         :param starttime: Python datetime object with timezone information
         :param endtime: Python datetime object with timezone information
         """
 
-        self._id = None
+        self._spanstream = spanstream
         self._starttime = starttime
         self._endtime = endtime
         self._label = label
@@ -48,6 +48,3 @@ class Span:
 
     def get_label(self):
         return self._label
-
-    def __str__(self):
-        return '(' + str(self._starttime) + ',' + str(self._endtime) + ',' + str(self._metadata) + ')'

@@ -62,6 +62,9 @@ class DataStream:
     def get_datapoints(self):
         return self._datapoints
 
+    def set_datapoints(self, data):
+        self._datapoints = data
+
     def get_user(self):
         return self._user
 

@@ -26,22 +26,36 @@ import numpy as np
 from numpy.linalg import norm
 from sklearn import preprocessing
 
+from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 
 
 def normalize(datastream: DataStream):
-    data = np.array(datastream.get_datapoints())
-    preprocessing.normalize(data)
+    inputdata = np.array([i.get_sample() for i in datastream.get_datapoints()])
 
-    data = data.tolist()
-    result = DataStream.from_datastream(inputstreams=[datastream], data=data)
+    data = preprocessing.normalize(inputdata).tolist()
+
+    result_data = [DataPoint.from_tuple(datastream=datastream, timestamp=i.get_timestamp(), sample=None)
+                   for i in datastream.get_datapoints()]
+    for i, dp in enumerate(result_data):
+        dp.set_sample(data[i])
+
+    result = DataStream.from_datastream(inputstreams=[datastream], data=result_data)
 
     return result
 
 
 def magnitude(datastream: DataStream):
-    data = norm(np.array(datastream.get_datapoints())).tolist()
+    inputdata = np.array([i.get_sample() for i in datastream.get_datapoints()])
 
-    result = DataStream.from_datastream(inputstreams=[datastream], data=data)
+    data = norm(inputdata, axis=1).tolist()
+
+    result_data = [DataPoint.from_tuple(datastream=datastream, timestamp=i.get_timestamp(), sample=None)
+                   for i in datastream.get_datapoints()]
+
+    for i, dp in enumerate(result_data):
+        dp.set_sample(data[i])
+
+    result = DataStream.from_datastream(inputstreams=[datastream], data=result_data)
 
     return result
