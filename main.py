@@ -21,6 +21,7 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+import argparse
 import uuid
 
 import cerebralcortex
@@ -32,35 +33,42 @@ from memphisdataprocessor.preprocessor import parser
 
 CC = cerebralcortex.CerebralCortex(master="local[*]", name="Memphis cStress Development App")
 
-basedir = "/home/aungkon/Desktop/data/"
-datastream_array=[]
+argparser = argparse.ArgumentParser(description="Cerebral Cortex Test Application")
+argparser.add_argument('--base_directory',default='/home/aungkon/Desktop/data/')
+
+args = argparser.parse_args()
+
+# To run this program, please specific a program argument for base_directory that is the path to the test data files.
+# e.g. --base_directory /Users/hnat/data/
+basedir = args.base_directory
+print(basedir)
 for i in range(1, 2):
     participant = "SI%02d" % i
 
     participant_UUID = uuid.uuid4()
     try:
-        ecgarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "ecg"})).map(
-            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
-        ecg = DataStream(participant_UUID, data=ecgarray)
+        ecgRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "ecg"})).map(
+            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
+        ecg = DataStream(CC, participant_UUID, data=ecgRDD.collect())
 
-        # riparray = CC.readfile(find(basedir, {"participant": participant, "datasource": "rip"})).map(
-        #     parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
-        # rip = DataStream(participant_UUID, data=riparray)
-        #
-        # accelxarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelx"})).map(
-        #     parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
-        # accelx = DataStream(participant_UUID, data=accelxarray)
-        #
-        # accelyarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "accely"})).map(
-        #     parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
-        # accely = DataStream(participant_UUID, data=accelyarray)
-        #
-        # accelzarray = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelz"})).map(
-        #     parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint)).collect()
-        # accelz = DataStream(participant_UUID, data=accelzarray)
-        datastream_array.append(ecg)
+        ripRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "rip"})).map(
+            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
+        rip = DataStream(CC, participant_UUID, data=ripRDD.collect())
+
+        accelxRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelx"})).map(
+            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
+        accelx = DataStream(CC, participant_UUID, data=accelxRDD.collect())
+
+        accelyRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "accely"})).map(
+            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
+        accely = DataStream(CC, participant_UUID, data=accelyRDD.collect())
+
+        accelzRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelz"})).map(
+            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
+        accelz = DataStream(CC, participant_UUID, data=accelzRDD.collect())
+
+        cStressFeatures = cStress(ecg, rip, accelx, accely, accelz)
+
     except Exception as e:
         print("File missing for %s" % participant)
         print(e)
-datastream_array_rdd= CC.sc.parallelize(datastream_array)
-datastream_array_rdd.foreach(cStress)

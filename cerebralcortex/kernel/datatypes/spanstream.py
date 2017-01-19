@@ -21,40 +21,47 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from datetime import datetime
+
+from pyspark import RDD
+
+from cerebralcortex import CerebralCortex
+from cerebralcortex.kernel.datatypes.metadata import Metadata
 
 
-class Window:
+class SpanStream:
     def __init__(self,
+                 cerebralcortex: CerebralCortex,
                  id: int = None,
-                 starttime: datetime = None,
-                 endtime: datetime = None,
-                 metadata: dict = None):
+                 data: RDD = None,
+                 processing: dict = None,
+                 metadata: Metadata = Metadata()):
+        """
+        The primary object in Cerebral Cortex which represents data
+        :param cerebralcortex: Reference to the Cerebral Cortex object
+        :param id:
+        :param data:
+        :param processing:
+        :param metadata:
         """
 
-        :param id: Database provided element index
-        :param starttime: Python datetime object with timezone information
-        :param endtime: Python datetime object with timezone information
-        :param metadata: Python dictionary containing all metadata
-        """
-
-        self._id = None
-        self._datastream = None
-        self._starttime = starttime
-        self._endtime = endtime
+        self._cc = cerebralcortex
+        self._id = id
+        self._processing = processing
         self._metadata = metadata
+        self._spans = data
 
-    def get_time_tuple(self):
-        result = (self._starttime, self._endtime)
+    def set_spans(self, spandata):
+        self._spans = spandata
+
+    def getID(self):
+        return self._id
+
+    @classmethod
+    def from_stream(cls, inputstreams: list, data: list):
+        result = cls(cerebralcortex=inputstreams[0]._cc,
+                            user=inputstreams[0]._user,
+                            data=data)
+
+        # TODO: Something with provenance tracking from inputstreams list
+
         return result
-
-    def get_metadata(self):
-        return self._metadata
-
-    def add_metadata(self, new_metadata):
-        # TODO: Provide metadata merging
-        # TODO: Question from Tim, is this necessary?
-        pass
-
-    def __str__(self):
-        return '(' + str(self._starttime) + ',' + str(self._endtime) + ',' + str(self._metadata) + ')'

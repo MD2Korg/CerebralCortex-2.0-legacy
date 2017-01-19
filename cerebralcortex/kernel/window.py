@@ -21,13 +21,56 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from cerebralcortex.kernel.datatypes.window import Window
+from collections import OrderedDict
+
+import numpy as np
 
 
-def window(datastream, windowsize):
-    rdd = datastream.rdd
-    result = rdd.map(lambda x: (int(x.timestamp / windowsize) * windowsize, (x.timestamp, x.sample)))
+def epochAlign(timestamp, offset, after=False):
+    newTimestamp = Math.floor(timestamp / offset) * offset
 
-    newMeta = {}
+    if after:
+        newTimestamp += offset
 
-    return Window([datastream], newMeta, result)
+    return newTimestamp
+
+
+def window(data: list,
+           window_size: int):
+    """
+    Special case of a sliding window with no overlaps
+    :param data:
+    :param window_size:
+    :return:
+    """
+    return window_sliding(data, window_size=window_size, window_offset=window_size)
+
+
+def window_sliding(data: list,
+                   window_size: int,
+                   window_offset: int):
+    """
+    Sliding Window Implementation
+
+    :param data: list
+    :param window_size: int
+    :param window_offset: int
+    :return: OrderedDict representing [(st,et),[dp,dp,dp,dp...],
+                                       (st,et),[dp,dp,dp,dp...],
+                                        ...]
+    """
+    if data is None:
+        return None
+
+    if len(data) == 0:
+        return None
+
+    starttime = data[0].get_timestamp_epoch() / 1000
+    endtime = data[-1].get_timestamp_epoch() / 1000
+    windowed_datastream = OrderedDict()
+
+    for ts in np.arange(starttime, endtime, window_offset):
+        key = (ts, ts + window_size)
+        values = [dp for dp in data if ts <= dp.get_timestamp_epoch() / 1000 < ts + window_size]
+        windowed_datastream[key] = values
+    return windowed_datastream
