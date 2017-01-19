@@ -22,18 +22,16 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import cerebralcortex.kernel.DataStoreEngine.Configuration.DataStoreConfiguration as Config
 import mysql.connector
 
 
 class LoadMetadata:
-    def __init__(self, databaseName: str = "cortex", dbUserName: str = "root", dbPassword: str = "pass") -> object:
+    def __init__(self) -> object:
         """
         Constructor
-        :param databaseName:
-        :param dbUserName:
-        :param dbPassword:
         """
-        self.dbConnection = mysql.connector.connect(user=dbUserName, password=dbPassword, database=databaseName)
+        self.dbConnection = mysql.connector.connect(user=Config.MySQL["DB_USER"], password=Config.MySQL["DB_PASS"], database=Config.MySQL["DATABASE"])
         self.cursor = self.dbConnection.cursor()
 
     @classmethod
@@ -113,7 +111,7 @@ class LoadMetadata:
 
         jsonQueryParam = {
             "columnNames": "metadata",
-            "tableName": "datastream",
+            "tableName": Config.MySQL["DATASTREAM_TABLE"],
             "whereClause": whereClause,
             "orderedByColumnName": "id",
             "sortingOrder": "ASC",
@@ -141,7 +139,7 @@ class LoadMetadata:
 
         jsonQueryParam = {
             "columnNames": "metadata",
-            "tableName": "spanstream",
+            "tableName": Config.MySQL["SPANSTREAM_TABLE"],
             "whereClause": whereClause,
             "orderedByColumnName": "id",
             "sortingOrder": "ASC",
@@ -162,7 +160,7 @@ class LoadMetadata:
 
         jsonQueryParam = {
             "columnNames": "metadata",
-            "tableName": "users",
+            "tableName": Config.MySQL["USERS_TABLE"],
             "whereClause": whereClause,
             "orderedByColumnName": "id",
             "sortingOrder": "ASC",
@@ -183,7 +181,7 @@ class LoadMetadata:
 
         jsonQueryParam = {
             "columnNames": "metadata",
-            "tableName": "processing_module",
+            "tableName": Config.MySQL["PROCESSING_MODULE_TABLE"],
             "whereClause": whereClause,
             "orderedByColumnName": "id",
             "sortingOrder": "ASC",

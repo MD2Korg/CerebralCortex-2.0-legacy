@@ -22,18 +22,16 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import cerebralcortex.kernel.DataStoreEngine.Configuration.DataStoreConfiguration as Config
 import mysql.connector
 
 
 class StoreMetadata:
-    def __init__(self, databaseName: str = "cortex", dbUserName: str = "root", dbPassword: str = "pass"):
+    def __init__(self):
         """
         Constructor
-        :param databaseName:
-        :param dbUserName:
-        :param dbPassword:
         """
-        self.dbConnection = mysql.connector.connect(user=dbUserName, password=dbPassword, database=databaseName)
+        self.dbConnection = mysql.connector.connect(user=Config.MySQL["DB_USER"], password=Config.MySQL["DB_PASS"], database=Config.MySQL["DATABASE"])
         self.cursor = self.dbConnection.cursor()
 
     def storeDatastrem(self, userID: int, processingModuleID: int, metadata: dict, datastreamID: int = ""):
@@ -46,10 +44,10 @@ class StoreMetadata:
         :return:
         """
         if (datastreamID != ""):
-            qry = "UPDATE datastream set user_id='" + userID + "', processing_module_id='" + processingModuleID + "', metadata='" + metadata + "' where id=" + str(
+            qry = "UPDATE "+Config.MySQL["DATASTREAM_TABLE"]+" set user_id='" + userID + "', processing_module_id='" + processingModuleID + "', metadata='" + metadata + "' where id=" + str(
                 datastreamID)
         else:
-            qry = "INSERT INTO datastream (user_id, processing_module_id,metadata) VALUES(" + userID + "," + processingModuleID + "," + metadata + ")"
+            qry = "INSERT INTO "+Config.MySQL["DATASTREAM_TABLE"]+" (user_id, processing_module_id,metadata) VALUES(" + userID + "," + processingModuleID + "," + metadata + ")"
         self.executeQuery(qry)
 
     def storeSpanstrem(self, sourceIDs: int, processingModuleID: int, metadata: dict, spanID: int = ""):
@@ -62,10 +60,10 @@ class StoreMetadata:
         :return:
         """
         if (sourceIDs != ""):
-            qry = "UPDATE spanstream set source_ids='" + sourceIDs + "', processing_module_id='" + processingModuleID + "', metadata='" + metadata + "' where id=" + str(
+            qry = "UPDATE "+Config.MySQL["SPANSTREAM"]+" set source_ids='" + sourceIDs + "', processing_module_id='" + processingModuleID + "', metadata='" + metadata + "' where id=" + str(
                 spanID)
         else:
-            qry = "INSERT INTO spanstream (source_ids, processing_module_id,metadata) VALUES(" + sourceIDs + "," + processingModuleID + "," + metadata + ")"
+            qry = "INSERT INTO "+Config.MySQL["SPANSTREAM_TABLE"]+" (source_ids, processing_module_id,metadata) VALUES(" + sourceIDs + "," + processingModuleID + "," + metadata + ")"
         self.executeQuery(qry)
 
     def storeProcessingModule(self, metadata: dict, processingModuleID: int = ""):
@@ -76,9 +74,9 @@ class StoreMetadata:
         :return:
         """
         if (processingModuleID != ""):
-            qry = "UPDATE processing_module set metadata='" + metadata + "' where id=" + str(processingModuleID)
+            qry = "UPDATE "+Config.MySQL["PROCESSING_MODULE_TABLE"]+" set metadata='" + metadata + "' where id=" + str(processingModuleID)
         else:
-            qry = "INSERT INTO processing_module (metadata) VALUES('" + metadata + "')"
+            qry = "INSERT INTO "+Config.MySQL["PROCESSING_MODULE_TABLE"]+" (metadata) VALUES('" + metadata + "')"
 
         self.executeQuery(qry)
 
