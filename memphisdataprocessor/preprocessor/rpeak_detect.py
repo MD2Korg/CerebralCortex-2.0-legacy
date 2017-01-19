@@ -109,6 +109,7 @@ def compute_r_peaks(thr1:float,
     :param pkt_loc: location of the R peaks in the simple peak array detected in the process before
 
     """
+
     thr2 = 0.5 * thr1     # any signal value between thr2 and thr1 is a noise peak
     sig_lev = 4 * thr1    # current signal level -any signal above thrice the signal level is discarded as a spurious value
     noise_lev = 0.1 * sig_lev #current noise level of the signal
