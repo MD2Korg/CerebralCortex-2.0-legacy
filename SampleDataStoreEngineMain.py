@@ -5,22 +5,38 @@ from cerebralcortex.kernel.DataStoreEngine.LoadData.LoadData import LoadData
 from cerebralcortex.kernel.DataStoreEngine.StoreData.StoreData import StoreData
 from cerebralcortex.kernel.DataStoreEngine.LoadData.LoadMetadata import LoadMetadata
 from cerebralcortex.kernel.DataStoreEngine.StoreData.StoreMetadata import StoreMetadata
-
+from pyspark.sql.types import *
+from pyspark.sql.functions import *
+import json
+import math
 
 def main():
     conf = SparkConf().setAppName("DataStore")
     sc = SparkContext(conf=conf)
     sqlContext = SQLContext(sc)
 
-    df = LoadData(sqlContext).datastream(1991, "1970-01-18 03:52:48+0000", "2016-12-26 16:05:44+0000")
+    df = LoadData(sqlContext).datastream(1992)
     df.show()
-    StoreData().datapoint(df)
+    #StoreData().datapoint(df)
 
-    res = LoadMetadata().getProcessingModulemetadata(7)
-    print(res)
-    print(type(res))
+    #####################Example to calculate magnitude on the sample column#######
+    computeMagnitudeUDF = udf(computeMagnitude, StringType())
+    df = df.withColumn("Magnitude", computeMagnitudeUDF(col("sample")))
+    df.show()
 
-    StoreMetadata().storeProcessingModule('{"something":"som111wwww1"}', 8)
+
+    #res = LoadMetadata().getProcessingModulemetadata(7)
+    #print(res)
+    #print(type(res))
+
+    #StoreMetadata().storeProcessingModule('{"something":"som111wwww1"}', 8)
+
+def computeMagnitude(sample):
+    data = json.loads(sample)
+    for val in data:
+        val = val + math.pow(val,2)
+    magni = math.sqrt(val)
+    return magni
 
 
 if __name__ == "__main__":
