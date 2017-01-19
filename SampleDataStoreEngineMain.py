@@ -17,7 +17,7 @@ def main():
 
     df = LoadData(sqlContext).datastream(1992)
     df.show()
-    #StoreData().datapoint(df)
+    StoreData().datapoint(df)
 
     #####################Example to calculate magnitude on the sample column#######
     computeMagnitudeUDF = udf(computeMagnitude, StringType())
@@ -25,11 +25,10 @@ def main():
     df.show()
 
 
-    #res = LoadMetadata().getProcessingModulemetadata(7)
-    #print(res)
-    #print(type(res))
+    res = LoadMetadata().getProcessingModulemetadata(7)
+    print(res)
 
-    #StoreMetadata().storeProcessingModule('{"something":"som111wwww1"}', 8)
+    StoreMetadata().storeProcessingModule('{"key":"value"}', 8)
 
 def computeMagnitude(sample):
     data = json.loads(sample)

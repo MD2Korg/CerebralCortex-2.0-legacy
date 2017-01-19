@@ -22,19 +22,18 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from pyspark.sql.types import *
-from pyspark.sql.functions import col, split
-
+import cerebralcortex.kernel.DataStoreEngine.Configuration.DataStoreConfiguration as Config
 
 class LoadData:
-    def __init__(self, sqlContext, keyspaceName="cortex"):
+    def __init__(self, sqlContext):
         """
         Constructor
         :param sqlContext:
         :param keyspaceName:
         """
-        self.keyspaceName = keyspaceName
+        self.keyspaceName = Config.Cassandra["KEYSPACE"]
         self.sqlContext = sqlContext
+
 
     def loadData(self, tableName: str, whereClause: str) -> object:
         """
@@ -46,8 +45,7 @@ class LoadData:
         df = self.sqlContext.read.format("org.apache.spark.sql.cassandra").options(table=tableName,
                                                                                    keyspace=self.keyspaceName).load().filter(
             whereClause)
-        #This will split a column's value and convert it into an array.
-        #df = df.withColumn("sample", split(col("sample"), ",").cast(ArrayType(DoubleType())).alias("sample"))
+
 
         return df
 
@@ -71,7 +69,7 @@ class LoadData:
         if (endTime != ""):
             whereClause += " and datetime<='" + endTime + "'"
 
-        return self.loadData("datapoint", whereClause)
+        return self.loadData(Config.Cassandra["DATAPOINT_TABLE"], whereClause)
 
     def span(self, spanID: int, startTime: int = "", endTime: int = "") -> object:
         """
@@ -93,4 +91,4 @@ class LoadData:
         if (endTime != ""):
             whereClause += " and datetime<=" + endTime
 
-        return self.loadData("span", whereClause)
+        return self.loadData(Config.Cassandra["SPAN_TABLE"], whereClause)

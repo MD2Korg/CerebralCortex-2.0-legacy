@@ -22,9 +22,11 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import cerebralcortex.kernel.DataStoreEngine.Configuration.DataStoreConfiguration as Config
+
 class StoreData:
-    def __init__(self, keyspaceName="cortex"):
-        self.keyspaceName = keyspaceName
+    def __init__(self):
+        pass
 
     def storeData(self, dfData: object, tableName: str):
         """
@@ -33,17 +35,17 @@ class StoreData:
         """
         dfData.write.format("org.apache.spark.sql.cassandra") \
             .mode('append') \
-            .options(table=tableName, keyspace=self.keyspaceName) \
+            .options(table=tableName, keyspace=Config.Cassandra["KEYSPACE"]) \
             .save()
 
     def datapoint(self, df: object):
         """
         :param df:
         """
-        self.storeData(df, "datapoint2")
+        self.storeData(df, Config.Cassandra["DATAPOINT_TABLE"])
 
     def span(self, df: object):
         """
         :param df:
         """
-        self.storeData(df, "span")
+        self.storeData(df, Config.Cassandra["SPAN_TABLE"])
