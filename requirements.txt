@@ -2,3 +2,6 @@ numpy
 scipy
 sklearn
 pytz==2016.10
+numpy
+scipy
+sklearn

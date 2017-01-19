@@ -27,6 +27,7 @@ from cerebralcortex.kernel.datatypes.datastream import DataStream
 from memphisdataprocessor.alignment import timestamp_correct, timestampCorrectAndSequenceAlign
 from memphisdataprocessor.signalprocessing.dataquality import ECGDataQuality, RIPDataQuality
 from memphisdataprocessor.signalprocessing.vector import normalize, magnitude
+from memphisdataprocessor.preprocessor.ecg_processor import compute_rr_datastream
 
 
 def cStress(rawecg: DataStream,
@@ -54,6 +55,10 @@ def cStress(rawecg: DataStream,
     ecgSamplingFrequency = 64.0
     ripSamplingFrequency = 64.0 / 3.0
     accelSamplingFrequency = 64.0 / 6.0
+
+    # r-peak datastream computation
+    ecg_rr_datastream = compute_rr_datastream(rawecg,ecgSamplingFrequency)
+    print(ecg_rr_datastream[0:10])
 
     # Timestamp correct datastreams
     ecgCorrected = timestamp_correct(datastream=rawecg, sampling_frequency=ecgSamplingFrequency)

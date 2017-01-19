@@ -36,12 +36,16 @@ CC = cerebralcortex.CerebralCortex(master="local[*]", name="Memphis cStress Deve
 argparser = argparse.ArgumentParser(description="Cerebral Cortex Test Application")
 argparser.add_argument('--base_directory')
 
+# To run this program, please specific a program argument for base_directory that is the path to the test data files.
+# e.g. --base_directory /Users/hnat/data/
+basedir = args.base_directory
+
 args = argparser.parse_args()
 
 # To run this program, please specific a program argument for base_directory that is the path to the test data files.
 # e.g. --base_directory /Users/hnat/data/
 basedir = args.base_directory
-
+print(basedir)
 for i in range(1, 2):
     participant = "SI%02d" % i
 
