@@ -34,7 +34,11 @@ from memphisdataprocessor.preprocessor import parser
 CC = cerebralcortex.CerebralCortex(master="local[*]", name="Memphis cStress Development App")
 
 argparser = argparse.ArgumentParser(description="Cerebral Cortex Test Application")
-argparser.add_argument('--base_directory',default='/home/aungkon/Desktop/data/')
+argparser.add_argument('--base_directory')
+
+# To run this program, please specific a program argument for base_directory that is the path to the test data files.
+# e.g. --base_directory /Users/hnat/data/
+basedir = args.base_directory
 
 args = argparser.parse_args()
 
@@ -46,6 +50,7 @@ for i in range(1, 2):
     participant = "SI%02d" % i
 
     participant_UUID = uuid.uuid4()
+    print(participant, participant_UUID)
     try:
         ecgRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "ecg"})).map(
             parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))

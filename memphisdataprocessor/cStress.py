@@ -29,6 +29,7 @@ from memphisdataprocessor.signalprocessing.dataquality import ECGDataQuality, RI
 from memphisdataprocessor.signalprocessing.vector import normalize, magnitude
 from memphisdataprocessor.preprocessor.ecg_processor import compute_rr_datastream
 
+
 def cStress(rawecg: DataStream,
             rawrip: DataStream,
             rawaccelx: DataStream,

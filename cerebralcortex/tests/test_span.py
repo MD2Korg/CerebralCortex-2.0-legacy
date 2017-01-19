@@ -21,25 +21,33 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from cerebralcortex.kernel.datatypes.datastream import DataStream
+
+import datetime
+import unittest
+
+from cerebralcortex.kernel.datatypes.span import Span
 
 
-def ECGDataQuality(windows: object,
-                   bufferLength: int = 3,
-                   acceptableOutlierPercent: int = 50,
-                   outlierThresholdHigh: int = 4500,
-                   outlierThresholdLow: int = 20,
-                   badSegmentThreshod: int = 2,
-                   ecgBandLooseThreshold: int = 47) -> DataStream:
-    return None
+class TestSpan(unittest.TestCase):
+    def test_Span_None(self):
+        dp = Span()
+
+        (starttime, endtime) = dp.get_time_tuple()
+
+        self.assertIsNone(starttime)
+        self.assertIsNone(endtime)
+        self.assertIsNone(dp.get_label())
+
+    def test_Span(self):
+        ts = datetime.datetime.now()
+        dp = Span(spanstream=123, starttime=ts, endtime=ts + datetime.timedelta(hours=1), label='RED')
+
+        (starttime, endtime) = dp.get_time_tuple()
+
+        self.assertEqual(ts, starttime)
+        self.assertEqual(ts + datetime.timedelta(hours=1), endtime)
+        self.assertEqual(dp.get_label(), 'RED')
 
 
-def RIPDataQuality(windows,
-                   bufferLength=5,
-                   acceptableOutlierPercent=50,
-                   outlierThresholdHigh=4500,
-                   outlierThresholdLow=20,
-                   badSegmentThreshod=2,
-                   ripBandOffThreshold=20,
-                   ripBandLooseThreshold=150):
-    return None
+if __name__ == '__main__':
+    unittest.main()

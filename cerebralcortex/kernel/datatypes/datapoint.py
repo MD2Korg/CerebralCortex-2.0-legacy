@@ -27,25 +27,25 @@ from datetime import datetime, timezone
 
 class DataPoint:
     def __init__(self,
-                 id: int = None,
                  datastream: int = None,
                  timestamp: datetime = None,
                  sample: object = None):
         """
 
-        :param id: Database provided element index
         :param datastream: Cerebral Cortex provided data stream identifier
         :param timestamp: Python datetime object with timezone information
         :param sample: Python object representing any data
         """
 
-        self._id = id
         self._datastreamID = datastream
         self._timestamp = timestamp
         self._sample = sample
 
     def get_sample(self) -> object:
         return self._sample
+
+    def set_sample(self, value):
+        self._sample = value
 
     def get_timestamp(self) -> datetime:
         return self._timestamp
@@ -60,9 +60,6 @@ class DataPoint:
     def get_datastream_id(self) -> int:
         return self._datastreamID
 
-    def __str__(self):
-        return '(' + str(self._datastreamID) + ',' + str(self._timestamp) + ',' + str(self.sample) + ')'
-
     @classmethod
-    def from_tuple(cls, timestamp, value):
-        return DataPoint(timestamp=timestamp, sample=value)
+    def from_tuple(cls, datastream, timestamp, sample):
+        return cls(datastream=datastream, timestamp=timestamp, sample=sample)
