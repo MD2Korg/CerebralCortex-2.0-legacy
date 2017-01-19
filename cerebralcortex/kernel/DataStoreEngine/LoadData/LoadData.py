@@ -46,16 +46,17 @@ class LoadData:
         df = self.sqlContext.read.format("org.apache.spark.sql.cassandra").options(table=tableName,
                                                                                    keyspace=self.keyspaceName).load().filter(
             whereClause)
-        df = df.withColumn("sample", split(col("sample"), ",").cast(ArrayType(DoubleType())).alias("sample"))
+        #This will split a column's value and convert it into an array.
+        #df = df.withColumn("sample", split(col("sample"), ",").cast(ArrayType(DoubleType())).alias("sample"))
 
         return df
 
     def datastream(self, datastreamID: int, startTime: int = "", endTime: int = "") -> object:
         """
-        :param datastreamID: 
-        :param startTime: 
-        :param endTime: 
-        :return: spark dataframe 
+        :param datastreamID:
+        :param startTime:
+        :param endTime:
+        :return: spark dataframe
         """
         datastreamID = str(datastreamID)
         startTime = str(startTime)
@@ -66,9 +67,9 @@ class LoadData:
         if (datastreamID == ""):
             raise "datastreamID cannot be empty"
         if (startTime != ""):
-            whereClause += " and timestamp>='" + startTime + "'"
+            whereClause += " and datetime>='" + startTime + "'"
         if (endTime != ""):
-            whereClause += " and timestamp<='" + endTime + "'"
+            whereClause += " and datetime<='" + endTime + "'"
 
         return self.loadData("datapoint", whereClause)
 
@@ -88,8 +89,8 @@ class LoadData:
         if (spanID == ""):
             raise "spanID cannot be empty"
         if (startTime != ""):
-            whereClause += " and timestamp>=" + startTime
+            whereClause += " and datetime>=" + startTime
         if (endTime != ""):
-            whereClause += " and timestamp<=" + endTime
+            whereClause += " and datetime<=" + endTime
 
         return self.loadData("span", whereClause)
