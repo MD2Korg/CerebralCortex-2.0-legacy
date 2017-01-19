@@ -24,48 +24,62 @@
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from memphisdataprocessor.preprocessor.rpeak_detect import detect_rpeak
 import numpy as np
-import uuid
 
-def classify_ecg_window(window):
-    '''
-    param
-    window --window of raw ecg tuples
 
-    returns a decision on the window based on three conditions
-    '''
+def classify_ecg_window(window: list,range_threshold:int = 200, slope_threshold:int = 50, maximum_value:int=4000):
+    """
+    :param window: window of raw ecg tuples
+    :param range_threshold: range of the window
+    :param slope_threshold: median slope of the window
+    :param maximum_value: maximum value
+    :return: True/False decision based on the three parameters
+
+    """
     values = np.array([i[1] for i in window])
-    if max(values) - min(values) < 200:
+    if max(values) - min(values) < range_threshold:
         return False
-    if max(values) > 4000:
+    if max(values) > maximum_value:
         return False
-    if np.median(np.abs(np.diff(values))) > 50:
+    if np.median(np.abs(np.diff(values))) > slope_threshold:
         return False
     return True
 
-def filter_bad_ecg(ecg_array,fs):
-    '''
-    param
-    ecg_array-- is a list of raw ecg tuples
-    fs -- is the sampling frequency
+def filter_bad_ecg(ecg_array: list, fs: float, no_of_secs:int = 2)-> list:
+    """
+    This function splits the ecg array into non overlapping windows of specified seconds
+    and assigns a binary decision on them returns a filtered ecg array which contains
+    only the windows to be kept
 
-    This function splits the ecg array into non overlapping windows of 2 seconds and assigns a binary decision on them
+    :param ecg_array: raw ecg array
+    :param fs: sampling frequency
+    :param no_of_secs : no of seconds each window would be long
+    :return:  filtered ecg array
+    """
 
-    returns a filtered ecg array which contains only the windows to be kept
-    '''
-    window_length = int(2 * fs)
+    window_length = int(no_of_secs * fs)
 
     ecg_filtered_array = []
     for i in range(0,len(ecg_array)-window_length-1,window_length):
+        #get the index of the window elements
         index = [k for k in range(i,i+window_length)]
-        if classify_ecg_window(ecg_array[index])==True:
+
+        if classify_ecg_window(ecg_array[index]):
+            #append the elements to the returned array
             for x in ecg_array[index]:
                 ecg_filtered_array.append((x[0],x[1]))
 
     return ecg_filtered_array
 
 
-def compute_rr_datastream(ecg:DataStream,fs:float)->DataStream:
+def compute_rr_datastream(ecg:DataStream,fs:float)-> list:
+    # get the ecg array from datastream
     ecg_array = np.array([(x.get_timestamp_epoch()/1000, x.get_sample()) for x in ecg.get_datapoints()])
+
+    # filter the ecg array
     ecg_filtered_array = filter_bad_ecg(ecg_array,fs)
+
+    #compute the r-peak array
     ecg_rpeak_array = detect_rpeak(ecg_filtered_array,fs)
-    return DataStream(uuid.uuid4(),data=ecg_rpeak_array)
+
+    # return DataStream(ecg.get_user(),data=ecg_rpeak_array)
+    return ecg_rpeak_array
