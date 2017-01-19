@@ -24,6 +24,7 @@
 
 import mysql.connector
 
+
 class StoreMetadata:
     def __init__(self, databaseName: str = "cortex", dbUserName: str = "root", dbPassword: str = "pass"):
         """
@@ -32,7 +33,7 @@ class StoreMetadata:
         :param dbUserName:
         :param dbPassword:
         """
-        self.dbConnection = mysql.connector.connect(user=dbUserName,password=dbPassword, database=databaseName)
+        self.dbConnection = mysql.connector.connect(user=dbUserName, password=dbPassword, database=databaseName)
         self.cursor = self.dbConnection.cursor()
 
     def storeDatastrem(self, userID: int, processingModuleID: int, metadata: dict, datastreamID: int = ""):
@@ -44,13 +45,14 @@ class StoreMetadata:
         :param datastreamID:
         :return:
         """
-        if(datastreamID!=""):
-            qry = "UPDATE datastream set user_id='"+userID+"', processing_module_id='"+processingModuleID+"', metadata='"+metadata+"' where id="+str(datastreamID)
+        if (datastreamID != ""):
+            qry = "UPDATE datastream set user_id='" + userID + "', processing_module_id='" + processingModuleID + "', metadata='" + metadata + "' where id=" + str(
+                datastreamID)
         else:
-            qry = "INSERT INTO datastream (user_id, processing_module_id,metadata) VALUES("+userID+","+processingModuleID+","+metadata+")"
+            qry = "INSERT INTO datastream (user_id, processing_module_id,metadata) VALUES(" + userID + "," + processingModuleID + "," + metadata + ")"
         self.executeQuery(qry)
 
-    def storeSpanstrem(self, sourceIDs: int, processingModuleID: int, metadata: dict, spanID: int=""):
+    def storeSpanstrem(self, sourceIDs: int, processingModuleID: int, metadata: dict, spanID: int = ""):
         """
         This method will update a record if spanID is provided else it would insert a new record.
         :param sourceIDs:
@@ -59,23 +61,24 @@ class StoreMetadata:
         :param spanID:
         :return:
         """
-        if(sourceIDs!=""):
-            qry = "UPDATE spanstream set source_ids='"+sourceIDs+"', processing_module_id='"+processingModuleID+"', metadata='"+metadata+"' where id="+str(spanID)
+        if (sourceIDs != ""):
+            qry = "UPDATE spanstream set source_ids='" + sourceIDs + "', processing_module_id='" + processingModuleID + "', metadata='" + metadata + "' where id=" + str(
+                spanID)
         else:
-            qry = "INSERT INTO spanstream (source_ids, processing_module_id,metadata) VALUES("+sourceIDs+","+processingModuleID+","+metadata+")"
+            qry = "INSERT INTO spanstream (source_ids, processing_module_id,metadata) VALUES(" + sourceIDs + "," + processingModuleID + "," + metadata + ")"
         self.executeQuery(qry)
 
-    def storeProcessingModule(self, metadata: dict, processingModuleID: int=""):
+    def storeProcessingModule(self, metadata: dict, processingModuleID: int = ""):
         """
         This method will update a record if processingModuleID is provided else it would insert a new record.
         :param metadata:
         :param processingModuleID:
         :return:
         """
-        if(processingModuleID!=""):
-            qry = "UPDATE processing_module set metadata='"+metadata+"' where id="+str(processingModuleID)
+        if (processingModuleID != ""):
+            qry = "UPDATE processing_module set metadata='" + metadata + "' where id=" + str(processingModuleID)
         else:
-            qry = "INSERT INTO processing_module (metadata) VALUES('"+metadata+"')"
+            qry = "INSERT INTO processing_module (metadata) VALUES('" + metadata + "')"
 
         self.executeQuery(qry)
 

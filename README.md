@@ -27,5 +27,3 @@ Add `pyspark.zip` to your project libraries:
 *  Give your new library a name, "My Python not Java Library"
 *  And finally click "Add Selected"
 
-###Dependencies
-* mysql-connector-python==2.0.4
