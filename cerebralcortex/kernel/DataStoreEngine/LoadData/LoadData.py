@@ -25,6 +25,7 @@
 from pyspark.sql.types import *
 from pyspark.sql.functions import col, split
 
+
 class LoadData:
     def __init__(self, sqlContext, keyspaceName="cortex"):
         """
@@ -35,7 +36,7 @@ class LoadData:
         self.keyspaceName = keyspaceName
         self.sqlContext = sqlContext
 
-    def loadData(self, tableName: str, whereClause: str)-> object:
+    def loadData(self, tableName: str, whereClause: str) -> object:
         """
         Establish connection with cassandra, load data, and filter based on the condition passed in whereClause argument
         :param tableName:
@@ -43,8 +44,9 @@ class LoadData:
         :return: spark dataframe
         """
         df = self.sqlContext.read.format("org.apache.spark.sql.cassandra").options(table=tableName,
-                                                                                   keyspace=self.keyspaceName).load().filter(whereClause)
-        df = df.withColumn("sample",split(col("sample"), ",").cast(ArrayType(DoubleType())).alias("sample"))
+                                                                                   keyspace=self.keyspaceName).load().filter(
+            whereClause)
+        df = df.withColumn("sample", split(col("sample"), ",").cast(ArrayType(DoubleType())).alias("sample"))
 
         return df
 
@@ -64,9 +66,9 @@ class LoadData:
         if (datastreamID == ""):
             raise "datastreamID cannot be empty"
         if (startTime != ""):
-            whereClause += " and timestamp>='" + startTime+"'"
+            whereClause += " and timestamp>='" + startTime + "'"
         if (endTime != ""):
-            whereClause += " and timestamp<='" + endTime+"'"
+            whereClause += " and timestamp<='" + endTime + "'"
 
         return self.loadData("datapoint", whereClause)
 
@@ -91,4 +93,3 @@ class LoadData:
             whereClause += " and timestamp<=" + endTime
 
         return self.loadData("span", whereClause)
-

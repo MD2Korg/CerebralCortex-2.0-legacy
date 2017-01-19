@@ -12,6 +12,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="pyspark" level="project" />
     <orderEntry type="library" exported="" name="PySparkLib" level="project" />
+    <orderEntry type="library" name="Python 3.5.2 (/usr/bin/python3.5) interpreter library" level="application" />
   </component>
   <component name="PackageRequirementsSettings">
     <option name="requirementsPath" value="$MODULE_DIR$/requirements.txt" />

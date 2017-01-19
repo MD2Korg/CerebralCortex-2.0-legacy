@@ -36,6 +36,7 @@ class LoadMetadata:
         self.dbConnection = mysql.connector.connect(user=dbUserName, password=dbPassword, database=databaseName)
         self.cursor = self.dbConnection.cursor()
 
+    @classmethod
     def mySQLQueryBuilder(self, jsonQueryParam: dict) -> str:
         """
         :param jsonQueryParam:
