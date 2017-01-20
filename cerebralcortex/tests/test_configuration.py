@@ -56,25 +56,5 @@ class TestConfiguration(unittest.TestCase):
         self.assertEqual(mysql['user_table'], 'user')
 
 
-#
-# cassandra:
-# keyspace: cortex
-# db_user: ""
-# db_pass: ""
-# datapoint_table: datapoint
-# span_table: span
-#
-#
-# mysql:
-# database: cortex
-# db_user: root
-# db_pass: pass
-# datastream_table: datastream
-# spanstream_table: span
-# processing_module_table: processing
-# user_table: user
-
-
-
 if __name__ == '__main__':
     unittest.main()
