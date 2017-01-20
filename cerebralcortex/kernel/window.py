@@ -21,23 +21,33 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 import math
 from collections import OrderedDict
+from datetime import datetime, timedelta
 
-import numpy as np
+import pytz
 
 
-def epoch_align(timestamp, offset, after=False):
-    new_timestamp = math.floor(timestamp / offset) * offset
+def epoch_align(ts: datetime, offset: float, after: bool = False) -> datetime:
+    """
+    Epoch timestamp alignment based on offset
+    :param ts: datatime object representing the timestamp to start with
+    :param offset: seconds as a float, supporting microsecond precision
+    :param after: Flag designating if the result should be after ts
+    :return: aligned datetime object
+    """
+    new_timestamp = math.floor(ts.timestamp() * 1e6 / (offset * 1e6)) * offset * 1e6
 
     if after:
-        new_timestamp += offset
+        new_timestamp += offset * 1e6
 
-    return new_timestamp
+    result = datetime.fromtimestamp(new_timestamp / 1e6, pytz.timezone('US/Central'))
+    return result
 
 
 def window(data: list,
-           window_size: int):
+           window_size: float):
     """
     Special case of a sliding window with no overlaps
     :param data:
@@ -47,15 +57,39 @@ def window(data: list,
     return window_sliding(data, window_size=window_size, window_offset=window_size)
 
 
+def window_iter(iterable, window_size, window_offset):
+    i = iter(iterable)
+
+    win_size = timedelta(seconds=window_size)
+    starttime = epoch_align(iterable[0].get_timestamp(), window_offset)
+    endtime = starttime + win_size
+    key = (starttime, endtime)
+
+    win = []
+    for e in i:
+        ts = e.get_timestamp()
+        if ts > endtime:
+            yield key, win
+
+            starttime = epoch_align(e.get_timestamp(), window_offset)
+            endtime = starttime + win_size
+            key = (starttime, endtime)
+
+            win = [i for i in win if i.get_timestamp() > starttime]
+
+        win.append(e)
+    yield key, win
+
+
 def window_sliding(data: list,
-                   window_size: int,
-                   window_offset: int):
+                   window_size: float,
+                   window_offset: float):
     """
     Sliding Window Implementation
 
     :param data: list
-    :param window_size: int
-    :param window_offset: int
+    :param window_size: float
+    :param window_offset: float
     :return: OrderedDict representing [(st,et),[dp,dp,dp,dp...],
                                        (st,et),[dp,dp,dp,dp...],
                                         ...]
@@ -66,12 +100,9 @@ def window_sliding(data: list,
     if len(data) == 0:
         return None
 
-    starttime = data[0].get_timestamp_epoch() / 1000
-    endtime = data[-1].get_timestamp_epoch() / 1000
     windowed_datastream = OrderedDict()
 
-    for ts in np.arange(starttime, endtime, window_offset):
-        key = (ts, ts + window_size)
-        values = [dp for dp in data if ts <= dp.get_timestamp_epoch() / 1000 < ts + window_size]
-        windowed_datastream[key] = values
+    count = 0
+    for key, data in window_iter(data, window_size, window_offset):
+        windowed_datastream[key] = data
     return windowed_datastream

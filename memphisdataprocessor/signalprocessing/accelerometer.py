@@ -1,4 +1,4 @@
-# Copyright (c) 2016, MD2K Center of Excellence
+# Copyright (c) 2017, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,45 +22,18 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from pyspark import RDD
+from cerebralcortex.kernel.datatypes.datastream import DataStream
+from cerebralcortex.kernel.window import window
+from memphisdataprocessor.signalprocessing.vector import magnitude, normalize
 
-from cerebralcortex import CerebralCortex
-from cerebralcortex.kernel.datatypes.metadata import Metadata
 
+def accelerometerFeatures(accel: DataStream):
+    accelerometerMagnitude = magnitude(normalize(accel))
 
-class SpanStream:
-    def __init__(self,
-                 cerebralcortex: CerebralCortex,
-                 id: int = None,
-                 data: RDD = None,
-                 processing: dict = None,
-                 metadata: Metadata = Metadata()):
-        """
-        The primary object in Cerebral Cortex which represents data
-        :param cerebralcortex: Reference to the Cerebral Cortex object
-        :param id:
-        :param data:
-        :param processing:
-        :param metadata:
-        """
+    windowMagnitudeSpans = window(accelerometerMagnitude, 10000)
 
-        self._cc = cerebralcortex
-        self._id = id
-        self._processing = processing
-        self._metadata = metadata
-        self._spans = data
+    pprint(windowMagnitudeSpans)
 
-    def set_spans(self, spandata):
-        self._spans = spandata
-
-    def getID(self):
-        return self._id
-
-    @classmethod
-    def from_stream(cls, inputstreams: list):
-        result = cls(cerebralcortex=inputstreams[0]._cc,
-                     user=inputstreams[0]._user)
-
-        # TODO: Something with provenance tracking from inputstreams list
-
-        return result
+    accelerometerWinMagDeviations = None
+    accelActivity = None
+    return accelerometerMagnitude, accelerometerWinMagDeviations, accelActivity

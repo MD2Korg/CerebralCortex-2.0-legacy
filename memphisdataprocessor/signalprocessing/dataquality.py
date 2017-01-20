@@ -21,11 +21,9 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from datetime import datetime
 from enum import Enum
 
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-from cerebralcortex.kernel.datatypes.span import Span
 from cerebralcortex.kernel.datatypes.spanstream import SpanStream
 from cerebralcortex.kernel.window import window
 
@@ -36,7 +34,7 @@ class DataQuality(Enum):
 
 
 def ECGDataQuality(datastream: DataStream,
-                   windowsize: int = 5000,
+                   windowsize: float = 5.0,
                    bufferLength: int = 3,
                    acceptableOutlierPercent: int = 50,
                    outlierThresholdHigh: int = 4500,
@@ -62,20 +60,20 @@ def ECGDataQuality(datastream: DataStream,
     result = SpanStream.from_stream(inputstreams=[datastream])
 
     # Do something here for data quality
-    ecgQuality = []
-    for i in range(1, 10):
-        ecgQuality.append(Span(result.getID(),
-                               starttime=datetime.now(),
-                               endtime=datetime.now(),
-                               label=DataQuality.GOOD))
-
-    result.set_spans(ecgQuality)
+    # ecgQuality = []
+    # for i in range(1, 10):
+    #     ecgQuality.append(Span(result.getID(),
+    #                            starttime=datetime.now(),
+    #                            endtime=datetime.now(),
+    #                            label=DataQuality.GOOD))
+    #
+    # result.set_spans(ecgQuality)
 
     return result
 
 
 def RIPDataQuality(datastream: DataStream,
-                   windowsize: int = 5000,
+                   windowsize: float = 5.0,
                    bufferLength=5,
                    acceptableOutlierPercent=50,
                    outlierThresholdHigh=4500,
@@ -102,14 +100,14 @@ def RIPDataQuality(datastream: DataStream,
 
     result = SpanStream.from_stream(inputstreams=[datastream])
 
-    # Do something here for data quality
-    ripQuality = []
-    for i in range(1, 10):
-        ripQuality.append(Span(result.getID(),
-                               starttime=datetime.now(),
-                               endtime=datetime.now(),
-                               label=DataQuality.GOOD))
-
-    result.set_spans(ripQuality)
+    # # Do something here for data quality
+    # ripQuality = []
+    # for i in range(1, 10):
+    #     ripQuality.append(Span(result.getID(),
+    #                            starttime=datetime.now(),
+    #                            endtime=datetime.now(),
+    #                            label=DataQuality.GOOD))
+    #
+    # result.set_spans(ripQuality)
 
     return result
