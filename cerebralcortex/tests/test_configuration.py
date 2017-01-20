@@ -21,47 +21,40 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
-from pyspark.sql import SparkSession
+import os
+import unittest
 
 from cerebralcortex.configuration import Configuration
 
 
-class CerebralCortex:
-    def __init__(self, configuration_file, master=None, name=None, ):
+class TestConfiguration(unittest.TestCase):
+    def setUp(self):
+        self.testConfigFile = os.path.join(os.path.dirname(__file__), 'res/test_configuration.yml')
 
-        self._configuration = Configuration(filepath=configuration_file).config
+    def test_None(self):
+        cfg = Configuration()
+        self.assertIsNone(cfg.config)
 
-        ss = SparkSession.builder
-        if name:
-            ss.appName(name)
-        if master:
-            ss.master(master)
+    def test_ConfiguationFile(self):
+        cfg = Configuration(filepath=self.testConfigFile)
 
-        self.sparkSession = ss.getOrCreate()
+        cassandra = cfg.config['cassandra']
+        mysql = cfg.config['mysql']
 
-        self.sc = self.sparkSession.sparkContext
+        self.assertEqual(cassandra['keyspace'], 'cortex')
+        self.assertEqual(cassandra['db_user'], '')
+        self.assertEqual(cassandra['db_pass'], '')
+        self.assertEqual(cassandra['datapoint_table'], 'datapoint')
+        self.assertEqual(cassandra['span_table'], 'span')
 
-    # def register(self, datastream):
-    #     """
-    #     Create a datastream in the system
-    #     :param datastream: Dictionary
-    #     """
-    #     pass
+        self.assertEqual(mysql['database'], 'cortex')
+        self.assertEqual(mysql['db_user'], 'root')
+        self.assertEqual(mysql['db_pass'], 'pass')
+        self.assertEqual(mysql['datastream_table'], 'datastream')
+        self.assertEqual(mysql['spanstream_table'], 'spanstream')
+        self.assertEqual(mysql['processing_module_table'], 'processing')
+        self.assertEqual(mysql['user_table'], 'user')
 
-    def find(self, query):
-        """
-        Find and return all matching datastreams
-        :param query: partial dictionary matching
-        """
-        pass
 
-    def readfile(self, filename):
-        return self.sc.textFile(filename)
-
-    def read(self):
-        pass
-
-    def save(self, datastreamID):
-        pass
+if __name__ == '__main__':
+    unittest.main()

@@ -1,4 +1,4 @@
-# Copyright (c) 2016, MD2K Center of Excellence
+# Copyright (c) 2017, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,46 +22,25 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
-from pyspark.sql import SparkSession
-
-from cerebralcortex.configuration import Configuration
+import yaml
 
 
-class CerebralCortex:
-    def __init__(self, configuration_file, master=None, name=None, ):
-
-        self._configuration = Configuration(filepath=configuration_file).config
-
-        ss = SparkSession.builder
-        if name:
-            ss.appName(name)
-        if master:
-            ss.master(master)
-
-        self.sparkSession = ss.getOrCreate()
-
-        self.sc = self.sparkSession.sparkContext
-
-    # def register(self, datastream):
-    #     """
-    #     Create a datastream in the system
-    #     :param datastream: Dictionary
-    #     """
-    #     pass
-
-    def find(self, query):
+class Configuration:
+    def __init__(self, filepath: str = None):
         """
-        Find and return all matching datastreams
-        :param query: partial dictionary matching
+        Initialization for the configuration object
+        :param filepath: path to a yml configuration file for Cerebral Cortex
         """
+        if filepath is not None:
+            self.load_file(filepath)
+        else:
+            self.config = None
         pass
 
-    def readfile(self, filename):
-        return self.sc.textFile(filename)
-
-    def read(self):
-        pass
-
-    def save(self, datastreamID):
-        pass
+    def load_file(self, filepath: str):
+        """
+        Helper function to load a yaml file
+        :param filepath: path to a yml configuration file for Cerebral Cortex
+        """
+        with open(filepath, 'r') as ymlfile:
+            self.config = yaml.load(ymlfile)
