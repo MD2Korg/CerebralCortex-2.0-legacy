@@ -31,21 +31,21 @@ from cerebralcortex.kernel.datatypes.metadata import Metadata
 class SpanStream:
     def __init__(self,
                  cerebralcortex: CerebralCortex,
-                 id: int = None,
+                 identifier: int = None,
                  data: RDD = None,
                  processing: dict = None,
                  metadata: Metadata = Metadata()):
         """
         The primary object in Cerebral Cortex which represents data
         :param cerebralcortex: Reference to the Cerebral Cortex object
-        :param id:
+        :param identifier:
         :param data:
         :param processing:
         :param metadata:
         """
 
         self._cc = cerebralcortex
-        self._id = id
+        self._id = identifier
         self._processing = processing
         self._metadata = metadata
         self._spans = data
@@ -58,8 +58,7 @@ class SpanStream:
 
     @classmethod
     def from_stream(cls, inputstreams: list):
-        result = cls(cerebralcortex=inputstreams[0]._cc,
-                     user=inputstreams[0]._user)
+        result = cls(cerebralcortex=inputstreams[0]._cc)
 
         # TODO: Something with provenance tracking from inputstreams list
 

@@ -108,7 +108,6 @@ def window_sliding(data: list,
 
     windowed_datastream = OrderedDict()
 
-    count = 0
     for key, data in window_iter(data, window_size, window_offset):
         windowed_datastream[key] = data
     return windowed_datastream

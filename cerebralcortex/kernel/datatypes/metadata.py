@@ -26,7 +26,7 @@ import json
 
 
 class Metadata:
-    def __init__(self, metadata: dict = {}):
+    def __init__(self, metadata: dict = None):
         self._metadata = metadata
 
     def dump(self):

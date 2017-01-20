@@ -61,7 +61,6 @@ class TestWindowing(unittest.TestCase):
         self.assertIsInstance(result, OrderedDict)
 
     def test_epoch_align(self):
-        timezone = pytz.timezone('US/Central')
         timestamps = [(datetime.fromtimestamp(123456789, tz=self.timezone), 0.01,
                        datetime.fromtimestamp(123456789, tz=self.timezone)),
                       (datetime.fromtimestamp(123456789, tz=self.timezone), 0.1,
