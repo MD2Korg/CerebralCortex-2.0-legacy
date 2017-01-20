@@ -25,18 +25,22 @@ import os
 import unittest
 
 from cerebralcortex import CerebralCortex
+from cerebralcortex.configuration import Configuration
 from cerebralcortex.kernel.DataStoreEngine.Data import Data
 
 
 class TestDataStoreEngine(unittest.TestCase):
     def setUp(self):
         self.testConfigFile = os.path.join(os.path.dirname(__file__), 'res/test_configuration.yml')
-        self.configuration = Configuration(filepath=self.testConfigFile)
-        self.CC = CerebralCortex(master="local[*]", name="Cerebral Cortex DataStoreEngine Tests")
+
+        self.CC = CerebralCortex(self.testConfigFile, master="local[*]", name="Cerebral Cortex DataStoreEngine Tests")
+
+        self.configuration = Configuration(filepath=self.testConfigFile).config
 
     def test_Data_datastream(self):
-        data_frame = Data(self.configuration, self.CC.sc).datastream(1992)
-        data_frame.show()
+        data_frame = Data(self.configuration, self.CC.sparkSession)
+        data = data_frame.get_datastream(1992)
+        data.show()
 
 
 # StoreData().datapoint(df)

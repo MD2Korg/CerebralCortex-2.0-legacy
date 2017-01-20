@@ -35,7 +35,7 @@ class Data:
         self.keyspaceName = self.configuration['cassandra']['keyspace']
         self.user = self.configuration['cassandra']['db_user']
         self.password = self.configuration['cassandra']['db_pass']
-        self.datapoint_table = self.configuration['cassandra']['datatpoint_table']
+        self.datapoint_table = self.configuration['cassandra']['datapoint_table']
         self.span_table = self.configuration['cassandra']['span_table']
 
         self.sqlContext = sqlContext
