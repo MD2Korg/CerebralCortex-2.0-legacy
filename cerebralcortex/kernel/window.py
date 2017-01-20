@@ -57,28 +57,34 @@ def window(data: list,
     return window_sliding(data, window_size=window_size, window_offset=window_size)
 
 
-def window_iter(iterable, window_size, window_offset):
-    i = iter(iterable)
+def window_iter(iterable: list, window_size: float, window_offset: float):
+    """
+    Window interation function that support various common implementations
+    :param iterable:
+    :param window_size:
+    :param window_offset:
+    """
+    iterator = iter(iterable)
 
     win_size = timedelta(seconds=window_size)
-    starttime = epoch_align(iterable[0].get_timestamp(), window_offset)
-    endtime = starttime + win_size
-    key = (starttime, endtime)
+    start_time = epoch_align(iterable[0].get_timestamp(), window_offset)
+    end_time = start_time + win_size
+    key = (start_time, end_time)
 
-    win = []
-    for e in i:
-        ts = e.get_timestamp()
-        if ts > endtime:
-            yield key, win
+    data = []
+    for element in iterator:
+        timestamp = element.get_timestamp()
+        if timestamp > end_time:
+            yield key, data
 
-            starttime = epoch_align(e.get_timestamp(), window_offset)
-            endtime = starttime + win_size
-            key = (starttime, endtime)
+            start_time = epoch_align(element.get_timestamp(), window_offset)
+            end_time = start_time + win_size
+            key = (start_time, end_time)
 
-            win = [i for i in win if i.get_timestamp() > starttime]
+            data = [i for i in data if i.get_timestamp() > start_time]
 
-        win.append(e)
-    yield key, win
+        data.append(element)
+    yield key, data
 
 
 def window_sliding(data: list,
