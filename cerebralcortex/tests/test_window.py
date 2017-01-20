@@ -35,6 +35,9 @@ from cerebralcortex.kernel.window import window_sliding, epoch_align
 
 
 class TestWindowing(unittest.TestCase):
+    def setUp(self):
+        self.timezone = pytz.timezone('US/Central')
+
     def test_Window_None(self):
         data = None
         result = window_sliding(data, window_size=60.0, window_offset=10.0)
@@ -48,7 +51,7 @@ class TestWindowing(unittest.TestCase):
     def test_Window_Valid(self):
         data = []
         for i in range(0, 100):
-            data.append(DataPoint(1, datetime.now(tz=pytz.timezone('US/Central')), random()))
+            data.append(DataPoint(1, datetime.now(tz=self.timezone), random()))
             sleep(0.01)
 
         self.assertEqual(100, len(data))
@@ -59,16 +62,29 @@ class TestWindowing(unittest.TestCase):
 
     def test_epoch_align(self):
         timezone = pytz.timezone('US/Central')
-        timestamps = [(datetime.fromtimestamp(123456789, tz=timezone), 0.01, datetime.fromtimestamp(123456789, tz=timezone)),
-                      (datetime.fromtimestamp(123456789, tz=timezone), 0.1, datetime.fromtimestamp(123456789, tz=timezone)),
-                      (datetime.fromtimestamp(123456789, tz=timezone), 1.0, datetime.fromtimestamp(123456789, tz=timezone)),
-                      (datetime.fromtimestamp(123456789, tz=timezone), 10.0, datetime.fromtimestamp(123456780, tz=timezone)),
-                      (datetime.fromtimestamp(123456789.5678, tz=timezone), 0.01, datetime.fromtimestamp(123456789.5600, tz=timezone))
+        timestamps = [(datetime.fromtimestamp(123456789, tz=self.timezone), 0.01,
+                       datetime.fromtimestamp(123456789, tz=self.timezone)),
+                      (datetime.fromtimestamp(123456789, tz=self.timezone), 0.1,
+                       datetime.fromtimestamp(123456789, tz=self.timezone)),
+                      (datetime.fromtimestamp(123456789, tz=self.timezone), 1.0,
+                       datetime.fromtimestamp(123456789, tz=self.timezone)),
+                      (datetime.fromtimestamp(123456789, tz=self.timezone), 10.0,
+                       datetime.fromtimestamp(123456780, tz=self.timezone)),
+                      (datetime.fromtimestamp(123456789.5678, tz=self.timezone), 0.01,
+                       datetime.fromtimestamp(123456789.5600, tz=self.timezone))
                       ]
         for ts, offset, correct in timestamps:
             self.assertEqual(correct, epoch_align(ts, offset))
             self.assertEqual(correct + timedelta(seconds=offset), epoch_align(ts, offset, after=True))
             self.assertNotEqual(correct, epoch_align(ts, offset + 1))
+
+    def test_epoch_align_intervals(self):
+
+        timestamp = datetime.fromtimestamp(1484929672.918273, tz=self.timezone)
+        for interval in [1000.0, 100.0, 10.0, 5.0, 1.0, 0.5, 0.1, 0.01, 0.001, 0.23, 0.45]:
+            aligned = epoch_align(timestamp, interval)
+            reference = (int(int(timestamp.timestamp() * 1e6) / int(interval * 1e6)) * interval)
+            self.assertAlmostEqual(aligned.timestamp(), reference, delta=1e-6)
 
 
 if __name__ == '__main__':
