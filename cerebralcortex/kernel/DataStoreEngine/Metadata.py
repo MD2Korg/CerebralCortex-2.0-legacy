@@ -22,7 +22,6 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import cerebralcortex.kernel.DataStoreEngine.Configuration.DataStoreConfiguration as Config
 import mysql.connector
 
 
@@ -41,8 +40,7 @@ class Metadata:
         self.processing_module_table = self.configuration['mysql']['processing_module_table']
         self.user_table = self.configuration['mysql']['user_table']
 
-        self.dbConnection = mysql.connector.connect(user=self.user, password=self.
-        pass, database = self.database)
+        self.dbConnection = mysql.connector.connect(user=self.user, password=self.password, database=self.database)
         self.cursor = self.dbConnection.cursor()
 
     @classmethod

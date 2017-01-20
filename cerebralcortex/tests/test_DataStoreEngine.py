@@ -27,6 +27,7 @@ import unittest
 from cerebralcortex import CerebralCortex
 from cerebralcortex.configuration import Configuration
 from cerebralcortex.kernel.DataStoreEngine.Data import Data
+from cerebralcortex.kernel.DataStoreEngine.Metadata import Metadata
 
 
 class TestDataStoreEngine(unittest.TestCase):
@@ -37,26 +38,29 @@ class TestDataStoreEngine(unittest.TestCase):
 
         self.configuration = Configuration(filepath=self.testConfigFile).config
 
+        # TODO: populate databases with sample information for these tests
+
     def test_Data_datastream(self):
         data_frame = Data(self.configuration, self.CC.sparkSession)
         data = data_frame.get_datastream(1992)
         data.show()
+        # StoreData().datapoint(df)
+
+    def test_Metadata_load_save(self):
+        meta = Metadata(self.configuration)
+        processing = meta.getProcessingModulemetadata(7)
+        print(processing)
+        # StoreMetadata().storeProcessingModule('{"key":"value"}', 8)
 
 
-# StoreData().datapoint(df)
+
 
 #
 #     #####################Example to calculate magnitude on the sample column#######
 #     computeMagnitudeUDF = udf(computeMagnitude, StringType())
 #     df = df.withColumn("Magnitude", computeMagnitudeUDF(col("sample")))
 #     df.show()
-#
-#
-#     res = LoadMetadata().getProcessingModulemetadata(7)
-#     print(res)
-#
-#     StoreMetadata().storeProcessingModule('{"key":"value"}', 8)
-#
+
 # def computeMagnitude(sample):
 #     data = json.loads(sample)
 #     for val in data:
