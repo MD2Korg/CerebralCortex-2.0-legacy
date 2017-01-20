@@ -32,7 +32,7 @@ class DataStream:
     def __init__(self,
                  cerebralcortex: CerebralCortex,
                  user: UUID,
-                 id: int = None,
+                 identifier: int = None,
                  data: list = None,
                  processing: dict = None,
                  sharing: dict = None,
@@ -41,7 +41,7 @@ class DataStream:
         """
         The primary object in Cerebral Cortex which represents data
         :param cerebralcortex: Reference to the Cerebral Cortex object
-        :param id:
+        :param identifier:
         :param data:
         :param user:
         :param processing:
@@ -51,7 +51,7 @@ class DataStream:
         """
 
         self._cc = cerebralcortex
-        self._id = id
+        self._id = identifier
         self._user = user
         self._processing = processing
         self._sharing = sharing
