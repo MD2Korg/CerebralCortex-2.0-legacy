@@ -4,3 +4,4 @@ sklearn
 py4j
 pytz==2016.10
 https://cdn.mysql.com/Downloads/Connector-Python/mysql-connector-python-2.0.4.tar.gz
+PyYAML==3.12
