@@ -2,7 +2,7 @@
 <module type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Python" name="Python">
-      <configuration sdkName="" />
+      <configuration sdkName="Python 3.5.2 (/usr/bin/python3.5)" />
     </facet>
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="true">
@@ -10,7 +10,16 @@
     <content url="file://$MODULE_DIR$" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+<<<<<<< HEAD
     <orderEntry type="library" name="pyspark" level="project" />
+=======
+    <orderEntry type="library" exported="" name="pyspark" level="project" />
+    <orderEntry type="library" exported="" name="PySparkLib" level="project" />
+<<<<<<< HEAD
+>>>>>>> 2b9dc00... added read/write options for Cassandra using pyspark
+=======
+    <orderEntry type="library" name="Python 3.5.2 (/usr/bin/python3.5) interpreter library" level="application" />
+>>>>>>> 96aedb0... Refactored code a bit and added config files in .gitignore
   </component>
   <component name="PackageRequirementsSettings">
     <option name="requirementsPath" value="$MODULE_DIR$/requirements.txt" />
