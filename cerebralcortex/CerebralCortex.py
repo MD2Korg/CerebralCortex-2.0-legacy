@@ -31,6 +31,8 @@ class CerebralCortex:
         ss = SparkSession.builder
         if name:
             ss.appName(name)
+        if master:
+            ss.master(master)
 
         self.sparkSession = ss.getOrCreate()
 

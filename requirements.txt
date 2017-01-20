@@ -1,2 +1,1 @@
 pytz==2016.10
-mysql-connector-python==2.0.4

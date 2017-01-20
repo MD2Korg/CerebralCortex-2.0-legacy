@@ -23,4 +23,4 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-__all__ = ['datapoint', 'datastream', 'window']
+__all__ = ['datapoint', 'datastream', 'spanstream', 'span']
