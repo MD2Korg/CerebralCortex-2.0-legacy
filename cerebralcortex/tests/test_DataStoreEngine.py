@@ -69,9 +69,5 @@ class TestDataStoreEngine(unittest.TestCase):
 #     return magni
 
 
-
-
-
-
 if __name__ == '__main__':
     unittest.main()
