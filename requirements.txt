@@ -2,4 +2,4 @@ numpy
 scipy
 sklearn
 pytz==2016.10
-mysql-connector-python==2.0.4
+https://cdn.mysql.com/Downloads/Connector-Python/mysql-connector-python-2.0.4.tar.gz
