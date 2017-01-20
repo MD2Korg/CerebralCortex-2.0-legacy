@@ -28,6 +28,8 @@ from datetime import datetime, timedelta
 from random import random
 from time import sleep
 
+import pytz
+
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.window import window_sliding, epoch_align
 
@@ -46,7 +48,7 @@ class TestWindowing(unittest.TestCase):
     def test_Window_Valid(self):
         data = []
         for i in range(0, 100):
-            data.append(DataPoint(1, datetime.now(), random()))
+            data.append(DataPoint(1, datetime.now(tz=pytz.timezone('US/Central')), random()))
             sleep(0.01)
 
         self.assertEqual(100, len(data))
@@ -56,11 +58,12 @@ class TestWindowing(unittest.TestCase):
         self.assertIsInstance(result, OrderedDict)
 
     def test_epoch_align(self):
-        timestamps = [(datetime.fromtimestamp(123456789), 0.01, datetime.fromtimestamp(123456789)),
-                      (datetime.fromtimestamp(123456789), 0.1, datetime.fromtimestamp(123456789)),
-                      (datetime.fromtimestamp(123456789), 1.0, datetime.fromtimestamp(123456789)),
-                      (datetime.fromtimestamp(123456789), 10.0, datetime.fromtimestamp(123456780)),
-                      (datetime.fromtimestamp(123456789.5678), 0.01, datetime.fromtimestamp(123456789.5600))
+        timezone = pytz.timezone('US/Central')
+        timestamps = [(datetime.fromtimestamp(123456789, tz=timezone), 0.01, datetime.fromtimestamp(123456789, tz=timezone)),
+                      (datetime.fromtimestamp(123456789, tz=timezone), 0.1, datetime.fromtimestamp(123456789, tz=timezone)),
+                      (datetime.fromtimestamp(123456789, tz=timezone), 1.0, datetime.fromtimestamp(123456789, tz=timezone)),
+                      (datetime.fromtimestamp(123456789, tz=timezone), 10.0, datetime.fromtimestamp(123456780, tz=timezone)),
+                      (datetime.fromtimestamp(123456789.5678, tz=timezone), 0.01, datetime.fromtimestamp(123456789.5600, tz=timezone))
                       ]
         for ts, offset, correct in timestamps:
             self.assertEqual(correct, epoch_align(ts, offset))
