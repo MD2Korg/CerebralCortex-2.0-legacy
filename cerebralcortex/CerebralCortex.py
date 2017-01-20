@@ -25,9 +25,14 @@
 
 from pyspark.sql import SparkSession
 
+from cerebralcortex.configuration import Configuration
+
 
 class CerebralCortex:
-    def __init__(self, master=None, name=None):
+    def __init__(self, configuration_file, master=None, name=None, ):
+
+        self._configuration = Configuration(filepath=configuration_file).config
+
         ss = SparkSession.builder
         if name:
             ss.appName(name)
