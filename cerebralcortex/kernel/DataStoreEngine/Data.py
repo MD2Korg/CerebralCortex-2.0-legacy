@@ -22,18 +22,23 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import cerebralcortex.kernel.DataStoreEngine.Configuration.DataStoreConfiguration as Config
 
-class LoadData:
-    def __init__(self, sqlContext):
+class Data:
+    def __init__(self, configuration, sqlContext):
         """
         Constructor
         :param sqlContext:
         :param keyspaceName:
         """
-        self.keyspaceName = Config.Cassandra["KEYSPACE"]
-        self.sqlContext = sqlContext
+        self.configuration = configuration
 
+        self.keyspaceName = self.configuration['cassandra']['keyspace']
+        self.user = self.configuration['cassandra']['db_user']
+        self.password = self.configuration['cassandra']['db_pass']
+        self.datapoint_table = self.configuration['cassandra']['datatpoint_table']
+        self.span_table = self.configuration['cassandra']['span_table']
+
+        self.sqlContext = sqlContext
 
     def loadData(self, tableName: str, whereClause: str) -> object:
         """
@@ -46,10 +51,9 @@ class LoadData:
                                                                                    keyspace=self.keyspaceName).load().filter(
             whereClause)
 
-
         return df
 
-    def datastream(self, datastreamID: int, startTime: int = "", endTime: int = "") -> object:
+    def get_datastream(self, datastreamID: int, startTime: int = "", endTime: int = "") -> object:
         """
         :param datastreamID:
         :param startTime:
@@ -69,9 +73,9 @@ class LoadData:
         if (endTime != ""):
             whereClause += " and datetime<='" + endTime + "'"
 
-        return self.loadData(Config.Cassandra["DATAPOINT_TABLE"], whereClause)
+        return self.loadData(self.datapoint_table, whereClause)
 
-    def span(self, spanID: int, startTime: int = "", endTime: int = "") -> object:
+    def get_span(self, spanID: int, startTime: int = "", endTime: int = "") -> object:
         """
         :param spanID:
         :param startTime:
@@ -91,4 +95,26 @@ class LoadData:
         if (endTime != ""):
             whereClause += " and datetime<=" + endTime
 
-        return self.loadData(Config.Cassandra["SPAN_TABLE"], whereClause)
+        return self.loadData(self.span_table, whereClause)
+
+    def storeData(self, dfData: object, tableName: str):
+        """
+        :param dfData:
+        :param tableName:
+        """
+        dfData.write.format("org.apache.spark.sql.cassandra") \
+            .mode('append') \
+            .options(table=tableName, keyspace=self.keyspaceName) \
+            .save()
+
+    def save_datapoint(self, df: object):
+        """
+        :param df:
+        """
+        self.storeData(df, self.datapoint_table)
+
+    def save_span(self, df: object):
+        """
+        :param df:
+        """
+        self.storeData(df, self.span_table)
