@@ -57,10 +57,9 @@ class SpanStream:
         return self._id
 
     @classmethod
-    def from_stream(cls, inputstreams: list, data: list):
+    def from_stream(cls, inputstreams: list):
         result = cls(cerebralcortex=inputstreams[0]._cc,
-                            user=inputstreams[0]._user,
-                            data=data)
+                     user=inputstreams[0]._user)
 
         # TODO: Something with provenance tracking from inputstreams list
 

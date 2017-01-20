@@ -23,11 +23,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-
 from memphisdataprocessor.alignment import timestamp_correct, timestampCorrectAndSequenceAlign
+from memphisdataprocessor.signalprocessing.accelerometer import accelerometerFeatures
 from memphisdataprocessor.signalprocessing.dataquality import ECGDataQuality, RIPDataQuality
-from memphisdataprocessor.signalprocessing.vector import normalize, magnitude
-from memphisdataprocessor.preprocessor.ecg_processor import compute_rr_datastream
 
 
 def cStress(rawecg: DataStream,
@@ -57,8 +55,8 @@ def cStress(rawecg: DataStream,
     accelSamplingFrequency = 64.0 / 6.0
 
     # r-peak datastream computation
-    ecg_rr_datastream = compute_rr_datastream(rawecg,ecgSamplingFrequency)
-    print(ecg_rr_datastream[0:10])
+    # ecg_rr_datastream = compute_rr_datastream(rawecg,ecgSamplingFrequency)
+    # print(ecg_rr_datastream[0:10])
 
     # Timestamp correct datastreams
     ecgCorrected = timestamp_correct(datastream=rawecg, sampling_frequency=ecgSamplingFrequency)
@@ -68,7 +66,7 @@ def cStress(rawecg: DataStream,
 
     # ECG and RIP signal morphology dataquality
     ecgDataQuality = ECGDataQuality(ecgCorrected,
-                                    windowsize=5000,  # What does windowsize mean here?
+                                    windowsize=5.0,  # What does windowsize mean here?
                                     bufferLength=3,
                                     acceptableOutlierPercent=50,
                                     outlierThresholdHigh=4500,
@@ -78,7 +76,7 @@ def cStress(rawecg: DataStream,
     ecgCorrected.addSpanStream(ecgDataQuality)
 
     ripDataQuality = RIPDataQuality(ripCorrected,
-                                    windowsize=5000,  # What does windowsize mean here?
+                                    windowsize=5.0,  # What does windowsize mean here?
                                     bufferLength=5,
                                     acceptableOutlierPercent=50,
                                     outlierThresholdHigh=4500,
@@ -90,9 +88,10 @@ def cStress(rawecg: DataStream,
 
     # Accelerometer Feature Computation
 
-    accelerometerMagnitude = magnitude(normalize(accel))
 
-    # windowMagnitudeSpans = window(accelerometerMagnitude, 10000)
+    accelerometerMagnitude, accelerometerWinMagDeviations, accelActivity = accelerometerFeatures(accel)
+
+
 
 
 

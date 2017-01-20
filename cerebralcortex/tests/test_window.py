@@ -24,7 +24,7 @@
 
 import unittest
 from collections import OrderedDict
-from datetime import datetime
+from datetime import datetime, timedelta
 from random import random
 from time import sleep
 
@@ -35,36 +35,36 @@ from cerebralcortex.kernel.window import window_sliding, epoch_align
 class TestWindowing(unittest.TestCase):
     def test_Window_None(self):
         data = None
-        result = window_sliding(data, window_size=60000, window_offset=10000)
+        result = window_sliding(data, window_size=60.0, window_offset=10.0)
         self.assertIsNone(result)
 
     def test_Window_Empty(self):
         data = []
-        result = window_sliding(data, window_size=60000, window_offset=10000)
+        result = window_sliding(data, window_size=60.0, window_offset=10.0)
         self.assertIsNone(result)
 
     def test_Window_Valid(self):
         data = []
-        for i in range(0, 10):
+        for i in range(0, 100):
             data.append(DataPoint(1, datetime.now(), random()))
-            sleep(0.1)
+            sleep(0.01)
 
-        self.assertEqual(10, len(data))
-        result = window_sliding(data, window_size=500, window_offset=100)
+        self.assertEqual(100, len(data))
+        result = window_sliding(data, window_size=0.25, window_offset=0.05)
         # TODO: check results of function output
 
         self.assertIsInstance(result, OrderedDict)
 
     def test_epoch_align(self):
-        timestamps = [(12345, 10, 12340),
-                      (12345, 100, 12300),
-                      (12345, 1000, 12000),
-                      (12345, 10000, 10000),
-                      (1234.5678, 100, 1200)
+        timestamps = [(datetime.fromtimestamp(123456789), 0.01, datetime.fromtimestamp(123456789)),
+                      (datetime.fromtimestamp(123456789), 0.1, datetime.fromtimestamp(123456789)),
+                      (datetime.fromtimestamp(123456789), 1.0, datetime.fromtimestamp(123456789)),
+                      (datetime.fromtimestamp(123456789), 10.0, datetime.fromtimestamp(123456780)),
+                      (datetime.fromtimestamp(123456789.5678), 0.01, datetime.fromtimestamp(123456789.5600))
                       ]
         for ts, offset, correct in timestamps:
             self.assertEqual(correct, epoch_align(ts, offset))
-            self.assertEqual(correct + offset, epoch_align(ts, offset, after=True))
+            self.assertEqual(correct + timedelta(seconds=offset), epoch_align(ts, offset, after=True))
             self.assertNotEqual(correct, epoch_align(ts, offset + 1))
 
 
