@@ -40,7 +40,8 @@ def normalize(datastream: DataStream):
     for i, dp in enumerate(result_data):
         dp.set_sample(data[i])
 
-    result = DataStream.from_datastream(inputstreams=[datastream], data=result_data)
+    result = DataStream.from_datastream(inputstreams=[datastream])
+    result.set_datapoints(result_data)
 
     return result
 
@@ -56,6 +57,7 @@ def magnitude(datastream: DataStream):
     for i, dp in enumerate(result_data):
         dp.set_sample(data[i])
 
-    result = DataStream.from_datastream(inputstreams=[datastream], data=result_data)
+    result = DataStream.from_datastream(inputstreams=[datastream])
+    result.set_datapoints(result_data)
 
     return result
