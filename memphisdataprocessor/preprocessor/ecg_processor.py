@@ -67,7 +67,7 @@ def filter_bad_ecg(ecg: DataStream, fs: float, no_of_secs: int = 2) -> DataStrea
     ecg_filtered_array = []
 
     for key, data in window_data:
-        if classify_ecg_window(data):
+        if classify_ecg_window(data, range_threshold=200, slope_threshold=50, maximum_value=4000):
             ecg_filtered_array.extend(data)
 
     ecg_filtered.set_datapoints(ecg_filtered_array)
@@ -75,10 +75,7 @@ def filter_bad_ecg(ecg: DataStream, fs: float, no_of_secs: int = 2) -> DataStrea
     return ecg_filtered
 
 
-def compute_rr_datastream(ecg: DataStream, fs: float) -> DataStream:
-    # # get the ecg array from datastream
-    # ecg_array = np.array([(x.get_timestamp_epoch() / 1000, x.get_sample()) for x in ecg.get_datapoints()])
-
+def compute_rr_intervals(ecg: DataStream, fs: float) -> DataStream:
     # filter the ecg array
     ecg_filtered = filter_bad_ecg(ecg, fs)
 

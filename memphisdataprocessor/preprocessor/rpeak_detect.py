@@ -51,13 +51,13 @@ def compute_moving_window_int(sample: np.ndarray,
 
     :return: the Moving window integration of the sample array
     """
-    Del = .02
+    delta = .02
     # filter edges
     filter_edges = [0, 4.5 * 2 / fs, 5 * 2 / fs, 20 * 2 / fs, 20.5 * 2 / fs, 1]
-    # gains at fliter band edges
+    # gains at filter band edges
     gains = [0, 0, 1, 1, 0, 0]
     # weights
-    weights = [500 / Del, 1 / Del, 500 / Del]
+    weights = [500 / delta, 1 / delta, 500 / delta]
     # length of the FIR filter
     filter_length = 257
     # FIR filter coefficients for bandpass filtering
@@ -270,9 +270,7 @@ def detect_rpeak(ecg: DataStream, fs: int = 64, threshold: float = 0.5) -> DataS
     blackman_win_len = np.ceil(fs / 5)
     y = compute_moving_window_int(sample, fs, blackman_win_len)
 
-    peak_location = [i for i in range(2, len(y) - 1) if
-                     check_peak(y,
-                                i)]  # TODO: This should be handled with a sliding window function to generate data blocks
+    peak_location = [i for i in range(2, len(y) - 1) if check_peak(y[i - 2:i + 2])]
     peak_location_values = y[peak_location]
 
     # initial RR interval average
