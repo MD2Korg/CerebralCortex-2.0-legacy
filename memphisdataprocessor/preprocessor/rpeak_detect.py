@@ -24,21 +24,26 @@
 import numpy as np
 from scipy import signal
 
+from cerebralcortex.kernel.datatypes.datapoint import DataPoint
+from cerebralcortex.kernel.datatypes.datastream import DataStream
+
 
 def rr_interval_update(rpeak_temp1: list,
-                       rr_ave: float) -> float:
+                       rr_ave: float,
+                       min_size: int = 8) -> float:
     """
+    :param min_size:
     :param rpeak_temp1: R peak locations
     :param rr_ave: previous rr-interval average
     :return: the new rr-interval average of the previously detected 8 R peak locations
     """
     peak_interval = np.diff([0] + rpeak_temp1)
-    return rr_ave if len(peak_interval) <= 7 else np.sum(peak_interval[-8:]) / 8
+    return rr_ave if len(peak_interval) < min_size else np.sum(peak_interval[-min_size:]) / min_size
 
 
-def compute_moving_window_int(sample: list,
+def compute_moving_window_int(sample: np.ndarray,
                               fs: float,
-                              blackmanWinlen: float) -> list:
+                              blackmanWinlen: float) -> np.ndarray:
     """
     :param sample: ecg sample array
     :param fs: sampling frequency
@@ -60,41 +65,62 @@ def compute_moving_window_int(sample: list,
 
     # bandpass filtered signal
     bandpass_signal = signal.convolve(sample, filter_coeff, 'same')
-    bandpass_signal = bandpass_signal / np.percentile(bandpass_signal, 90)
+    bandpass_signal /= np.percentile(bandpass_signal, 90)
 
     # derivative array
     derivative_array = (np.array([-1.0, -2.0, 0, 2.0, 1.0])) * (1 / 8)
     # derivative signal (differentiation of the bandpass)
     derivative_signal = signal.convolve(bandpass_signal, derivative_array, 'same')
-    derivative_signal = derivative_signal / np.percentile(derivative_signal, 90)
+    derivative_signal /= np.percentile(derivative_signal, 90)
 
     # squared derivative signal
     derivative_squared_signal = derivative_signal ** 2
-    derivative_squared_signal = derivative_squared_signal / np.percentile(derivative_squared_signal, 90)
+    derivative_squared_signal /= np.percentile(derivative_squared_signal, 90)
 
     # blackman window
     blackmanWinlen = np.ceil(fs / 5)
     blackman_window = np.blackman(blackmanWinlen)
     # moving window Integration of squared derivative signal
     mov_win_int_signal = signal.convolve(derivative_squared_signal, blackman_window, 'same')
-    mov_win_int_signal = mov_win_int_signal / np.percentile(mov_win_int_signal, 90)
+    mov_win_int_signal /= np.percentile(mov_win_int_signal, 90)
 
     return mov_win_int_signal
 
 
-def check_peak(y, i):
+def check_peak(data: list):
     """
     This is a function to check the condition of a simple peak of signal y in index i
     :param y: sample array
     :param i: index
     :return: True/False= peak/not_peak
     """
-    return y[i - 2] < y[i - 1] and y[i - 1] < y[i] and y[i] >= y[i + 1] and y[i + 1] > y[i + 2]
+    # TODO: Is this new implementation more general than this hardcoded logic?
+    # (y[i - 2] < y[i - 1] < y[i]) and (y[i] >= y[i + 1] > y[i + 2])
+
+    if len(data) < 3:
+        raise Exception("data too small")
+
+    midpoint = int(len(data) / 2)
+    test_value = data[0]
+
+    for i in data[1:midpoint + 1]:
+        if test_value < i:
+            test_value = i
+        else:
+            return False
+
+    for i in data[midpoint + 1:]:
+        if test_value > i:
+            test_value = i
+        else:
+            return False
+
+    return True
 
 
 def compute_r_peaks(thr1: float,
                     rr_ave: float,
-                    mov_win_int_signal: list,
+                    mov_win_int_signal: np.ndarray,
                     valuepks: list,
                     pkt: list,
                     ) -> list:
@@ -125,9 +151,9 @@ def compute_r_peaks(thr1: float,
 
             # values and indexes of previous peaks discarded as not an R peak whose magnitude is above thr2
             searchback_array_inrange_values = [valuepks[k] for k in range(pkt_loc[-1] + 1, i) if
-                                               valuepks[k] < 3 * sig_lev and valuepks[k] > thr2]
+                                               3 * sig_lev > valuepks[k] > thr2]
             searchback_array_inrange_index = [k - pkt_loc[-1] for k in range(pkt_loc[-1] + 1, i) if
-                                              valuepks[k] < 3 * sig_lev and valuepks[k] > thr2]
+                                              3 * sig_lev > valuepks[k] > thr2]
 
             if len(searchback_array_inrange_values) > 0:
                 # maximum inside the range calculated beforehand is taken as R peak
@@ -142,25 +168,33 @@ def compute_r_peaks(thr1: float,
             else:
                 thr1 = noise_lev + 0.25 * (sig_lev - noise_lev)
                 thr2 = 0.5 * thr1
-                i = i + 1
+                i += 1
         else:
             # R peak checking
-            if mov_win_int_signal[pkt[i]] >= thr1 and mov_win_int_signal[pkt[i]] < 3 * sig_lev:
+            if thr1 <= mov_win_int_signal[pkt[i]] < 3 * sig_lev:
                 rpeak_temp1.append(pkt[i])
                 pkt_loc.append(i)
                 sig_lev = 0.125 * mov_win_int_signal[pkt[i]] + 0.875 * sig_lev  # update the signal level
             # noise peak checking
-            elif mov_win_int_signal[pkt[i]] < thr1 and mov_win_int_signal[pkt[i]] > thr2:
+            elif thr1 > mov_win_int_signal[pkt[i]] > thr2:
                 noise_lev = 0.125 * mov_win_int_signal[pkt[i]] + 0.875 * noise_lev  # update the noise level
             thr1 = noise_lev + 0.25 * (sig_lev - noise_lev)
             thr2 = 0.5 * thr1
-            i = i + 1
+            i += 1
+
     return rpeak_temp1
 
 
+def check_min(sample, rpeak_temp1, i):
+    """
+    returns which peak has the maximum value (i)th or (i+1)th
+    """
+    return i if sample[rpeak_temp1[i]] > sample[rpeak_temp1[i + 1]] else i + 1
+
+
 def remove_close_peaks(rpeak_temp1: list,
-                       sample: list,
-                       fs: float) -> int:
+                       sample: np.ndarray,
+                       fs: float) -> list:
     """
     This function removes one of two peaks from two consecutive R peaks
     if difference among them is less than the minimum possible
@@ -171,12 +205,6 @@ def remove_close_peaks(rpeak_temp1: list,
     :return: R peak array with no close R peaks
 
     """
-
-    def check_min(sample, rpeak_temp1, i):
-        """
-        returns which peak has the maximum value (i)th or (i+1)th
-        """
-        return i if sample[rpeak_temp1[i]] > sample[rpeak_temp1[i + 1]] else i + 1
 
     temp_ind = [1, 2]  # just a normal initialization so that it goes to while loop
     while len(temp_ind) != 0:
@@ -189,11 +217,11 @@ def remove_close_peaks(rpeak_temp1: list,
         count = 0
         for i in temp_ind:
             rpeak_temp1.remove(rpeak_temp1[i - count])
-            count = count + 1
+            count += 1
     return rpeak_temp1
 
 
-def confirm_peaks(rpeak_temp1: list, sample: list, fs: float) -> list:
+def confirm_peaks(rpeak_temp1: list, sample: np.ndarray, fs: float) -> np.ndarray:
     """
 
     This function does the final check on the R peaks detected and
@@ -213,7 +241,7 @@ def confirm_peaks(rpeak_temp1: list, sample: list, fs: float) -> list:
     return np.array(rpeak_temp1).astype(np.int64)
 
 
-def detect_rpeak(ecg: list, fs: int = 64, threshold: float = 0.5) -> list:
+def detect_rpeak(ecg: DataStream, fs: int = 64, threshold: float = 0.5) -> DataStream:
     """
     This program implements the Pan Tomkins algorithm on ECG signal to detect the R peaks
 
@@ -233,25 +261,35 @@ def detect_rpeak(ecg: list, fs: int = 64, threshold: float = 0.5) -> list:
     :return: R peak array of tuples (timestamp, Rpeak interval)
     """
 
-    sample = np.array([i[1] for i in ecg])
-    timestamp = np.array([i[0] for i in ecg])
+    data = ecg.get_datapoints()
+
+    sample = np.array([i.get_sample() for i in data])
+    timestamp = np.array([i.get_timestamp() for i in data])
 
     # computes the moving window integration of the signal
-    blackmanWinlen = np.ceil(fs / 5)
-    y = compute_moving_window_int(sample, fs, blackmanWinlen)
+    blackman_win_len = np.ceil(fs / 5)
+    y = compute_moving_window_int(sample, fs, blackman_win_len)
 
-    peak_location = [i for i in range(2, len(y) - 1) if check_peak(y, i) == True]
+    peak_location = [i for i in range(2, len(y) - 1) if
+                     check_peak(y,
+                                i)]  # TODO: This should be handled with a sliding window function to generate data blocks
     peak_location_values = y[peak_location]
 
     # initial RR interval average
     running_rr_avg = sum(np.diff(peak_location)) / (len(peak_location) - 1)
     thr1 = threshold
     rpeak_temp1 = compute_r_peaks(thr1, running_rr_avg, y, peak_location_values, peak_location)
-    rpeak_temp1 = remove_close_peaks(rpeak_temp1[0:], sample, fs)
+    rpeak_temp1 = remove_close_peaks(rpeak_temp1, sample, fs)
     index = confirm_peaks(rpeak_temp1, sample, fs)
 
     rpeak_timestamp = timestamp[index]
     rpeak_value = np.diff(rpeak_timestamp)
     rpeak_timestamp = rpeak_timestamp[1:]
 
-    return [(rpeak_timestamp[k], rpeak_value[k]) for k in range(len(rpeak_value))]
+    # Create resulting datastream to be returned
+    result = DataStream.from_datastream([ecg])
+    result_data = [DataPoint.from_tuple(result.get_identifier(), rpeak_timestamp[k], rpeak_value[k]) for k in
+                   range(len(rpeak_value))]
+    result.set_datapoints(result_data)
+
+    return result
