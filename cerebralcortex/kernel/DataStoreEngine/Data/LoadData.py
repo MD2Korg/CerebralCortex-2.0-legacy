@@ -22,16 +22,22 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import cerebralcortex.kernel.DataStoreEngine.Configuration.DataStoreConfiguration as Config
 
 class LoadData:
-    def __init__(self, sqlContext):
+    def __init__(self, configuration, sqlContext):
+
         """
-        Constructor
+        :param configuration:
         :param sqlContext:
-        :param keyspaceName:
         """
-        self.keyspaceName = Config.Cassandra["KEYSPACE"]
+
+        self.configuration = configuration
+        self.keyspaceName = self.configuration['cassandra']['keyspace']
+        self.dbUser = self.configuration['cassandra']['db_user']
+        self.dbPassword = self.configuration['cassandra']['db_pass']
+        self.datapointTable = self.configuration['cassandra']['datapoint_table']
+        self.spanTable = self.configuration['cassandra']['span_table']
+
         self.sqlContext = sqlContext
 
 
@@ -49,7 +55,7 @@ class LoadData:
 
         return df
 
-    def datastream(self, datastreamID: int, startTime: int = "", endTime: int = "") -> object:
+    def getDatastream(self, datastreamID: int, startTime: int = "", endTime: int = "") -> object:
         """
         :param datastreamID:
         :param startTime:
@@ -69,9 +75,9 @@ class LoadData:
         if (endTime != ""):
             whereClause += " and datetime<='" + endTime + "'"
 
-        return self.loadData(Config.Cassandra["DATAPOINT_TABLE"], whereClause)
+        return self.loadData(self.datapointTable, whereClause)
 
-    def span(self, spanID: int, startTime: int = "", endTime: int = "") -> object:
+    def getSpan(self, spanID: int, startTime: int = "", endTime: int = "") -> object:
         """
         :param spanID:
         :param startTime:
@@ -91,4 +97,4 @@ class LoadData:
         if (endTime != ""):
             whereClause += " and datetime<=" + endTime
 
-        return self.loadData(Config.Cassandra["SPAN_TABLE"], whereClause)
+        return self.loadData(self.spanTable, whereClause)

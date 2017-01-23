@@ -1,4 +1,4 @@
-# Copyright (c) 2016, MD2K Center of Excellence
+# Copyright (c) 2017, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,30 +22,25 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import cerebralcortex.kernel.DataStoreEngine.Configuration.DataStoreConfiguration as Config
+import yaml
 
-class StoreData:
-    def __init__(self):
+
+class Configuration:
+    def __init__(self, filepath: str = None):
+        """
+        Initialization for the configuration object
+        :param filepath: path to a yml configuration file for Cerebral Cortex
+        """
+        if filepath is not None:
+            self.load_file(filepath)
+        else:
+            self.config = None
         pass
 
-    def storeData(self, dfData: object, tableName: str):
+    def load_file(self, filepath: str):
         """
-        :param dfData:
-        :param tableName:
+        Helper function to load a yaml file
+        :param filepath: path to a yml configuration file for Cerebral Cortex
         """
-        dfData.write.format("org.apache.spark.sql.cassandra") \
-            .mode('append') \
-            .options(table=tableName, keyspace=Config.Cassandra["KEYSPACE"]) \
-            .save()
-
-    def datapoint(self, df: object):
-        """
-        :param df:
-        """
-        self.storeData(df, Config.Cassandra["DATAPOINT_TABLE"])
-
-    def span(self, df: object):
-        """
-        :param df:
-        """
-        self.storeData(df, Config.Cassandra["SPAN_TABLE"])
+        with open(filepath, 'r') as ymlfile:
+            self.config = yaml.load(ymlfile)
