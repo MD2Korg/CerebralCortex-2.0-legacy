@@ -22,11 +22,19 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import cerebralcortex.kernel.DataStoreEngine.Configuration.DataStoreConfiguration as Config
 
 class StoreData:
-    def __init__(self):
-        pass
+    def __init__(self, configuration):
+        """
+        Constructor
+        :param configuration:
+        """
+        self.configuration = configuration
+        self.keyspaceName = self.configuration['cassandra']['keyspace']
+        self.dbUser = self.configuration['cassandra']['db_user']
+        self.dbPassword = self.configuration['cassandra']['db_pass']
+        self.datapointTable = self.configuration['cassandra']['datapoint_table']
+        self.spanTable = self.configuration['cassandra']['span_table']
 
     def storeData(self, dfData: object, tableName: str):
         """
@@ -35,17 +43,18 @@ class StoreData:
         """
         dfData.write.format("org.apache.spark.sql.cassandra") \
             .mode('append') \
-            .options(table=tableName, keyspace=Config.Cassandra["KEYSPACE"]) \
+            .options(table=tableName, keyspace=self.keyspaceName) \
             .save()
 
-    def datapoint(self, df: object):
+    #These two methods will be moved to struct classes
+    def saveDatapoint(self, df: object):
         """
         :param df:
         """
-        self.storeData(df, Config.Cassandra["DATAPOINT_TABLE"])
+        self.storeData(df, self.datapointTable)
 
-    def span(self, df: object):
+    def saveSpan(self, df: object):
         """
         :param df:
         """
-        self.storeData(df, Config.Cassandra["SPAN_TABLE"])
+        self.storeData(df, self.spanTable)

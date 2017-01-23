@@ -1,23 +1,23 @@
-from pyspark import SparkContext, SparkConf
-from pyspark.sql import SQLContext
-
-from cerebralcortex.kernel.DataStoreEngine.LoadData.LoadData import LoadData
-from cerebralcortex.kernel.DataStoreEngine.StoreData.StoreData import StoreData
-from cerebralcortex.kernel.DataStoreEngine.LoadData.LoadMetadata import LoadMetadata
-from cerebralcortex.kernel.DataStoreEngine.StoreData.StoreMetadata import StoreMetadata
-from pyspark.sql.types import *
-from pyspark.sql.functions import *
 import json
 import math
+
+from pyspark import SparkContext, SparkConf
+from pyspark.sql import SQLContext
+from pyspark.sql.functions import *
+from pyspark.sql.types import *
+
+from cerebralcortex.kernel.DataStoreEngine.Data.LoadData import LoadData
+from cerebralcortex.kernel.DataStoreEngine.Metadata.StoreMetadata import StoreMetadata
+
 
 def main():
     conf = SparkConf().setAppName("DataStore")
     sc = SparkContext(conf=conf)
     sqlContext = SQLContext(sc)
 
-    df = LoadData(sqlContext).datastream(1992)
+    df = LoadData(sqlContext).getDatastream(1992)
     df.show()
-    StoreData().datapoint(df)
+    #StoreData().datapoint(df)
 
     #####################Example to calculate magnitude on the sample column#######
     computeMagnitudeUDF = udf(computeMagnitude, StringType())
@@ -25,8 +25,8 @@ def main():
     df.show()
 
 
-    res = LoadMetadata().getProcessingModulemetadata(7)
-    print(res)
+    #res = LoadMetadata().getProcessingModulemetadata(7)
+    #print(res)
 
     StoreMetadata().storeProcessingModule('{"key":"value"}', 8)
 
@@ -37,6 +37,8 @@ def computeMagnitude(sample):
     magni = math.sqrt(val)
     return magni
 
+def dfTodp():
+    pass
 
 if __name__ == "__main__":
     main()
