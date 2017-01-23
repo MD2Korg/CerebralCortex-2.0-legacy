@@ -28,7 +28,10 @@ from cerebralcortex.kernel.window import window
 from memphisdataprocessor.preprocessor.rpeak_detect import detect_rpeak
 
 
-def classify_ecg_window(data: list, range_threshold: int = 200, slope_threshold: int = 50, maximum_value: int = 4000):
+def classify_ecg_window(data: list,
+                        range_threshold: int = 200,
+                        slope_threshold: int = 50,
+                        maximum_value: int = 4000):
     """
 
     :param data: window of raw ecg tuples
@@ -48,7 +51,9 @@ def classify_ecg_window(data: list, range_threshold: int = 200, slope_threshold:
     return True
 
 
-def filter_bad_ecg(ecg: DataStream, fs: float, no_of_secs: int = 2) -> DataStream:
+def filter_bad_ecg(ecg: DataStream,
+                   fs: float,
+                   no_of_secs: int = 2) -> DataStream:
     """
     This function splits the ecg array into non overlapping windows of specified seconds
     and assigns a binary decision on them returns a filtered ecg array which contains
@@ -66,6 +71,7 @@ def filter_bad_ecg(ecg: DataStream, fs: float, no_of_secs: int = 2) -> DataStrea
     ecg_filtered = DataStream.from_datastream([ecg])
     ecg_filtered_array = []
 
+    # TODO: CODE_REVIEW: Should these thresholds be brought out to the outmost layer?
     for key, data in window_data:
         if classify_ecg_window(data, range_threshold=200, slope_threshold=50, maximum_value=4000):
             ecg_filtered_array.extend(data)
@@ -75,7 +81,8 @@ def filter_bad_ecg(ecg: DataStream, fs: float, no_of_secs: int = 2) -> DataStrea
     return ecg_filtered
 
 
-def compute_rr_intervals(ecg: DataStream, fs: float) -> DataStream:
+def compute_rr_intervals(ecg: DataStream,
+                         fs: float) -> DataStream:
     # filter the ecg array
     ecg_filtered = filter_bad_ecg(ecg, fs)
 

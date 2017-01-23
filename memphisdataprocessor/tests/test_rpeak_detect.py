@@ -50,6 +50,7 @@ class TestRPeakDetect(unittest.TestCase):
         self.assertEqual(rr_interval_update(rpeak_temp1, rr_ave, min_size=25), 4.5)
 
     def test_compute_moving_window_int(self):
+        # TODO: Complete this test
         pass
 
     def test_check_peak(self):
@@ -65,6 +66,25 @@ class TestRPeakDetect(unittest.TestCase):
         data = [0, 1]
         self.assertRaises(Exception, check_peak, data)
 
+    def test_compute_r_peaks(self):
+        # TODO: Complete this test
+        pass
+
+    def test_remove_close_peaks(self):
+        # TODO: Complete this test
+        pass
+
+    def test_confirm_peaks(self):
+        # TODO: Complete this test
+        pass
+
+    def test_detect_rpeak(self):
+        # TODO: Complete this test
+        pass
+
+    def test_emwa(self):
+        # TODO: Complete this test
+        pass
 
 if __name__ == '__main__':
     unittest.main()
