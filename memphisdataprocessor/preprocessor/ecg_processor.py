@@ -28,6 +28,7 @@ from cerebralcortex.kernel.window import window
 from memphisdataprocessor.preprocessor.rpeak_detect import detect_rpeak
 
 
+# TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
 def classify_ecg_window(data: list,
                         range_threshold: int = 200,
                         slope_threshold: int = 50,
@@ -51,6 +52,7 @@ def classify_ecg_window(data: list,
     return True
 
 
+# TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
 def filter_bad_ecg(ecg: DataStream,
                    fs: float,
                    no_of_secs: int = 2) -> DataStream:
@@ -83,7 +85,12 @@ def filter_bad_ecg(ecg: DataStream,
 
 def compute_rr_intervals(ecg: DataStream,
                          fs: float) -> DataStream:
-    # filter the ecg array
+    """
+    filter ecg ...
+    :param ecg:
+    :param fs:
+    :return:
+    """
     ecg_filtered = filter_bad_ecg(ecg, fs)
 
     # compute the r-peak array

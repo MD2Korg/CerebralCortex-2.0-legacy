@@ -28,6 +28,7 @@ from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 
 
+# TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
 def rr_interval_update(rpeak_temp1: list,
                        rr_ave: float,
                        min_size: int = 8) -> float:
@@ -121,6 +122,8 @@ def check_peak(data: list):
     return True
 
 
+# TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
+# TODO: CODE_REVIEW: Make hard-coded constants default method parameter
 def compute_r_peaks(threshold_1: float,
                     rr_ave: float,
                     mov_win_int_signal: np.ndarray,
@@ -197,9 +200,18 @@ def compute_r_peaks(threshold_1: float,
 
 
 def ewma(value, new_value, alpha):
+    """
+
+    :param value:
+    :param new_value:
+    :param alpha:
+    :return:
+    """
     return alpha * new_value + (1 - alpha) * value
 
 
+# TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
+# TODO: CODE_REVIEW: Make hard-coded constants default method parameter
 def remove_close_peaks(rpeak_temp1: list,
                        sample: np.ndarray,
                        fs: float) -> list:
@@ -235,6 +247,8 @@ def remove_close_peaks(rpeak_temp1: list,
     return rpeak_temp1
 
 
+# TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
+# TODO: CODE_REVIEW: Make hard-coded constants default method parameter
 def confirm_peaks(rpeak_temp1: list,
                   sample: np.ndarray,
                   fs: float) -> np.ndarray:
@@ -262,6 +276,8 @@ def confirm_peaks(rpeak_temp1: list,
         np.int64)  # TODO: CODE_REVIEW: This is the first time I am seeing np.int64  Why is this type specified?
 
 
+# TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
+# TODO: CODE_REVIEW: Make hard-coded constants default method parameter
 def detect_rpeak(ecg: DataStream,
                  fs: float = 64,
                  threshold: float = 0.5) -> DataStream:
