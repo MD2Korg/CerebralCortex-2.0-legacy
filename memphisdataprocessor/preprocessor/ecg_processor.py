@@ -24,19 +24,25 @@
 import numpy as np
 
 from cerebralcortex.kernel.datatypes.datastream import DataStream
+from cerebralcortex.kernel.window import window
 from memphisdataprocessor.preprocessor.rpeak_detect import detect_rpeak
 
 
-def classify_ecg_window(window: list, range_threshold: int = 200, slope_threshold: int = 50, maximum_value: int = 4000):
+# TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
+def classify_ecg_window(data: list,
+                        range_threshold: int = 200,
+                        slope_threshold: int = 50,
+                        maximum_value: int = 4000):
     """
-    :param window: window of raw ecg tuples
+
+    :param data: window of raw ecg tuples
     :param range_threshold: range of the window
     :param slope_threshold: median slope of the window
     :param maximum_value: maximum value
     :return: True/False decision based on the three parameters
-
     """
-    values = np.array([i[1] for i in window])
+
+    values = np.array([i.get_sample() for i in data])
     if max(values) - min(values) < range_threshold:
         return False
     if max(values) > maximum_value:
@@ -46,42 +52,48 @@ def classify_ecg_window(window: list, range_threshold: int = 200, slope_threshol
     return True
 
 
-def filter_bad_ecg(ecg_array: list, fs: float, no_of_secs: int = 2) -> list:
+# TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
+def filter_bad_ecg(ecg: DataStream,
+                   fs: float,
+                   no_of_secs: int = 2) -> DataStream:
     """
     This function splits the ecg array into non overlapping windows of specified seconds
     and assigns a binary decision on them returns a filtered ecg array which contains
     only the windows to be kept
 
-    :param ecg_array: raw ecg array
+    :param ecg: raw ecg array
     :param fs: sampling frequency
     :param no_of_secs : no of seconds each window would be long
     :return:  filtered ecg array
     """
 
     window_length = int(no_of_secs * fs)
+    window_data = window(ecg.get_datapoints(), window_size=window_length)
 
+    ecg_filtered = DataStream.from_datastream([ecg])
     ecg_filtered_array = []
-    for i in range(0, len(ecg_array) - window_length - 1, window_length):
-        # get the index of the window elements
-        index = [k for k in range(i, i + window_length)]
 
-        if classify_ecg_window(ecg_array[index]):
-            # append the elements to the returned array
-            for x in ecg_array[index]:
-                ecg_filtered_array.append((x[0], x[1]))
+    # TODO: CODE_REVIEW: Should these thresholds be brought out to the outmost layer?
+    for key, data in window_data:
+        if classify_ecg_window(data, range_threshold=200, slope_threshold=50, maximum_value=4000):
+            ecg_filtered_array.extend(data)
 
-    return ecg_filtered_array
+    ecg_filtered.set_datapoints(ecg_filtered_array)
+
+    return ecg_filtered
 
 
-def compute_rr_datastream(ecg: DataStream, fs: float) -> list:
-    # get the ecg array from datastream
-    ecg_array = np.array([(x.get_timestamp_epoch() / 1000, x.get_sample()) for x in ecg.get_datapoints()])
-
-    # filter the ecg array
-    ecg_filtered_array = filter_bad_ecg(ecg_array, fs)
+def compute_rr_intervals(ecg: DataStream,
+                         fs: float) -> DataStream:
+    """
+    filter ecg ...
+    :param ecg:
+    :param fs:
+    :return:
+    """
+    ecg_filtered = filter_bad_ecg(ecg, fs)
 
     # compute the r-peak array
-    ecg_rpeak_array = detect_rpeak(ecg_filtered_array, fs)
+    ecg_rpeak = detect_rpeak(ecg_filtered, fs)
 
-    # return DataStream(ecg.get_user(),data=ecg_rpeak_array)
-    return ecg_rpeak_array
+    return ecg_rpeak

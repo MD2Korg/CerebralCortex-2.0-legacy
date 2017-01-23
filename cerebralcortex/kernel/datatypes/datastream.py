@@ -59,6 +59,9 @@ class DataStream:
         self._datapoints = data
         self._spanstreams = spanstreams
 
+    def get_identifier(self):
+        return self._id
+
     def get_datapoints(self):
         return self._datapoints
 
@@ -69,7 +72,7 @@ class DataStream:
         return self._user
 
     @classmethod
-    def from_datastream(cls, inputstreams: list, data: list):
+    def from_datastream(cls, inputstreams: list):
         """
 
         :param inputstreams:
@@ -77,8 +80,7 @@ class DataStream:
         :return:
         """
         result = cls(cerebralcortex=inputstreams[0]._cc,
-                     user=inputstreams[0]._user,
-                     data=data)
+                     user=inputstreams[0]._user)
 
         # TODO: Something with provenance tracking from datastream list
 

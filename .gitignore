@@ -55,10 +55,17 @@ fabric.properties
 
 
 
-
+# MD2K: Ignore files due to user properties included that cause conflicts across multiple developers.
 .idea/copyright
 .idea/dictionaries
 .idea/inspectionProfiles
+.idea/runConfigurations
+.idea/CerebralCortex.iml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+**/__pycache__/
 
 
 # End of https://www.gitignore.io/api/intellij
+

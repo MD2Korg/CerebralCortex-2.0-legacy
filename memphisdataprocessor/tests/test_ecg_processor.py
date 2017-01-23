@@ -22,42 +22,25 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import numpy as np
-from numpy.linalg import norm
-from sklearn import preprocessing
-
-from cerebralcortex.kernel.datatypes.datapoint import DataPoint
-from cerebralcortex.kernel.datatypes.datastream import DataStream
+import unittest
 
 
-def normalize(datastream: DataStream):
-    inputdata = np.array([i.get_sample() for i in datastream.get_datapoints()])
+class TestRPeakDetect(unittest.TestCase):
+    def setUp(self):
+        pass
 
-    data = preprocessing.normalize(inputdata).tolist()
+    def test_classify_ecg_window(self):
+        # TODO: Complete this test
+        pass
 
-    result_data = [DataPoint.from_tuple(datastream=datastream, timestamp=i.get_timestamp(), sample=None)
-                   for i in datastream.get_datapoints()]
-    for i, dp in enumerate(result_data):
-        dp.set_sample(data[i])
+    def test_filter_bad_ecg(self):
+        # TODO: Complete this test
+        pass
 
-    result = DataStream.from_datastream(inputstreams=[datastream])
-    result.set_datapoints(result_data)
-
-    return result
+    def test_compute_rr_intervals(self):
+        # TODO: Complete this test
+        pass
 
 
-def magnitude(datastream: DataStream):
-    inputdata = np.array([i.get_sample() for i in datastream.get_datapoints()])
-
-    data = norm(inputdata, axis=1).tolist()
-
-    result_data = [DataPoint.from_tuple(datastream=datastream, timestamp=i.get_timestamp(), sample=None)
-                   for i in datastream.get_datapoints()]
-
-    for i, dp in enumerate(result_data):
-        dp.set_sample(data[i])
-
-    result = DataStream.from_datastream(inputstreams=[datastream])
-    result.set_datapoints(result_data)
-
-    return result
+if __name__ == '__main__':
+    unittest.main()
