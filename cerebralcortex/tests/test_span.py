@@ -40,7 +40,7 @@ class TestSpan(unittest.TestCase):
 
     def test_Span(self):
         ts = datetime.datetime.now()
-        dp = Span(spanstream=123, starttime=ts, endtime=ts + datetime.timedelta(hours=1), label='RED')
+        dp = Span(start_time=ts, end_time=ts + datetime.timedelta(hours=1), label='RED')
 
         (starttime, endtime) = dp.get_time_tuple()
 

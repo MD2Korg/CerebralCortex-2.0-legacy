@@ -25,29 +25,39 @@
 import math
 from collections import OrderedDict
 from datetime import datetime, timedelta
+from typing import List
 
 import pytz
 
+from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 
-def epoch_align(ts: datetime, offset: float, after: bool = False) -> datetime:
+
+def epoch_align(ts: datetime,
+                offset: float,
+                after: bool = False,
+                time_zone: pytz = pytz.timezone('US/Central'),
+                time_base: int = 1e6) -> datetime:
     """
     Epoch timestamp alignment based on offset
+
+    :param time_zone: Specifiy the timezone of the timestamps, default US/Central
     :param ts: datatime object representing the timestamp to start with
-    :param offset: seconds as a float, supporting microsecond precision
+    :param offset: seconds as a float
     :param after: Flag designating if the result should be after ts
+    :param time_base: specifies the precision with which the time base should be manipulated (1e6 -> microseconds)
     :return: aligned datetime object
     """
-    new_timestamp = math.floor(ts.timestamp() * 1e6 / (offset * 1e6)) * offset * 1e6
+    new_timestamp = math.floor(ts.timestamp() * time_base / (offset * time_base)) * offset * time_base
 
     if after:
-        new_timestamp += offset * 1e6
+        new_timestamp += offset * time_base
 
-    result = datetime.fromtimestamp(new_timestamp / 1e6, pytz.timezone('US/Central'))
+    result = datetime.fromtimestamp(new_timestamp / time_base, time_zone)
     return result
 
 
-def window(data: list,
-           window_size: float):
+def window(data: List[DataPoint],
+           window_size: float) -> OrderedDict:
     """
     Special case of a sliding window with no overlaps
     :param data:
@@ -57,7 +67,36 @@ def window(data: list,
     return window_sliding(data, window_size=window_size, window_offset=window_size)
 
 
-def window_iter(iterable: list, window_size: float, window_offset: float):
+def window_sliding(data: List[DataPoint],
+                   window_size: float,
+                   window_offset: float):
+    """
+    Sliding Window Implementation
+
+    :param data: list
+    :param window_size: float
+    :param window_offset: float
+    :return: OrderedDict representing [(st,et),[dp,dp,dp,dp...],
+                                       (st,et),[dp,dp,dp,dp...],
+                                        ...]
+    """
+    if data is None:
+        raise TypeError('data is not List[DataPoint]')
+
+    if len(data) == 0:
+        raise ValueError('The length of data is zero')
+
+    windowed_datastream = OrderedDict()
+
+    for key, data in window_iter(data, window_size, window_offset):
+        windowed_datastream[key] = data
+
+    return windowed_datastream
+
+
+def window_iter(iterable: List[DataPoint],
+                window_size: float,
+                window_offset: float):
     """
     Window interation function that support various common implementations
     :param iterable:
@@ -86,28 +125,3 @@ def window_iter(iterable: list, window_size: float, window_offset: float):
         data.append(element)
     yield key, data
 
-
-def window_sliding(data: list,
-                   window_size: float,
-                   window_offset: float):
-    """
-    Sliding Window Implementation
-
-    :param data: list
-    :param window_size: float
-    :param window_offset: float
-    :return: OrderedDict representing [(st,et),[dp,dp,dp,dp...],
-                                       (st,et),[dp,dp,dp,dp...],
-                                        ...]
-    """
-    if data is None:
-        return None
-
-    if len(data) == 0:
-        return None
-
-    windowed_datastream = OrderedDict()
-
-    for key, data in window_iter(data, window_size, window_offset):
-        windowed_datastream[key] = data
-    return windowed_datastream

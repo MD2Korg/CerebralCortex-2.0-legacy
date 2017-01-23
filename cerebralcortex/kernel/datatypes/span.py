@@ -22,29 +22,36 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from datetime import datetime
+from typing import Any, Tuple
 
 
 class Span:
     def __init__(self,
-                 spanstream: int = None,
-                 starttime: datetime = None,
-                 endtime: datetime = None,
-                 label: object = None):
+                 start_time: datetime = None,
+                 end_time: datetime = None,
+                 label: Any = None):
         """
 
-        :param spanstream:
-        :param starttime: Python datetime object with timezone information
-        :param endtime: Python datetime object with timezone information
+        :param start_time: Python datetime object with timezone information
+        :param end_time: Python datetime object with timezone information
+        :param label:
         """
 
-        self._spanstream = spanstream
-        self._starttime = starttime
-        self._endtime = endtime
+        self._starttime = start_time
+        self._endtime = end_time
         self._label = label
 
-    def get_time_tuple(self):
+    def get_time_tuple(self) -> Tuple[datetime, datetime]:
+        """
+
+        :return:
+        """
         result = (self._starttime, self._endtime)
         return result
 
-    def get_label(self):
+    def get_label(self) -> Any:
+        """
+
+        :return:
+        """
         return self._label

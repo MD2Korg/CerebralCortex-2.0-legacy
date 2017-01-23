@@ -40,18 +40,18 @@ class TestWindowing(unittest.TestCase):
 
     def test_Window_None(self):
         data = None
-        result = window_sliding(data, window_size=60.0, window_offset=10.0)
-        self.assertIsNone(result)
+        self.assertRaises(TypeError, window_sliding, data, window_size=60.0, window_offset=10.0)
+
 
     def test_Window_Empty(self):
         data = []
-        result = window_sliding(data, window_size=60.0, window_offset=10.0)
-        self.assertIsNone(result)
+        self.assertRaises(ValueError, window_sliding, data, window_size=60.0, window_offset=10.0)
+
 
     def test_Window_Valid(self):
         data = []
         for i in range(0, 100):
-            data.append(DataPoint(1, datetime.now(tz=self.timezone), random()))
+            data.append(DataPoint(datetime.now(tz=self.timezone), random()))
             sleep(0.01)
 
         self.assertEqual(100, len(data))

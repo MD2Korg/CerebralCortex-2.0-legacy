@@ -37,7 +37,7 @@ class TestVector(unittest.TestCase):
     def setUp(self):
         self.size = 100
         self.ds = DataStream(None, None)
-        data = [DataPoint.from_tuple(self.ds, datetime.datetime.now(), [random() * 100, random() * 10, random()]) for i
+        data = [DataPoint.from_tuple(datetime.datetime.now(), [random() * 100, random() * 10, random()]) for i
                 in range(0, self.size)]
         self.ds.set_datapoints(data)
 

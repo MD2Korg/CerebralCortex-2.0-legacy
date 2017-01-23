@@ -30,34 +30,44 @@ from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 
 
-def normalize(datastream: DataStream):
-    inputdata = np.array([i.get_sample() for i in datastream.get_datapoints()])
+def normalize(datastream: DataStream) -> DataStream:
+    """
 
-    data = preprocessing.normalize(inputdata).tolist()
+    :param datastream:
+    :return:
+    """
+    input_data = np.array([i.get_sample() for i in datastream.get_datapoints()])
 
-    result_data = [DataPoint.from_tuple(datastream=datastream, timestamp=i.get_timestamp(), sample=None)
+    data = preprocessing.normalize(input_data).tolist()
+
+    result_data = [DataPoint.from_tuple(timestamp=i.get_timestamp(), sample=None)
                    for i in datastream.get_datapoints()]
     for i, dp in enumerate(result_data):
         dp.set_sample(data[i])
 
-    result = DataStream.from_datastream(inputstreams=[datastream])
+    result = DataStream.from_datastream(input_streams=[datastream])
     result.set_datapoints(result_data)
 
     return result
 
 
-def magnitude(datastream: DataStream):
-    inputdata = np.array([i.get_sample() for i in datastream.get_datapoints()])
+def magnitude(datastream: DataStream) -> DataStream:
+    """
 
-    data = norm(inputdata, axis=1).tolist()
+    :param datastream:
+    :return:
+    """
+    input_data = np.array([i.get_sample() for i in datastream.get_datapoints()])
 
-    result_data = [DataPoint.from_tuple(datastream=datastream, timestamp=i.get_timestamp(), sample=None)
+    data = norm(input_data, axis=1).tolist()
+
+    result_data = [DataPoint.from_tuple(timestamp=i.get_timestamp(), sample=None)
                    for i in datastream.get_datapoints()]
 
     for i, dp in enumerate(result_data):
         dp.set_sample(data[i])
 
-    result = DataStream.from_datastream(inputstreams=[datastream])
+    result = DataStream.from_datastream(input_streams=[datastream])
     result.set_datapoints(result_data)
 
     return result
