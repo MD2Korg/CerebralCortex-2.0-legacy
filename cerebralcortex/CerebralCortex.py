@@ -43,25 +43,5 @@ class CerebralCortex:
 
         self.sc = self.sparkSession.sparkContext
 
-    # def register(self, datastream):
-    #     """
-    #     Create a datastream in the system
-    #     :param datastream: Dictionary
-    #     """
-    #     pass
-
-    def find(self, query):
-        """
-        Find and return all matching datastreams
-        :param query: partial dictionary matching
-        """
-        pass
-
     def readfile(self, filename):
         return self.sc.textFile(filename)
-
-    def read(self):
-        pass
-
-    def save(self, datastreamID):
-        pass

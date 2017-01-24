@@ -26,7 +26,8 @@ import yaml
 
 
 class Configuration:
-    def __init__(self, filepath: str = None):
+    def __init__(self,
+                 filepath: str = None) -> None:
         """
         Initialization for the configuration object
         :param filepath: path to a yml configuration file for Cerebral Cortex
@@ -37,7 +38,8 @@ class Configuration:
             self.config = None
         pass
 
-    def load_file(self, filepath: str):
+    def load_file(self,
+                  filepath: str) -> None:
         """
         Helper function to load a yaml file
         :param filepath: path to a yml configuration file for Cerebral Cortex

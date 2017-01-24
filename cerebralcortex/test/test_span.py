@@ -25,33 +25,28 @@
 import datetime
 import unittest
 
-from cerebralcortex.kernel.datatypes.datapoint import DataPoint
+from cerebralcortex.kernel.datatypes.span import Span
 
 
-class TestDataPoint(unittest.TestCase):
-    def test_DataPoint_None(self):
-        dp = DataPoint()
-        self.assertIsNone(dp.get_sample())
-        self.assertIsNone(dp.get_datastream_id())
-        self.assertIsNone(dp.get_timestamp())
-        self.assertRaises(ValueError, dp.get_timestamp_epoch)
+class TestSpan(unittest.TestCase):
+    def test_Span_None(self):
+        dp = Span()
 
+        (starttime, endtime) = dp.get_time_tuple()
 
-    def test_DataPoint(self):
+        self.assertIsNone(starttime)
+        self.assertIsNone(endtime)
+        self.assertIsNone(dp.get_label())
+
+    def test_Span(self):
         ts = datetime.datetime.now()
-        dp = DataPoint(datastream=4, timestamp=ts, sample={'Foo': 123})
-        self.assertDictEqual(dp.get_sample(), {'Foo': 123})
-        self.assertEqual(dp.get_datastream_id(), 4)
-        self.assertEqual(dp.get_timestamp(), ts)
-        self.assertEqual(dp.get_timestamp_epoch(), ts.timestamp() * 1e6)
+        dp = Span(start_time=ts, end_time=ts + datetime.timedelta(hours=1), label='RED')
 
-    def test_classmethod_from_tuple(self):
-        ts = datetime.datetime.now()
-        dp = DataPoint.from_tuple(datastream=234, timestamp=ts, sample=[1, 2, 3])
-        self.assertIsInstance(dp, DataPoint)
-        self.assertEqual(dp.get_timestamp(), ts)
-        self.assertEqual(dp.get_sample(), [1, 2, 3])
-        self.assertEqual(dp.get_datastream_id(), 234)
+        (starttime, endtime) = dp.get_time_tuple()
+
+        self.assertEqual(ts, starttime)
+        self.assertEqual(ts + datetime.timedelta(hours=1), endtime)
+        self.assertEqual(dp.get_label(), 'RED')
 
 
 if __name__ == '__main__':

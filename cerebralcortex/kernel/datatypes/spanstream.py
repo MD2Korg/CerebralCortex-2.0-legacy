@@ -21,11 +21,13 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from typing import List
 
 from pyspark import RDD
 
 from cerebralcortex import CerebralCortex
 from cerebralcortex.kernel.datatypes.metadata import Metadata
+from cerebralcortex.kernel.datatypes.span import Span
 
 
 class SpanStream:
@@ -50,15 +52,22 @@ class SpanStream:
         self._metadata = metadata
         self._spans = data
 
-    def set_spans(self, spandata):
-        self._spans = spandata
+    def get_cc(self) -> CerebralCortex:
+        """
 
-    def getID(self):
+        :return:
+        """
+        return self._cc
+
+    def set_spans(self, data: List[Span]) -> None:
+        self._spans = data
+
+    def get_id(self) -> int:
         return self._id
 
     @classmethod
     def from_stream(cls, inputstreams: list):
-        result = cls(cerebralcortex=inputstreams[0]._cc)
+        result = cls(cerebralcortex=inputstreams[0].get_cc())
 
         # TODO: Something with provenance tracking from inputstreams list
 

@@ -24,29 +24,40 @@
 
 import datetime
 import unittest
+from random import random
 
-from cerebralcortex.kernel.datatypes.span import Span
+import numpy as np
+
+from cerebralcortex.kernel.datatypes.datapoint import DataPoint
+from cerebralcortex.kernel.datatypes.datastream import DataStream
+from memphisdataprocessor.signalprocessing.vector import normalize, magnitude
 
 
-class TestSpan(unittest.TestCase):
-    def test_Span_None(self):
-        dp = Span()
+class TestVector(unittest.TestCase):
+    def setUp(self):
+        self.size = 100
+        self.ds = DataStream(None, None)
+        data = [DataPoint.from_tuple(datetime.datetime.now(), [random() * 100, random() * 10, random()]) for i
+                in range(0, self.size)]
+        self.ds.set_datapoints(data)
 
-        (starttime, endtime) = dp.get_time_tuple()
+    def test_normalize(self):
+        self.assertIsInstance(self.ds, DataStream)
+        self.assertEqual(len(self.ds.get_datapoints()), self.size)
 
-        self.assertIsNone(starttime)
-        self.assertIsNone(endtime)
-        self.assertIsNone(dp.get_label())
+        n = normalize(self.ds)
+        self.assertIsInstance(n, DataStream)
+        for dp in n.get_datapoints():
+            self.assertAlmostEqual(np.linalg.norm(dp.get_sample()), 1.0, delta=1e-6)
 
-    def test_Span(self):
-        ts = datetime.datetime.now()
-        dp = Span(spanstream=123, starttime=ts, endtime=ts + datetime.timedelta(hours=1), label='RED')
+    def test_magnitude(self):
+        self.assertIsInstance(self.ds, DataStream)
+        self.assertEqual(len(self.ds.get_datapoints()), self.size)
 
-        (starttime, endtime) = dp.get_time_tuple()
-
-        self.assertEqual(ts, starttime)
-        self.assertEqual(ts + datetime.timedelta(hours=1), endtime)
-        self.assertEqual(dp.get_label(), 'RED')
+        m = magnitude(normalize(self.ds))
+        self.assertIsInstance(m, DataStream)
+        for sample in m.get_datapoints():
+            self.assertAlmostEqual(sample.get_sample(), 1.0, delta=1e-6)
 
 
 if __name__ == '__main__':

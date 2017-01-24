@@ -23,79 +23,72 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-from memphisdataprocessor.alignment import timestamp_correct, timestampCorrectAndSequenceAlign
+from memphisdataprocessor.alignment import timestamp_correct, timestamp_correct_and_sequence_align
 from memphisdataprocessor.preprocessor.ecg_processor import compute_rr_intervals
 from memphisdataprocessor.signalprocessing.accelerometer import accelerometerFeatures
 from memphisdataprocessor.signalprocessing.dataquality import ECGDataQuality, RIPDataQuality
 
 
-def cStress(rawecg: DataStream,
-            rawrip: DataStream,
-            rawaccelx: DataStream,
-            rawaccely: DataStream,
-            rawaccelz: DataStream) -> DataStream:
+def cStress(raw_ecg: DataStream,
+            raw_rip: DataStream,
+            raw_accel_x: DataStream,
+            raw_accel_y: DataStream,
+            raw_accel_z: DataStream) -> DataStream:
     """
 
     :return:
-    :param rawecg:
-    :param rawrip:
-    :param rawaccelx:
-    :param rawaccely:
-    :param rawaccelz:
+    :param raw_ecg:
+    :param raw_rip:
+    :param raw_accel_x:
+    :param raw_accel_y:
+    :param raw_accel_z:
     """
 
     # Algorithm Constants
     # TODO: Once metadata is implemented
-    # ecgSamplingFrequency = rawecg.get_metadata('samplingFrequency')  # 64.0
-    # ripSamplingFrequency = rawrip.get_metadata('samplingFrequency')  # 64.0 / 3.0
-    # accelSamplingFrequency = rawaccelx.get_metadata('samplingFrequency')  # 64.0 / 6.0
+    # ecg_sampling_frequency = rawecg.get_metadata('samplingFrequency')  # 64.0
+    # rip_sampling_frequency = rawrip.get_metadata('samplingFrequency')  # 64.0 / 3.0
+    # accel_sampling_frequency = rawaccelx.get_metadata('samplingFrequency')  # 64.0 / 6.0
 
     # TODO: TWH Temporary
-    ecgSamplingFrequency = 64.0
-    ripSamplingFrequency = 64.0 / 3.0
-    accelSamplingFrequency = 64.0 / 6.0
+    ecg_sampling_frequency = 64.0
+    rip_sampling_frequency = 64.0 / 3.0
+    accel_sampling_frequency = 64.0 / 6.0
 
     # r-peak datastream computation
-    ecg_rr_datastream = compute_rr_intervals(rawecg, ecgSamplingFrequency)
+    ecg_rr_datastream = compute_rr_intervals(raw_ecg, ecg_sampling_frequency)
     # print(ecg_rr_datastream[0:10])
 
     # Timestamp correct datastreams
-    ecgCorrected = timestamp_correct(datastream=rawecg, sampling_frequency=ecgSamplingFrequency)
-    ripCorrected = timestamp_correct(datastream=rawrip, sampling_frequency=ripSamplingFrequency)
-    accel = timestampCorrectAndSequenceAlign(datastreamArray=[rawaccelx, rawaccely, rawaccelz],
-                                             sampling_frequency=accelSamplingFrequency)
+    ecg_corrected = timestamp_correct(datastream=raw_ecg, sampling_frequency=ecg_sampling_frequency)
+    rip_corrected = timestamp_correct(datastream=raw_rip, sampling_frequency=rip_sampling_frequency)
+    accel = timestamp_correct_and_sequence_align(datastream_array=[raw_accel_x, raw_accel_y, raw_accel_z],
+                                                 sampling_frequency=accel_sampling_frequency)
 
     # ECG and RIP signal morphology dataquality
-    ecgDataQuality = ECGDataQuality(ecgCorrected,
-                                    windowsize=5.0,  # What does windowsize mean here?
+    ecg_data_quality = ECGDataQuality(ecg_corrected,
+                                      windowsize=5.0,  # What does windowsize mean here?
                                     bufferLength=3,
-                                    acceptableOutlierPercent=50,
-                                    outlierThresholdHigh=4500,
-                                    outlierThresholdLow=20,
-                                    badSegmentThreshod=2,
-                                    ecgBandLooseThreshold=47)
-    ecgCorrected.addSpanStream(ecgDataQuality)
+                                      acceptableOutlierPercent=50,
+                                      outlierThresholdHigh=4500,
+                                      outlierThresholdLow=20,
+                                      badSegmentThreshod=2,
+                                      ecgBandLooseThreshold=47)
+    ecg_corrected.add_span_stream(ecg_data_quality)
 
-    ripDataQuality = RIPDataQuality(ripCorrected,
-                                    windowsize=5.0,  # What does windowsize mean here?
+    rip_data_quality = RIPDataQuality(rip_corrected,
+                                      windowsize=5.0,  # What does windowsize mean here?
                                     bufferLength=5,
-                                    acceptableOutlierPercent=50,
-                                    outlierThresholdHigh=4500,
-                                    outlierThresholdLow=20,
-                                    badSegmentThreshod=2,
-                                    ripBandOffThreshold=20,
-                                    ripBandLooseThreshold=150)
-    ripCorrected.addSpanStream(ripDataQuality)
+                                      acceptableOutlierPercent=50,
+                                      outlierThresholdHigh=4500,
+                                      outlierThresholdLow=20,
+                                      badSegmentThreshod=2,
+                                      ripBandOffThreshold=20,
+                                      ripBandLooseThreshold=150)
+    rip_corrected.add_span_stream(rip_data_quality)
 
     # Accelerometer Feature Computation
-
-
-    accelerometerMagnitude, accelerometerWinMagDeviations, accelActivity = accelerometerFeatures(accel)
-
-
-
-
-
+    accelerometer_magnitude, accelerometer_win_mag_deviations, accel_activity = accelerometerFeatures(accel)
 
     # TODO: TWH Fix when feature vector result is available
-    return rawecg
+    return raw_ecg

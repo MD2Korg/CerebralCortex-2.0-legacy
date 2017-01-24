@@ -40,18 +40,16 @@ class TestWindowing(unittest.TestCase):
 
     def test_Window_None(self):
         data = None
-        result = window_sliding(data, window_size=60.0, window_offset=10.0)
-        self.assertIsNone(result)
+        self.assertRaises(TypeError, window_sliding, data, window_size=60.0, window_offset=10.0)
 
     def test_Window_Empty(self):
         data = []
-        result = window_sliding(data, window_size=60.0, window_offset=10.0)
-        self.assertIsNone(result)
+        self.assertRaises(ValueError, window_sliding, data, window_size=60.0, window_offset=10.0)
 
     def test_Window_Valid(self):
         data = []
         for i in range(0, 100):
-            data.append(DataPoint(1, datetime.now(tz=self.timezone), random()))
+            data.append(DataPoint(datetime.now(tz=self.timezone), random()))
             sleep(0.01)
 
         self.assertEqual(100, len(data))
@@ -73,17 +71,19 @@ class TestWindowing(unittest.TestCase):
                        datetime.fromtimestamp(123456789.5600, tz=self.timezone))
                       ]
         for ts, offset, correct in timestamps:
-            self.assertEqual(correct, epoch_align(ts, offset))
-            self.assertEqual(correct + timedelta(seconds=offset), epoch_align(ts, offset, after=True))
-            self.assertNotEqual(correct, epoch_align(ts, offset + 1))
+            with self.subTest(ts=ts, offset=offset, correct=correct):
+                self.assertEqual(correct, epoch_align(ts, offset))
+                self.assertEqual(correct + timedelta(seconds=offset), epoch_align(ts, offset, after=True))
+                self.assertNotEqual(correct, epoch_align(ts, offset + 1))
 
     def test_epoch_align_intervals(self):
 
         timestamp = datetime.fromtimestamp(1484929672.918273, tz=self.timezone)
         for interval in [1000.0, 100.0, 10.0, 5.0, 1.0, 0.5, 0.1, 0.01, 0.001, 0.23, 0.45]:
-            aligned = epoch_align(timestamp, interval)
-            reference = (int(int(timestamp.timestamp() * 1e6) / int(interval * 1e6)) * interval)
-            self.assertAlmostEqual(aligned.timestamp(), reference, delta=1e-6)
+            with self.subTest(interval=interval):
+                aligned = epoch_align(timestamp, interval)
+                reference = (int(int(timestamp.timestamp() * 1e6) / int(interval * 1e6)) * interval)
+                self.assertAlmostEqual(aligned.timestamp(), reference, delta=1e-6)
 
 
 if __name__ == '__main__':

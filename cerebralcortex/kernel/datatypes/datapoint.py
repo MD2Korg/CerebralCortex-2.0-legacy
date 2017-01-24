@@ -23,43 +23,61 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from datetime import datetime, timezone
+from typing import Any
 
 
 class DataPoint:
     def __init__(self,
-                 datastream: int = None,
                  timestamp: datetime = None,
-                 sample: object = None):
+                 sample: Any = None) -> None:
         """
 
-        :param datastream: Cerebral Cortex provided data stream identifier
         :param timestamp: Python datetime object with timezone information
         :param sample: Python object representing any data
         """
 
-        self._datastreamID = datastream
         self._timestamp = timestamp
         self._sample = sample
 
-    def get_sample(self) -> object:
+    def get_sample(self) -> Any:
+        """
+
+        :return:
+        """
         return self._sample
 
-    def set_sample(self, value):
+    def set_sample(self, value: Any) -> None:
+        """
+
+        :param value:
+        """
         self._sample = value
 
     def get_timestamp(self) -> datetime:
+        """
+
+        :return:
+        """
         return self._timestamp
 
-    def get_timestamp_epoch(self, tzinfo=timezone.utc) -> int:
+    def get_timestamp_epoch(self, tzinfo: timezone = timezone.utc) -> int:
         # TODO: Handle timezone information
+        """
+
+        :param tzinfo:
+        :return:
+        """
         if self._timestamp is None:
             raise ValueError
 
         return int(self._timestamp.timestamp() * 1e6)
 
-    def get_datastream_id(self) -> int:
-        return self._datastreamID
-
     @classmethod
-    def from_tuple(cls, datastream, timestamp, sample):
-        return cls(datastream=datastream, timestamp=timestamp, sample=sample)
+    def from_tuple(cls, timestamp: datetime, sample: Any):
+        """
+
+        :param timestamp:
+        :param sample:
+        :return:
+        """
+        return cls(timestamp=timestamp, sample=sample)

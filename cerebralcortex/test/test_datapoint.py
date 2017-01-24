@@ -24,40 +24,30 @@
 
 import datetime
 import unittest
-from random import random
-
-import numpy as np
 
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
-from cerebralcortex.kernel.datatypes.datastream import DataStream
-from memphisdataprocessor.signalprocessing.vector import normalize, magnitude
 
 
-class TestVector(unittest.TestCase):
-    def setUp(self):
-        self.size = 100
-        self.ds = DataStream(None, None)
-        data = [DataPoint.from_tuple(self.ds, datetime.datetime.now(), [random() * 100, random() * 10, random()]) for i
-                in range(0, self.size)]
-        self.ds.set_datapoints(data)
+class TestDataPoint(unittest.TestCase):
+    def test_DataPoint_None(self):
+        dp = DataPoint()
+        self.assertIsNone(dp.get_sample())
+        self.assertIsNone(dp.get_timestamp())
+        self.assertRaises(ValueError, dp.get_timestamp_epoch)
 
-    def test_normalize(self):
-        self.assertIsInstance(self.ds, DataStream)
-        self.assertEqual(len(self.ds.get_datapoints()), self.size)
+    def test_DataPoint(self):
+        ts = datetime.datetime.now()
+        dp = DataPoint(timestamp=ts, sample={'Foo': 123})
+        self.assertDictEqual(dp.get_sample(), {'Foo': 123})
+        self.assertEqual(dp.get_timestamp(), ts)
+        self.assertEqual(dp.get_timestamp_epoch(), ts.timestamp() * 1e6)
 
-        n = normalize(self.ds)
-        self.assertIsInstance(n, DataStream)
-        for dp in n.get_datapoints():
-            self.assertAlmostEqual(np.linalg.norm(dp.get_sample()), 1.0, delta=1e-6)
-
-    def test_magnitude(self):
-        self.assertIsInstance(self.ds, DataStream)
-        self.assertEqual(len(self.ds.get_datapoints()), self.size)
-
-        m = magnitude(normalize(self.ds))
-        self.assertIsInstance(m, DataStream)
-        for sample in m.get_datapoints():
-            self.assertAlmostEqual(sample.get_sample(), 1.0, delta=1e-6)
+    def test_classmethod_from_tuple(self):
+        ts = datetime.datetime.now()
+        dp = DataPoint.from_tuple(timestamp=ts, sample=[1, 2, 3])
+        self.assertIsInstance(dp, DataPoint)
+        self.assertEqual(dp.get_timestamp(), ts)
+        self.assertEqual(dp.get_sample(), [1, 2, 3])
 
 
 if __name__ == '__main__':

@@ -21,9 +21,11 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from typing import List
 from uuid import UUID
 
 from cerebralcortex import CerebralCortex
+from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.metadata import Metadata
 from cerebralcortex.kernel.datatypes.spanstream import SpanStream
 
@@ -33,11 +35,11 @@ class DataStream:
                  cerebralcortex: CerebralCortex,
                  user: UUID,
                  identifier: int = None,
-                 data: list = None,
+                 data: List[DataPoint] = None,
                  processing: dict = None,
                  sharing: dict = None,
                  metadata: Metadata = Metadata(),
-                 spanstreams: list = None):
+                 spanstreams: List[SpanStream] = None) -> None:
         """
         The primary object in Cerebral Cortex which represents data
         :param cerebralcortex: Reference to the Cerebral Cortex object
@@ -59,32 +61,58 @@ class DataStream:
         self._datapoints = data
         self._spanstreams = spanstreams
 
-    def get_identifier(self):
+    def get_cc(self) -> CerebralCortex:
+        """
+
+        :return:
+        """
+        return self._cc
+
+    def get_identifier(self) -> int:
+        """
+
+        :return:
+        """
         return self._id
 
-    def get_datapoints(self):
+    def get_datapoints(self) -> List[DataPoint]:
+        """
+
+        :return:
+        """
         return self._datapoints
 
-    def set_datapoints(self, data):
+    def set_datapoints(self, data: list) -> None:
+        """
+
+        :param data:
+        """
         self._datapoints = data
 
-    def get_user(self):
+    def get_user(self) -> UUID:
+        """
+
+        :return:
+        """
         return self._user
 
     @classmethod
-    def from_datastream(cls, inputstreams: list):
+    def from_datastream(cls, input_streams: list):
         """
 
-        :param inputstreams:
-        :param data:
+        :param input_streams:
         :return:
         """
-        result = cls(cerebralcortex=inputstreams[0]._cc,
-                     user=inputstreams[0]._user)
+        result = cls(cerebralcortex=input_streams[0]._cc,
+                     user=input_streams[0].get_user())
 
         # TODO: Something with provenance tracking from datastream list
 
         return result
 
-    def addSpanStream(self, spanstream: SpanStream):
+    def add_span_stream(self, spanstream: SpanStream) -> None:
+        """
+
+        :param spanstream:
+        """
         self._spanstreams.append(spanstream)
