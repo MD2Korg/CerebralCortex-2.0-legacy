@@ -264,6 +264,7 @@ def detect_rpeak(ecg: DataStream, fs: int = 64, threshold: float = 0.5) -> DataS
     data = ecg.get_datapoints()
 
     sample = np.array([i.get_sample() for i in data])
+    print(sample)
     timestamp = np.array([i.get_timestamp() for i in data])
 
     # computes the moving window integration of the signal

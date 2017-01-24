@@ -30,11 +30,16 @@ from memphisdataprocessor.preprocessor.rpeak_detect import detect_rpeak
 
 def classify_ecg_window(data: list, range_threshold: int = 200, slope_threshold: int = 50, maximum_value: int = 4000):
     """
+    :param data: window of raw ecg datapoints.
 
-    :param data: window of raw ecg tuples
-    :param range_threshold: range of the window
-    :param slope_threshold: median slope of the window
-    :param maximum_value: maximum value
+    :param range_threshold: range of the window ( since ecg sample value can be from 0-4096,
+    the morphology of ECG signal dictates that the range should be greater than 200)
+    :param slope_threshold: median slope of the window (here slope is the consecutive difference
+    among the ECG sample values. The median of the absolute value of consecutive difference is
+    parameterized)
+    :param maximum_value: maximum value of the ecg sample array. An amplitude of greater than 4000 is
+    considered an spurious value. so the window is discarded.
+
     :return: True/False decision based on the three parameters
     """
 
@@ -54,10 +59,12 @@ def filter_bad_ecg(ecg: DataStream, fs: float, no_of_secs: int = 2) -> DataStrea
     and assigns a binary decision on them returns a filtered ecg array which contains
     only the windows to be kept
 
-    :param ecg: raw ecg array
+    :param ecg: raw ecg datastream
     :param fs: sampling frequency
-    :param no_of_secs : no of seconds each window would be long
-    :return:  filtered ecg array
+    :param no_of_secs : no of seconds is the length of the window by which the ecg datastream is
+     divided and checked.
+
+    :return:  filtered ecg datastream
     """
 
     window_length = int(no_of_secs * fs)
@@ -66,7 +73,8 @@ def filter_bad_ecg(ecg: DataStream, fs: float, no_of_secs: int = 2) -> DataStrea
     ecg_filtered = DataStream.from_datastream([ecg])
     ecg_filtered_array = []
 
-    for key, data in window_data:
+    for key in window_data:
+        data=window_data[key]
         if classify_ecg_window(data, range_threshold=200, slope_threshold=50, maximum_value=4000):
             ecg_filtered_array.extend(data)
 
