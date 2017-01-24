@@ -36,6 +36,7 @@ def dataprocessor(inputString):
         timestamp = datetime.fromtimestamp(float(ts) / 1000.0, pytz.timezone('US/Central'))
         return DataPoint.from_tuple(timestamp=timestamp, sample=float(val))
     except ValueError:
+
         # Skip bad values and filter them later
         # print("ValueError: " + str(input))
         return
