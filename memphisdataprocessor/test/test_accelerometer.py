@@ -23,6 +23,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import datetime
+import gzip
+import os
 import unittest
 from random import random
 
@@ -34,17 +36,41 @@ from memphisdataprocessor.signalprocessing.accelerometer import window_std_dev
 
 
 class TestAccelerometer(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(TestAccelerometer, cls).setUpClass()
+
+        cls.accelx = []
+        with gzip.open(os.path.join(os.path.dirname(__file__), 'res/accelx.csv.gz'), 'rt') as f:
+            for l in f:
+                values = list(map(int, l.split(',')))
+                cls.accelx.append(DataPoint(datetime.datetime.fromtimestamp(values[0] / 1000000.0), values[1]))
+
+        cls.accely = []
+        with gzip.open(os.path.join(os.path.dirname(__file__), 'res/accely.csv.gz'), 'rt') as f:
+            for l in f:
+                values = list(map(int, l.split(',')))
+                cls.accely.append(DataPoint(datetime.datetime.fromtimestamp(values[0] / 1000000.0), values[1]))
+
+        cls.accelz = []
+        with gzip.open(os.path.join(os.path.dirname(__file__), 'res/accelz.csv.gz'), 'rt') as f:
+            for l in f:
+                values = list(map(int, l.split(',')))
+                cls.accelz.append(DataPoint(datetime.datetime.fromtimestamp(values[0] / 1000000.0), values[1]))
+
+
     def setUp(self):
         self.size = 100000
         self.ds = DataStream(None, None)
         data = [DataPoint.from_tuple(datetime.datetime.now(), [random()]) for i in range(0, self.size)]
         self.ds.set_datapoints(data)
 
+
     def test_window_std_dev(self):
         ts = datetime.datetime.now(tz=pytz.timezone('US/Central'))
         dev = window_std_dev(self.ds.get_datapoints(), ts)
         self.assertEqual(dev.get_timestamp(), ts)
-        self.assertAlmostEqual(dev.get_sample(), 0.2886751346, delta=0.001)
+        self.assertAlmostEqual(dev.get_sample(), 0.2886751346, delta=0.01)
 
     def test_window_std_dev_one(self):
         ts = datetime.datetime.now(tz=pytz.timezone('US/Central'))
