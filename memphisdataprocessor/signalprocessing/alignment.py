@@ -21,9 +21,32 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+import datetime
+
+import numpy as np
+
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 
+
+def interpolate_gaps(datastream: DataStream,
+                     sampling_frequency: float = None) -> DataStream:
+    sampling_interval = 1.0 / sampling_frequency
+
+    max_interpolation_gap = 1.0 / (sampling_frequency * 0.1)
+
+    data = datastream.get_datapoints()
+    timedeltas = np.diff([dp.get_timestamp() for dp in data])
+
+    gap_points = []
+    low_limit = datetime.timedelta(seconds=2 * sampling_interval)
+    high_limit = datetime.timedelta(seconds=max_interpolation_gap)
+    for index, value in enumerate(timedeltas):
+
+        if low_limit <= value <= high_limit:
+            gap_points.append(data[index])
+
+    print('gaps:', len(gap_points))
 
 def timestamp_correct(datastream: DataStream,
                       sampling_frequency: float = None) -> DataStream:
