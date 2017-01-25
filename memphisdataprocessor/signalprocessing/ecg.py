@@ -21,15 +21,89 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from typing import List
+
 import numpy as np
 from scipy import signal
 
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
+from cerebralcortex.kernel.window import window
 
 
 # TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
-def rr_interval_update(rpeak_temp1: list,
+def classify_ecg_window(data: List[DataPoint],
+                        range_threshold: int = 200,
+                        slope_threshold: int = 50,
+                        maximum_value: int = 4000) -> bool:
+    """
+
+    :param data: window of raw ecg tuples
+    :param range_threshold: range of the window
+    :param slope_threshold: median slope of the window
+    :param maximum_value: maximum value
+    :return: True/False decision based on the three parameters
+    """
+
+    values = np.array([i.get_sample() for i in data])
+    if max(values) - min(values) < range_threshold:
+        return False
+    if max(values) > maximum_value:
+        return False
+    if np.median(np.abs(np.diff(values))) > slope_threshold:
+        return False
+    return True
+
+
+# TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
+def filter_bad_ecg(ecg: DataStream,
+                   fs: float,
+                   no_of_secs: int = 2) -> DataStream:
+    """
+    This function splits the ecg array into non overlapping windows of specified seconds
+    and assigns a binary decision on them returns a filtered ecg array which contains
+    only the windows to be kept
+
+    :param ecg: raw ecg array
+    :param fs: sampling frequency
+    :param no_of_secs : no of seconds each window would be long
+    :return:  filtered ecg array
+    """
+
+    window_length = int(no_of_secs * fs)
+    window_data = window(ecg.get_datapoints(), window_size=window_length)
+
+    ecg_filtered = DataStream.from_datastream([ecg])
+    ecg_filtered_array = []
+
+    # TODO: CODE_REVIEW: Should these thresholds be brought out to the outmost layer?
+    for key, data in window_data:
+        if classify_ecg_window(data, range_threshold=200, slope_threshold=50, maximum_value=4000):
+            ecg_filtered_array.extend(data)
+
+    ecg_filtered.set_datapoints(ecg_filtered_array)
+
+    return ecg_filtered
+
+
+def compute_rr_intervals(ecg: DataStream,
+                         fs: float) -> DataStream:
+    """
+    filter ecg ...
+    :param ecg:
+    :param fs:
+    :return:
+    """
+    ecg_filtered = filter_bad_ecg(ecg, fs)
+
+    # compute the r-peak array
+    ecg_rpeak = detect_rpeak(ecg_filtered, fs)
+
+    return ecg_rpeak
+
+
+# TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
+def rr_interval_update(rpeak_temp1: List[DataPoint],
                        rr_ave: float,
                        min_size: int = 8) -> float:
     """
@@ -91,7 +165,7 @@ def compute_moving_window_int(sample: np.ndarray,
     return mov_win_int_signal
 
 
-def check_peak(data: list):
+def check_peak(data: List[DataPoint]) -> bool:
     """
     This is a function to check the condition of a simple peak of signal y in index i
     :param data:
@@ -127,7 +201,8 @@ def check_peak(data: list):
 def compute_r_peaks(threshold_1: float,
                     rr_ave: float,
                     mov_win_int_signal: np.ndarray,
-                    valuepks: list,
+                    valuepks: List[DataPoint],
+                    # TODO: CODE_REVIEW: valuepks and pkt should be combined to List[DataPoint] and code adjusted
                     pkt: list) -> list:
     """
     This function does the adaptive thresholding of the signal to get the R-peak locations
@@ -199,7 +274,7 @@ def compute_r_peaks(threshold_1: float,
     return rpeak_temp1
 
 
-def ewma(value, new_value, alpha):
+def ewma(value: float, new_value: float, alpha: float) -> float:
     """
 
     :param value:
@@ -212,9 +287,9 @@ def ewma(value, new_value, alpha):
 
 # TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
 # TODO: CODE_REVIEW: Make hard-coded constants default method parameter
-def remove_close_peaks(rpeak_temp1: list,
-                       sample: np.ndarray,
-                       fs: float) -> list:
+def remove_close_peaks(rpeak_temp1: List[DataPoint],
+                       sample: List[DataPoint],
+                       fs: float) -> List[DataPoint]:
     """
     This function removes one of two peaks from two consecutive R peaks
     if difference among them is less than the minimum possible
@@ -249,9 +324,9 @@ def remove_close_peaks(rpeak_temp1: list,
 
 # TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
 # TODO: CODE_REVIEW: Make hard-coded constants default method parameter
-def confirm_peaks(rpeak_temp1: list,
-                  sample: np.ndarray,
-                  fs: float) -> np.ndarray:
+def confirm_peaks(rpeak_temp1: List[DataPoint],
+                  sample: List[DataPoint],
+                  fs: float) -> List[DataPoint]:
     """
 
     This function does the final check on the R peaks detected and
@@ -273,7 +348,7 @@ def confirm_peaks(rpeak_temp1: list,
         rpeak_temp1[i] = rpeak_temp1[i] - np.ceil(fs / 10) + index
 
     return np.array(rpeak_temp1).astype(
-        np.int64)  # TODO: CODE_REVIEW: This is the first time I am seeing np.int64  Why is this type specified?
+        np.int64)  # TODO: CODE_REVIEW: This is the first time I am seeing np.int64  Why is this type specified? Result should be list of DataPoints
 
 
 # TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
@@ -289,10 +364,10 @@ def detect_rpeak(ecg: DataStream,
 
     The algorithm consists of some major steps
 
-    1. computation of the moving window integration of the signal in terms of balckman window of a prescribed length
+    1. computation of the moving window integration of the signal in terms of blackman window of a prescribed length
     2. compute all the peaks of the moving window integration signal
     3. adaptive thresholding with dynamic signal and noise thresholds applied to filter out the R peak locations
-    4. confirm the R peaks through differntiation from the nearby peaks and remove the false peaks
+    4. confirm the R peaks through differentiation from the nearby peaks and remove the false peaks
 
     :param ecg: ecg array of tuples (timestamp,value)
     :param fs: sampling frequency
@@ -323,13 +398,12 @@ def detect_rpeak(ecg: DataStream,
     rpeak_value = np.diff(rpeak_timestamp)
     rpeak_timestamp = rpeak_timestamp[1:]
 
-    # Create resulting datastream to be returned
-    result = DataStream.from_datastream([ecg])
-
     result_data = []
     for k in range(len(rpeak_value)):
-        result_data.append(DataPoint.from_tuple(result.get_identifier(), rpeak_timestamp[k], rpeak_value[k]))
+        result_data.append(DataPoint.from_tuple(rpeak_timestamp[k], rpeak_value[k]))
 
+    # Create resulting datastream to be returned
+    result = DataStream.from_datastream([ecg])
     result.set_datapoints(result_data)
 
     return result
