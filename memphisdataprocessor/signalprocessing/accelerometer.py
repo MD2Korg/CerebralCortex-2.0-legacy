@@ -46,10 +46,15 @@ def window_std_dev(datapoints: List[DataPoint],
 
 def accelerometer_features(accel: DataStream,
                            window_length: float = 10.0,
-                           activity_threshold: float = 0.21):  # From Figure 3: http://www.cs.memphis.edu/~santosh/Papers/Timing-JIT-UbiComp-2014.pdf
+                           activity_threshold: float = 0.21,
+                           # From Figure 3: http://www.cs.memphis.edu/~santosh/Papers/Timing-JIT-UbiComp-2014.pdf
+                           percentile_low: int = 1,
+                           percentile_high: int = 99):
 
     """
 
+    :param percentile_high:
+    :param percentile_low:
     :param accel:
     :param window_length:
     :param activity_threshold:
@@ -65,8 +70,8 @@ def accelerometer_features(accel: DataStream,
     accelerometer_win_mag_deviations.set_datapoints(accelerometer_win_mag_deviations_data)
 
     am_values = np.array([dp.get_sample() for dp in accelerometer_magnitude.get_datapoints()])
-    low_limit = np.percentile(am_values, 1)
-    high_limit = np.percentile(am_values, 99)
+    low_limit = np.percentile(am_values, percentile_low)
+    high_limit = np.percentile(am_values, percentile_high)
     time_range = high_limit - low_limit
 
     accel_activity_data = []
