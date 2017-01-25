@@ -38,6 +38,17 @@ class CerebralCortex:
 
         self.sc = self.sparkSession.sparkContext
 
+
+    def get_datastream(self, stream_identifier):
+
+        datastream = Data(configuration, self.mysql).getDatastream(stream_identifier)
+
+        datapoints = Data(configuration, self.sparkSession).getDatastream(stream_identifier)
+
+
+
+
+
     # def register(self, datastream):
     #     """
     #     Create a datastream in the system
