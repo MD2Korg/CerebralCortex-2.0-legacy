@@ -24,7 +24,8 @@
 
 import unittest
 
-from memphisdataprocessor.preprocessor.rpeak_detect import rr_interval_update, check_peak
+import numpy as np
+from memphisdataprocessor.preprocessor.rpeak_detect import rr_interval_update, check_peak , compute_moving_window_int
 
 
 class TestRPeakDetect(unittest.TestCase):
@@ -50,8 +51,12 @@ class TestRPeakDetect(unittest.TestCase):
         self.assertEqual(rr_interval_update(rpeak_temp1, rr_ave, min_size=25), 4.5)
 
     def test_compute_moving_window_int(self):
-        # TODO: Complete this test
-        pass
+        sample = np.array([i for i in range(1,40,5)])
+        fs=64
+        blackmanWinLen=np.ceil(fs/5)
+        result = [0.1877978,0.32752854,0.52515934,0.754176,0.94976418,1.03957192,0.9830406,0.79712449]
+        self.assertEqual(compute_moving_window_int(sample,fs,blackmanWinLen),result)
+
 
     def test_check_peak(self):
         data = [0, 1, 2, 1, 0]

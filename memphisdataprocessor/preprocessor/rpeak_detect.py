@@ -78,7 +78,6 @@ def compute_moving_window_int(sample: np.ndarray,
     derivative_squared_signal /= np.percentile(derivative_squared_signal, 90)
 
     # blackman window
-    blackmanWinlen = np.ceil(fs / 5)
     blackman_window = np.blackman(blackmanWinlen)
     # moving window Integration of squared derivative signal
     mov_win_int_signal = signal.convolve(derivative_squared_signal, blackman_window, 'same')
@@ -289,6 +288,7 @@ def detect_rpeak(ecg: DataStream, fs: int = 64, threshold: float = 0.5) -> DataS
     result = DataStream.from_datastream([ecg])
     result_data = [DataPoint.from_tuple(rpeak_timestamp[k], rpeak_value[k]) for k in
                    range(len(rpeak_value))]
+
     print(result_data[0].get_sample(),result_data[0].get_timestamp())
     result.set_datapoints(result_data)
 
