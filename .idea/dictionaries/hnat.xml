@@ -2,6 +2,7 @@
   <dictionary name="hnat">
     <words>
       <w>datastream</w>
+      <w>rpeak</w>
     </words>
   </dictionary>
 </component>

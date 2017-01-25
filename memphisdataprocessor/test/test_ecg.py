@@ -24,11 +24,23 @@
 
 import unittest
 
-from memphisdataprocessor.preprocessor.rpeak_detect import rr_interval_update, check_peak
+from memphisdataprocessor.signalprocessing.ecg import rr_interval_update, check_peak
 
 
-class TestRPeakDetect(unittest.TestCase):
+class TestECG(unittest.TestCase):
     def setUp(self):
+        pass
+
+    def test_classify_ecg_window(self):
+        # TODO: Complete this test
+        pass
+
+    def test_filter_bad_ecg(self):
+        # TODO: Complete this test
+        pass
+
+    def test_compute_rr_intervals(self):
+        # TODO: Complete this test
         pass
 
     def test_rr_interval_update(self):

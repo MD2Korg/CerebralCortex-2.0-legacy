@@ -23,17 +23,31 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import datetime
+import gzip
+import os
 import unittest
 from random import random
 
 import numpy as np
+import pytz
 
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
+from memphisdataprocessor.signalprocessing.alignment import interpolate_gaps
 from memphisdataprocessor.signalprocessing.vector import normalize, magnitude
 
 
 class TestVector(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(TestVector, cls).setUpClass()
+        tz = pytz.timezone('US/Eastern')
+        cls.ecg = []
+        with gzip.open(os.path.join(os.path.dirname(__file__), 'res/ecg.csv.gz'), 'rt') as f:
+            for l in f:
+                values = list(map(int, l.split(',')))
+                cls.ecg.append(DataPoint(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
+
     def setUp(self):
         self.size = 100
         self.ds = DataStream(None, None)
@@ -61,6 +75,12 @@ class TestVector(unittest.TestCase):
         for sample in m.get_datapoints():
             self.assertAlmostEqual(sample.get_sample(), 0.12295653034492039, delta=1e-6)
 
+    def test_interpolate_gaps(self):
+        ds = DataStream(None, None)
+        ds.set_datapoints(self.ecg)
+
+        print('ecg size:', len(self.ecg))
+        result = interpolate_gaps(ds, 64.0)
 
 if __name__ == '__main__':
     unittest.main()

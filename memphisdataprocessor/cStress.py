@@ -23,9 +23,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-from memphisdataprocessor.alignment import timestamp_correct, timestamp_correct_and_sequence_align
 from memphisdataprocessor.signalprocessing.accelerometer import accelerometer_features
+from memphisdataprocessor.signalprocessing.alignment import timestamp_correct, timestamp_correct_and_sequence_align
 from memphisdataprocessor.signalprocessing.dataquality import ECGDataQuality, RIPDataQuality
+from memphisdataprocessor.signalprocessing.ecg import compute_rr_intervals
 
 
 def cStress(raw_ecg: DataStream,
@@ -54,17 +55,13 @@ def cStress(raw_ecg: DataStream,
     rip_sampling_frequency = 64.0 / 3.0
     accel_sampling_frequency = 64.0 / 6.0
 
-    # r-peak datastream computation
-    # ecg_rr_datastream = compute_rr_intervals(raw_ecg, ecg_sampling_frequency)
-    # print(ecg_rr_datastream[0:10])
-
     # Timestamp correct datastreams
     ecg_corrected = timestamp_correct(datastream=raw_ecg, sampling_frequency=ecg_sampling_frequency)
     rip_corrected = timestamp_correct(datastream=raw_rip, sampling_frequency=rip_sampling_frequency)
     accel = timestamp_correct_and_sequence_align(datastream_array=[raw_accel_x, raw_accel_y, raw_accel_z],
                                                  sampling_frequency=accel_sampling_frequency)
 
-    # ECG and RIP signal morphology dataquality
+    # ECG and RIP signal morphology data quality
     ecg_data_quality = ECGDataQuality(ecg_corrected,
                                       windowsize=5.0,  # What does windowsize mean here?
                                       bufferLength=3,
@@ -92,6 +89,13 @@ def cStress(raw_ecg: DataStream,
     print('mag-length:', len(accelerometer_magnitude.get_datapoints()))
     print('mag-deviations-length:', len(accelerometer_win_mag_deviations.get_datapoints()))
     print('accel_activity-length:', len(accel_activity.get_datapoints()))
+
+    # r-peak datastream computation
+    ecg_rr_datastream = compute_rr_intervals(raw_ecg, ecg_sampling_frequency)
+
+    # r-peak datastream computation
+    ecg_rr_datastream = compute_rr_intervals(raw_ecg, ecg_sampling_frequency)
+
 
     # TODO: TWH Fix when feature vector result is available
     return raw_ecg

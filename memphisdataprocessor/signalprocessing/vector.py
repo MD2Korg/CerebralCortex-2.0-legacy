@@ -59,7 +59,7 @@ def magnitude(datastream: DataStream) -> DataStream:
     """
     input_data = np.array([i.get_sample() for i in datastream.get_datapoints()])
 
-    data = norm(input_data, axis=1).tolist()
+    data = norm(input_data, axis=1).tolist()  # TODO: Fix function to not compute normalized magnitudes
 
     result_data = [DataPoint.from_tuple(timestamp=i.get_timestamp(), sample=None)
                    for i in datastream.get_datapoints()]
