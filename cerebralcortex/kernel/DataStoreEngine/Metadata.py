@@ -22,16 +22,25 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import cerebralcortex.kernel.DataStoreEngine.Configuration.DataStoreConfiguration as Config
 import mysql.connector
 
 
-class LoadMetadata:
-    def __init__(self) -> object:
+class Metadata:
+    def __init__(self, configuration) -> object:
         """
         Constructor
         """
-        self.dbConnection = mysql.connector.connect(user=Config.MySQL["DB_USER"], password=Config.MySQL["DB_PASS"], database=Config.MySQL["DATABASE"])
+        self.configuration = configuration
+
+        self.database = self.configuration['mysql']['database']
+        self.user = self.configuration['mysql']['db_user']
+        self.password = self.configuration['mysql']['db_pass']
+        self.datastream_table = self.configuration['mysql']['datastream_table']
+        self.spanstream_table = self.configuration['mysql']['spanstream_table']
+        self.processing_module_table = self.configuration['mysql']['processing_module_table']
+        self.user_table = self.configuration['mysql']['user_table']
+
+        self.dbConnection = mysql.connector.connect(user=self.user, password=self.password, database=self.database)
         self.cursor = self.dbConnection.cursor()
 
     @classmethod
@@ -199,3 +208,60 @@ class LoadMetadata:
         self.cursor.close()
         self.dbConnection.close()
         return results
+
+    def storeDatastrem(self, userID: int, processingModuleID: int, metadata: dict, datastreamID: int = ""):
+        """
+        This method will update a record if datastreamID is provided else it would insert a new record.
+        :param userID:
+        :param processingModuleID:
+        :param metadata:
+        :param datastreamID:
+        :return:
+        """
+        if (datastreamID != ""):
+            qry = "UPDATE " + self.datastream_table + " set user_id='" + userID + "', processing_module_id='" + processingModuleID + "', metadata='" + metadata + "' where id=" + str(
+                datastreamID)
+        else:
+            qry = "INSERT INTO " + self.datastream_table + " (user_id, processing_module_id,metadata) VALUES(" + userID + "," + processingModuleID + "," + metadata + ")"
+        self.executeSaveQuery(qry)
+
+    def storeSpanstrem(self, sourceIDs: int, processingModuleID: int, metadata: dict, spanID: int = ""):
+        """
+        This method will update a record if spanID is provided else it would insert a new record.
+        :param sourceIDs:
+        :param processingModuleID:
+        :param metadata:
+        :param spanID:
+        :return:
+        """
+        if (sourceIDs != ""):
+            qry = "UPDATE " + self.spanstream_table + " set source_ids='" + sourceIDs + "', processing_module_id='" + processingModuleID + "', metadata='" + metadata + "' where id=" + str(
+                spanID)
+        else:
+            qry = "INSERT INTO " + self.spanstream_table + " (source_ids, processing_module_id,metadata) VALUES(" + sourceIDs + "," + processingModuleID + "," + metadata + ")"
+        self.executeSaveQuery(qry)
+
+    def storeProcessingModule(self, metadata: dict, processingModuleID: int = ""):
+        """
+        This method will update a record if processingModuleID is provided else it would insert a new record.
+        :param metadata:
+        :param processingModuleID:
+        :return:
+        """
+        if (processingModuleID != ""):
+            qry = "UPDATE " + self.processing_module_table + " set metadata='" + metadata + "' where id=" + str(
+                processingModuleID)
+        else:
+            qry = "INSERT INTO " + self.processing_module_table + " (metadata) VALUES('" + metadata + "')"
+
+        self.executeSaveQuery(qry)
+
+    def executeSaveQuery(self, qry: str):
+        """
+        :param qry: SQL Query
+        :return: results of a query
+        """
+        self.cursor.execute(qry)
+        self.dbConnection.commit()
+        self.cursor.close()
+        self.dbConnection.close()
