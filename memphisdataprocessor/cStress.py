@@ -74,7 +74,6 @@ def cStress(raw_ecg: DataStream,
 
     rip_data_quality = RIPDataQuality(rip_corrected,
                                       windowsize=5.0,  # What does windowsize mean here?
-
                                       bufferLength=5,
                                       acceptableOutlierPercent=50,
                                       outlierThresholdHigh=4500,
@@ -93,6 +92,10 @@ def cStress(raw_ecg: DataStream,
 
     # r-peak datastream computation
     ecg_rr_datastream = compute_rr_intervals(raw_ecg, ecg_sampling_frequency)
+
+    # r-peak datastream computation
+    ecg_rr_datastream = compute_rr_intervals(raw_ecg, ecg_sampling_frequency)
+
 
     # TODO: TWH Fix when feature vector result is available
     return raw_ecg
