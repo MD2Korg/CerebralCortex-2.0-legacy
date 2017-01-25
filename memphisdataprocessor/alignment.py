@@ -21,6 +21,7 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 
 
@@ -34,6 +35,12 @@ def timestamp_correct(datastream: DataStream,
 def timestamp_correct_and_sequence_align(datastream_array: list,
                                          sampling_frequency: float = None) -> DataStream:
     result = DataStream.from_datastream(input_streams=datastream_array)
-    result.set_datapoints(datastream_array[0].get_datapoints())
+
+    data = []
+    for dp in datastream_array[0].get_datapoints():
+        data.append(DataPoint.from_tuple(dp.get_timestamp(), [dp.get_sample(), dp.get_sample(),
+                                                              dp.get_sample()]))  # TODO: Fix with a proper sequence alignment operation later
+
+    result.set_datapoints(data)
 
     return result

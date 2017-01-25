@@ -24,8 +24,7 @@
 
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from memphisdataprocessor.alignment import timestamp_correct, timestamp_correct_and_sequence_align
-from memphisdataprocessor.preprocessor.ecg_processor import compute_rr_intervals
-from memphisdataprocessor.signalprocessing.accelerometer import accelerometerFeatures
+from memphisdataprocessor.signalprocessing.accelerometer import accelerometer_features
 from memphisdataprocessor.signalprocessing.dataquality import ECGDataQuality, RIPDataQuality
 
 
@@ -56,7 +55,7 @@ def cStress(raw_ecg: DataStream,
     accel_sampling_frequency = 64.0 / 6.0
 
     # r-peak datastream computation
-    ecg_rr_datastream = compute_rr_intervals(raw_ecg, ecg_sampling_frequency)
+    # ecg_rr_datastream = compute_rr_intervals(raw_ecg, ecg_sampling_frequency)
     # print(ecg_rr_datastream[0:10])
 
     # Timestamp correct datastreams
@@ -68,27 +67,31 @@ def cStress(raw_ecg: DataStream,
     # ECG and RIP signal morphology dataquality
     ecg_data_quality = ECGDataQuality(ecg_corrected,
                                       windowsize=5.0,  # What does windowsize mean here?
-                                    bufferLength=3,
+                                      bufferLength=3,
                                       acceptableOutlierPercent=50,
                                       outlierThresholdHigh=4500,
                                       outlierThresholdLow=20,
                                       badSegmentThreshod=2,
                                       ecgBandLooseThreshold=47)
-    ecg_corrected.add_span_stream(ecg_data_quality)
+    # ecg_corrected.add_span_stream(ecg_data_quality)
 
     rip_data_quality = RIPDataQuality(rip_corrected,
                                       windowsize=5.0,  # What does windowsize mean here?
-                                    bufferLength=5,
+                                      bufferLength=5,
                                       acceptableOutlierPercent=50,
                                       outlierThresholdHigh=4500,
                                       outlierThresholdLow=20,
                                       badSegmentThreshod=2,
                                       ripBandOffThreshold=20,
                                       ripBandLooseThreshold=150)
-    rip_corrected.add_span_stream(rip_data_quality)
+    # rip_corrected.add_span_stream(rip_data_quality)
 
     # Accelerometer Feature Computation
-    accelerometer_magnitude, accelerometer_win_mag_deviations, accel_activity = accelerometerFeatures(accel)
+    accelerometer_magnitude, accelerometer_win_mag_deviations, accel_activity = accelerometer_features(accel)
+
+    print('mag-length:', len(accelerometer_magnitude.get_datapoints()))
+    print('mag-deviations-length:', len(accelerometer_win_mag_deviations.get_datapoints()))
+    print('accel_activity-length:', len(accel_activity.get_datapoints()))
 
     # TODO: TWH Fix when feature vector result is available
     return raw_ecg

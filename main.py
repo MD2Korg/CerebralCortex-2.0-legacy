@@ -23,6 +23,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import argparse
 import os
+import sys
+import traceback
 import uuid
 
 import cerebralcortex
@@ -75,3 +77,4 @@ for i in range(1, 2):
     except Exception as e:
         print("File missing for %s" % participant)
         print(e)
+        traceback.print_exc(file=sys.stderr)

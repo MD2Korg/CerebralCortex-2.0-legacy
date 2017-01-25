@@ -21,19 +21,65 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+import datetime
+from typing import List
 
+import numpy as np
+
+from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.kernel.window import window
 from memphisdataprocessor.signalprocessing.vector import magnitude, normalize
 
 
-def accelerometerFeatures(accel: DataStream):
-    accelerometerMagnitude = magnitude(normalize(accel))
+def window_std_dev(datapoints: List[DataPoint],
+                   window_start: datetime) -> DataPoint:
+    """
 
-    windowMagnitudeSpans = window(accelerometerMagnitude, 10000)
+    :param datapoints:
+    :param window_start:
+    :return:
+    """
+    data = np.array([dp.get_sample() for dp in datapoints])
+    return DataPoint(window_start, np.std(data))
 
-    pprint(windowMagnitudeSpans)
 
-    accelerometerWinMagDeviations = None
-    accelActivity = None
-    return accelerometerMagnitude, accelerometerWinMagDeviations, accelActivity
+def accelerometer_features(accel: DataStream,
+                           window_length: float = 10.0,
+                           activity_threshold: float = 0.21,
+                           # From Figure 3: http://www.cs.memphis.edu/~santosh/Papers/Timing-JIT-UbiComp-2014.pdf
+                           percentile_low: int = 1,
+                           percentile_high: int = 99):
+
+    """
+
+    :param percentile_high:
+    :param percentile_low:
+    :param accel:
+    :param window_length:
+    :param activity_threshold:
+    :return:
+    """
+    accelerometer_magnitude = magnitude(normalize(accel))
+
+    accelerometer_win_mag_deviations_data = []
+    for key, data in window(accelerometer_magnitude.get_datapoints(), window_length).items():
+        accelerometer_win_mag_deviations_data.append(window_std_dev(data, key[0]))
+
+    accelerometer_win_mag_deviations = DataStream.from_datastream([accel])
+    accelerometer_win_mag_deviations.set_datapoints(accelerometer_win_mag_deviations_data)
+
+    am_values = np.array([dp.get_sample() for dp in accelerometer_magnitude.get_datapoints()])
+    low_limit = np.percentile(am_values, percentile_low)
+    high_limit = np.percentile(am_values, percentile_high)
+    time_range = high_limit - low_limit
+
+    accel_activity_data = []
+    for dp in accelerometer_win_mag_deviations_data:
+        accel_activity_data.append(
+            DataPoint.from_tuple(dp.get_timestamp(), dp.get_sample() > (low_limit + activity_threshold * time_range)))
+
+    accel_activity = DataStream.from_datastream([accel])
+    accel_activity.set_datapoints(accel_activity_data)
+
+    return accelerometer_magnitude, accelerometer_win_mag_deviations, accel_activity

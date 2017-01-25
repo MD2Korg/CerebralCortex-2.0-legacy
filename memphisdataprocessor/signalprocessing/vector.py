@@ -38,7 +38,7 @@ def normalize(datastream: DataStream) -> DataStream:
     """
     input_data = np.array([i.get_sample() for i in datastream.get_datapoints()])
 
-    data = preprocessing.normalize(input_data).tolist()
+    data = preprocessing.normalize(input_data, axis=0)
 
     result_data = [DataPoint.from_tuple(timestamp=i.get_timestamp(), sample=None)
                    for i in datastream.get_datapoints()]
