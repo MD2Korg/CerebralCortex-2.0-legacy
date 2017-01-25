@@ -90,6 +90,7 @@ def cStress(raw_ecg: DataStream,
     accelerometer_magnitude, accelerometer_win_mag_deviations, accel_activity = accelerometer_features(accel)
 
     print('mag-length:', len(accelerometer_magnitude.get_datapoints()))
+    print('mag-deviations-length:', len(accelerometer_win_mag_deviations.get_datapoints()))
     print('accel_activity-length:', len(accel_activity.get_datapoints()))
 
     # TODO: TWH Fix when feature vector result is available
