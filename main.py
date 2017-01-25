@@ -53,23 +53,23 @@ for i in range(1, 2):
     print(participant, participant_UUID)
     try:
         ecgRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "ecg"})).map(
-            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
+            parser.data_processor).filter(lambda x: isinstance(x, DataPoint))
         ecg = DataStream(CC, participant_UUID, data=ecgRDD.collect())
 
         ripRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "rip"})).map(
-            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
+            parser.data_processor).filter(lambda x: isinstance(x, DataPoint))
         rip = DataStream(CC, participant_UUID, data=ripRDD.collect())
 
         accelxRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelx"})).map(
-            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
+            parser.data_processor).filter(lambda x: isinstance(x, DataPoint))
         accelx = DataStream(CC, participant_UUID, data=accelxRDD.collect())
 
         accelyRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "accely"})).map(
-            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
+            parser.data_processor).filter(lambda x: isinstance(x, DataPoint))
         accely = DataStream(CC, participant_UUID, data=accelyRDD.collect())
 
         accelzRDD = CC.readfile(find(basedir, {"participant": participant, "datasource": "accelz"})).map(
-            parser.dataprocessor).filter(lambda x: isinstance(x, DataPoint))
+            parser.data_processor).filter(lambda x: isinstance(x, DataPoint))
         accelz = DataStream(CC, participant_UUID, data=accelzRDD.collect())
 
         cStressFeatures = cStress(ecg, rip, accelx, accely, accelz)

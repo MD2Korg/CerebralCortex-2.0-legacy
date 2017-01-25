@@ -29,7 +29,7 @@ import pytz
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 
 
-def dataprocessor(inputString):
+def data_processor(inputString):
     try:
         [val, ts] = inputString.split(' ')
         timestamp = datetime.fromtimestamp(float(ts) / 1000.0, pytz.timezone('US/Central'))
