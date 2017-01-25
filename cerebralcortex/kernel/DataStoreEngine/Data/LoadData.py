@@ -22,24 +22,18 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from cerebralcortex.kernel.datatypes.datapoint import *
+from cerebralcortex.kernel.datatypes.datastream import *
+from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import *
+
+
+from cerebralcortex.configuration import Configuration
+import os
 
 class LoadData:
-    def __init__(self, configuration, sqlContext):
 
-        """
-        :param configuration:
-        :param sqlContext:
-        """
-
-        self.configuration = configuration
-        self.keyspaceName = self.configuration['cassandra']['keyspace']
-        self.dbUser = self.configuration['cassandra']['db_user']
-        self.dbPassword = self.configuration['cassandra']['db_pass']
-        self.datapointTable = self.configuration['cassandra']['datapoint_table']
-        self.spanTable = self.configuration['cassandra']['span_table']
-
-        self.sqlContext = sqlContext
-
+    def __init__(self):
+        self.df = ""
 
     def loadData(self, tableName: str, whereClause: str) -> object:
         """
@@ -75,7 +69,10 @@ class LoadData:
         if (endTime != ""):
             whereClause += " and datetime<='" + endTime + "'"
 
-        return self.loadData(self.datapointTable, whereClause)
+        datapoints = self.mapDataframeToDatapoint(self.loadData(self.datapointTable, whereClause))
+        datastream = self.mapDatapointAndMetadataToDatastream(datastreamID, datapoints)
+
+        return datastream
 
     def getSpan(self, spanID: int, startTime: int = "", endTime: int = "") -> object:
         """
@@ -98,3 +95,35 @@ class LoadData:
             whereClause += " and datetime<=" + endTime
 
         return self.loadData(self.spanTable, whereClause)
+
+    def mapDataframeToDatapoint(self, df: object) -> list:
+        """
+        Converts a PySpark DataFrame into a list of datapoing objects
+        :param df:
+        :return: list of datapoint objects
+        """
+        temps = []
+        rows = df.collect()
+        for row in rows:
+            dp = DataPoint(row["datastream_id"], row["datetime"], row["sample"])
+            temps.append(dp)
+        return temps
+
+    def mapDatapointAndMetadataToDatastream(self, datastreamID: int, data: list) -> object:
+        """
+        This method will map the datapoint and metadata to datastream object
+        :param datastreamID:
+        :param data: list
+        :return: datastream object
+        """
+
+        #query datastream(mysql) for metadata and user-id
+        datastreamInfo = Metadata(self.configuration).getDatastreamInfo(datastreamID)
+        processingModuleInfo = Metadata(self.configuration).getProcessingModuleInfo(datastreamInfo[0][2])
+
+        userID = datastreamInfo[0][1]
+        processingModuleMetadata= processingModuleInfo[0][1]
+        datastreamMetadata = datastreamInfo[0][3]
+
+        #populate struct of datastream
+        return DataStream(userID,datastreamID,data,processingModuleMetadata,datastreamMetadata)

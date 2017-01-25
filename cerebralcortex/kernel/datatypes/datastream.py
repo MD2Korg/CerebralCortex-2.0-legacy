@@ -29,77 +29,114 @@ from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.metadata import Metadata
 from cerebralcortex.kernel.datatypes.spanstream import SpanStream
 
+from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
+
 
 class DataStream:
     def __init__(self,
-                 cerebralcortex: CerebralCortex,
-                 user: UUID,
+                 #cerebralcortex: CerebralCortex,
+                 user_id: UUID,
+                 study_ids: dict,
+                 processing_module_id: int,
+                 datastream_type: str,
+                 source_ids: dict = None,
                  identifier: int = None,
-                 data: List[DataPoint] = None,
-                 processing: dict = None,
-                 sharing: dict = None,
-                 metadata: Metadata = Metadata(),
-                 spanstreams: List[SpanStream] = None) -> None:
+                 data: List[DataPoint] = None
+                 ) -> None:
         """
         The primary object in Cerebral Cortex which represents data
         :param cerebralcortex: Reference to the Cerebral Cortex object
         :param identifier:
         :param data:
-        :param user:
+        :param user_id:
         :param processing:
         :param sharing:
         :param metadata:
         :param windows:
         """
 
-        self._cc = cerebralcortex
+        #self._cc = cerebralcortex
         self._id = identifier
-        self._user = user
-        self._processing = processing
-        self._sharing = sharing
-        self._metadata = metadata
+        self._user_id = user_id
+        self._study_ids = study_ids
+        self._processing_module_id = processing_module_id
+        self._datastream_type = datastream_type
+        self._source_ids = source_ids
         self._datapoints = data
-        self._spanstreams = spanstreams
+
+
+    def get_datastream_metadata(self):
+        datastreamInfo = Metadata("").getDatastreamInfo(self._id)
+        datastreamMetadata = datastreamInfo[0][3]
+        return datastreamMetadata
+
+    def get_user_metadata(self):
+        userInfo = Metadata("").getDatastreamInfo(self._user_id)
+        userMetadata = userInfo[0][1]
+        return userMetadata
+
+    def get_study_metadata(self) -> list:
+        """
+        :return: list of study metadata
+        """
+        studyMetadata = []
+        for studyID in self._study_ids:
+            studyInfo = Metadata("").getDatastreamInfo(studyID)
+            studyMetadata.append(studyInfo[0][2])
+        return studyMetadata
+
+    def get_processing_module_metadata(self):
+        processingModuleInfo = Metadata("").getDatastreamInfo(self._processing_module_id)
+        procesingModuleMetadata = processingModuleInfo[0][1]
+        return procesingModuleMetadata
+
+
 
     def get_cc(self) -> CerebralCortex:
         """
-
         :return:
         """
         return self._cc
 
     def get_identifier(self) -> int:
         """
-
         :return:
         """
         return self._id
 
     def get_datapoints(self) -> List[DataPoint]:
         """
-
         :return:
         """
         return self._datapoints
 
     def set_datapoints(self, data: list) -> None:
         """
-
         :param data:
         """
         self._datapoints = data
 
-    def get_user(self) -> UUID:
+    def get_user_id(self) -> UUID:
         """
-
         :return:
         """
-        return self._user
+        return self._user_id
+
+    def get_study_ids(self):
+        return self._study_ids
+
+    def get_processing_module_id(self):
+        return self._processing_module_id
+
+    def get_datastream_type(self):
+        return self._datastream_type
+
+    def get_source_ids(self):
+        return self._source_ids
 
     @classmethod
     def from_datastream(cls, input_streams: list):
         """
-
         :param input_streams:
         :return:
         """
@@ -112,7 +149,9 @@ class DataStream:
 
     def add_span_stream(self, spanstream: SpanStream) -> None:
         """
-
         :param spanstream:
         """
         self._spanstreams.append(spanstream)
+
+    def __str__(self):
+        return str(self._id)+" - "+str(self._user_id) + " - " + str(self._processing) + " - " + str(self._metadata) + " - " + str(self._datapoints)

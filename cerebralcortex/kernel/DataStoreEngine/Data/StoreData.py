@@ -22,19 +22,9 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 
 class StoreData:
-    def __init__(self, configuration):
-        """
-        Constructor
-        :param configuration:
-        """
-        self.configuration = configuration
-        self.keyspaceName = self.configuration['cassandra']['keyspace']
-        self.dbUser = self.configuration['cassandra']['db_user']
-        self.dbPassword = self.configuration['cassandra']['db_pass']
-        self.datapointTable = self.configuration['cassandra']['datapoint_table']
-        self.spanTable = self.configuration['cassandra']['span_table']
 
     def storeData(self, dfData: object, tableName: str):
         """
@@ -58,3 +48,41 @@ class StoreData:
         :param df:
         """
         self.storeData(df, self.spanTable)
+
+    def mapDatapointToDataframe(self, datastreamID, sc, sqlContext, datapointList):
+        temp = []
+        for i in datapointList:
+            day = i.get_timestamp()
+            day = day.strftime("%Y%m%d")
+            dp = datastreamID,day, i.get_timestamp(), "", i.get_sample()
+            temp.append(dp)
+
+
+        tempRDD = sc.parallelize(temp)
+        df = sqlContext.createDataFrame(tempRDD)
+
+        return df
+
+    def storeDatastream(self, datastreamObj):
+        datastreamID = datastreamObj.get_identifier()
+        userID = datastreamObj.get_user_id()
+        studyIDs = datastreamObj.get_study_ids()
+        processingModuleID = datastreamObj.get_processing_module_id()
+        datastreamType = datastreamObj.get_datastream_type()
+        sourceIDs = datastreamObj.get_source_ids()
+        data = datastreamObj.get_datapoints()
+
+        #if datastreamID is empty then create a new datastreamID in MySQL database and return the newly added datastreamID
+        if(datastreamID==""):
+            Metadata().storeDatastrem(userID,processingModuleID,)
+
+
+
+
+
+        #query datastream(mysql) to store/update metadata
+        #call get datapoint method to get a list
+        #populate struct of datastream
+
+
+        pass

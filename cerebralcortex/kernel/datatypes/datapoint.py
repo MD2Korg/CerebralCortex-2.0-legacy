@@ -31,7 +31,6 @@ class DataPoint:
                  timestamp: datetime = None,
                  sample: Any = None) -> None:
         """
-
         :param timestamp: Python datetime object with timezone information
         :param sample: Python object representing any data
         """
@@ -41,21 +40,18 @@ class DataPoint:
 
     def get_sample(self) -> Any:
         """
-
         :return:
         """
         return self._sample
 
     def set_sample(self, value: Any) -> None:
         """
-
         :param value:
         """
         self._sample = value
 
     def get_timestamp(self) -> datetime:
         """
-
         :return:
         """
         return self._timestamp
@@ -63,7 +59,6 @@ class DataPoint:
     def get_timestamp_epoch(self, tzinfo: timezone = timezone.utc) -> int:
         # TODO: Handle timezone information
         """
-
         :param tzinfo:
         :return:
         """
@@ -75,9 +70,11 @@ class DataPoint:
     @classmethod
     def from_tuple(cls, timestamp: datetime, sample: Any):
         """
-
         :param timestamp:
         :param sample:
         :return:
         """
         return cls(timestamp=timestamp, sample=sample)
+
+    def __str__(self):
+        return str(self._datastreamID)+" - "+str(self._timestamp)+" - "+str(self._sample)

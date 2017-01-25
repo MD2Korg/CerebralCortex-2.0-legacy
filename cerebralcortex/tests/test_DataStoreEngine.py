@@ -48,7 +48,7 @@ class TestDataStoreEngine(unittest.TestCase):
 
     def test_Metadata_load_save(self):
         meta = Metadata(self.configuration)
-        processing = meta.getProcessingModulemetadata(7)
+        processing = meta.getProcessingModuleInfo(7)
         print(processing)
         # StoreMetadata().storeProcessingModule('{"key":"value"}', 8)
 

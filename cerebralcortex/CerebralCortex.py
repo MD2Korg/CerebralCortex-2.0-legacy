@@ -25,14 +25,9 @@
 
 from pyspark.sql import SparkSession
 
-from cerebralcortex.configuration import Configuration
-
 
 class CerebralCortex:
-    def __init__(self, configuration_file, master=None, name=None, ):
-
-        self._configuration = Configuration(filepath=configuration_file).config
-
+    def __init__(self, master=None, name=None):
         ss = SparkSession.builder
         if name:
             ss.appName(name)
@@ -43,5 +38,36 @@ class CerebralCortex:
 
         self.sc = self.sparkSession.sparkContext
 
+
+    def get_datastream(self, stream_identifier):
+
+        datastream = Data(configuration, self.mysql).getDatastream(stream_identifier)
+
+        datapoints = Data(configuration, self.sparkSession).getDatastream(stream_identifier)
+
+
+
+
+
+    # def register(self, datastream):
+    #     """
+    #     Create a datastream in the system
+    #     :param datastream: Dictionary
+    #     """
+    #     pass
+
+    def find(self, query):
+        """
+        Find and return all matching datastreams
+        :param query: partial dictionary matching
+        """
+        pass
+
     def readfile(self, filename):
         return self.sc.textFile(filename)
+
+    def read(self):
+        pass
+
+    def save(self, datastreamID):
+        pass
