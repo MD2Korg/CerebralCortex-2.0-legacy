@@ -26,7 +26,10 @@ from uuid import UUID
 
 from cerebralcortex import CerebralCortex
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
-from cerebralcortex.kernel.datatypes.metadata import Metadata
+from cerebralcortex.kernel.datatypes.metadata import Metadata as MetadataStruct
+from cerebralcortex.kernel.datatypes.user import User
+from cerebralcortex.kernel.datatypes.processing import Processing
+from cerebralcortex.kernel.datatypes.study import Study
 from cerebralcortex.kernel.datatypes.spanstream import SpanStream
 
 from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
@@ -35,10 +38,11 @@ from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 class DataStream:
     def __init__(self,
                  #cerebralcortex: CerebralCortex,
-                 user_id: UUID,
-                 study_ids: dict,
-                 processing_module_id: int,
+                 userObj: User,
+                 studyObjList: List[Study], #all the study info related to a datastream
+                 processingModuleObj: Processing,
                  datastream_type: str,
+                 metadata: MetadataStruct,
                  source_ids: dict = None,
                  identifier: int = None,
                  data: List[DataPoint] = None
@@ -57,40 +61,24 @@ class DataStream:
 
         #self._cc = cerebralcortex
         self._id = identifier
-        self._user_id = user_id
-        self._study_ids = study_ids
-        self._processing_module_id = processing_module_id
+        self.userObj = userObj
+        self.studyObjList = studyObjList
+        self.processingModuleObj = processingModuleObj
         self._datastream_type = datastream_type
+        self.metadata = metadata
         self._source_ids = source_ids
         self._datapoints = data
 
 
-    def get_datastream_metadata(self):
-        datastreamInfo = Metadata("").getDatastreamInfo(self._id)
-        datastreamMetadata = datastreamInfo[0][3]
-        return datastreamMetadata
+    def getMetadata(self):
+        return self.metadata
 
-    def get_user_metadata(self):
-        userInfo = Metadata("").getDatastreamInfo(self._user_id)
-        userMetadata = userInfo[0][1]
-        return userMetadata
-
-    def get_study_metadata(self) -> list:
-        """
-        :return: list of study metadata
-        """
-        studyMetadata = []
-        for studyID in self._study_ids:
-            studyInfo = Metadata("").getDatastreamInfo(studyID)
-            studyMetadata.append(studyInfo[0][2])
-        return studyMetadata
-
-    def get_processing_module_metadata(self):
-        processingModuleInfo = Metadata("").getDatastreamInfo(self._processing_module_id)
-        procesingModuleMetadata = processingModuleInfo[0][1]
-        return procesingModuleMetadata
-
-
+    def getStudyIDs(self):
+        studyIDs = []
+        for studyObj in self.studyObjList:
+            id = studyObj.getStudyID()
+            studyIDs.append(id)
+        return studyIDs
 
     def get_cc(self) -> CerebralCortex:
         """
@@ -115,18 +103,6 @@ class DataStream:
         :param data:
         """
         self._datapoints = data
-
-    def get_user_id(self) -> UUID:
-        """
-        :return:
-        """
-        return self._user_id
-
-    def get_study_ids(self):
-        return self._study_ids
-
-    def get_processing_module_id(self):
-        return self._processing_module_id
 
     def get_datastream_type(self):
         return self._datastream_type
@@ -154,4 +130,4 @@ class DataStream:
         self._spanstreams.append(spanstream)
 
     def __str__(self):
-        return str(self._id)+" - "+str(self._user_id) + " - " + str(self._processing) + " - " + str(self._metadata) + " - " + str(self._datapoints)
+        return str(self._id)+" - "+str(self.userObj.getMetadata()) + " - " + str(self.processingModuleObj.getMetadata()) + " - " + str(self.metadata) + " - " + str(self._datapoints)

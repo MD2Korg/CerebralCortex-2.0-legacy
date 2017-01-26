@@ -24,21 +24,25 @@ def main():
     testConfigFile = os.path.join(os.path.dirname(__file__), 'cerebralcortex.yml')
     configuration = Configuration(filepath=testConfigFile).config
 
-    df = Data(configuration, sqlContext).getDatastream(1992)
+    df = Data(sc, sqlContext, configuration).getDatastream(1992)
 
     print(df)
     dp = df.get_datapoints()
+    print(df.userObj.getMetadata())
     #df.show()
 
     # cc.get_datastream(1992)
     temp = []
     for i in dp:
-        print(i.get_timestamp())
-        day = i.get_timestamp()
+        print(i.getStartTime())
+        day = i.getStartTime()
         day = day.strftime("%Y%m%d")
-        dp = "",day, i.get_timestamp(), "", i.get_sample()
+        dp = "", day, i.getStartTime(), "", i.get_sample()
         temp.append(dp)
     print(temp)
+
+    Data(sc, sqlContext, configuration).storeDatastream(df)
+
     # dfp = sc.parallelize(df)
     # dfp2 = sqlContext.createDataFrame(dfp)
     #
@@ -56,8 +60,8 @@ def main():
     # df.show()
 
 
-    # res = Metadata(configuration).getProcessingModuleInfo(7)
-    # print(res)
+    #res = Metadata(configuration).getProcessingModuleInfo(7)
+    #print(res)
     # print(res[0][1])
 
     #StoreMetadata().storeProcessingModule('{"key":"value"}', 8)

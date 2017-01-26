@@ -26,9 +26,14 @@ from cerebralcortex.kernel.datatypes.datapoint import *
 from cerebralcortex.kernel.datatypes.datastream import *
 from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import *
 
+from cerebralcortex.kernel.datatypes.metadata import Metadata as MetadataStruct
+from cerebralcortex.kernel.datatypes.user import User
+from cerebralcortex.kernel.datatypes.processing import Processing
+from cerebralcortex.kernel.datatypes.study import Study
 
 from cerebralcortex.configuration import Configuration
 import os
+import json
 
 class LoadData:
 
@@ -105,7 +110,7 @@ class LoadData:
         temps = []
         rows = df.collect()
         for row in rows:
-            dp = DataPoint(row["datastream_id"], row["datetime"], row["sample"])
+            dp = DataPoint(row["start_time"], row["end_time"], row["sample"], row["metadata"])
             temps.append(dp)
         return temps
 
@@ -119,11 +124,28 @@ class LoadData:
 
         #query datastream(mysql) for metadata and user-id
         datastreamInfo = Metadata(self.configuration).getDatastreamInfo(datastreamID)
-        processingModuleInfo = Metadata(self.configuration).getProcessingModuleInfo(datastreamInfo[0][2])
 
-        userID = datastreamInfo[0][1]
-        processingModuleMetadata= processingModuleInfo[0][1]
-        datastreamMetadata = datastreamInfo[0][3]
+        #load data from MySQL
+        studyObjList = []
+        studyList = json.loads(datastreamInfo[0][1])
+        print(studyList)
+        for studyID in studyList:
+            print(studyID)
+            studyInfo = Metadata(self.configuration).getStudyInfo(studyID)
+            study = Study(studyInfo[0][0],studyInfo[0][1], MetadataStruct(studyInfo[0][2]))
+            studyObjList.append(study)
 
-        #populate struct of datastream
-        return DataStream(userID,datastreamID,data,processingModuleMetadata,datastreamMetadata)
+
+        userInfo = Metadata(self.configuration).getUserInfo(datastreamInfo[0][2])
+        processingModuleInfo = Metadata(self.configuration).getProcessingModuleInfo(datastreamInfo[0][3])
+
+        #create/populate objects
+        user = User(datastreamInfo[0][2], MetadataStruct(userInfo[0][1]))
+        processingModule = Processing(processingModuleInfo[0][0], MetadataStruct(processingModuleInfo[0][1]))
+
+
+        sourceIDs = datastreamInfo[0][4]
+        datastreamType = datastreamInfo[0][5]
+        datastreamMetadata = MetadataStruct(datastreamInfo[0][6])
+
+        return DataStream(user, studyObjList, processingModule, datastreamType, datastreamMetadata, sourceIDs, datastreamID, data)
