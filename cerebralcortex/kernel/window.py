@@ -61,21 +61,21 @@ def window_iter(iterable, window_size, window_offset):
     i = iter(iterable)
 
     win_size = timedelta(seconds=window_size)
-    starttime = epoch_align(iterable[0].get_timestamp(), window_offset)
+    starttime = epoch_align(iterable[0].getStartTime(), window_offset)
     endtime = starttime + win_size
     key = (starttime, endtime)
 
     win = []
     for e in i:
-        ts = e.get_timestamp()
+        ts = e.getStartTime()
         if ts > endtime:
             yield key, win
 
-            starttime = epoch_align(e.get_timestamp(), window_offset)
+            starttime = epoch_align(e.getStartTime(), window_offset)
             endtime = starttime + win_size
             key = (starttime, endtime)
 
-            win = [i for i in win if i.get_timestamp() > starttime]
+            win = [i for i in win if i.getStartTime() > starttime]
 
         win.append(e)
     yield key, win

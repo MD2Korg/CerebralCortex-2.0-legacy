@@ -29,7 +29,18 @@ from cerebralcortex.kernel.datatypes.metadata import Metadata
 class User:
     """A user class"""
 
-    def __init__(self, user, metadata=Metadata()):
-        self.id = None
-        self.user = user
+    def __init__(self, id, metadata=Metadata()):
+        self.id = id
         self.metadata = metadata
+
+    def setID(self, id):
+        self.id = id
+
+    def setMetadata(self, metadata):
+        self.metadata = metadata
+
+    def getID(self):
+        return self.id
+
+    def getMetadata(self):
+        return self.metadata

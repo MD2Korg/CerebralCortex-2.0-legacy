@@ -2,7 +2,7 @@ cassandra:
   keyspace: cortex
   db_user: ""
   db_pass: ""
-  datapoint_table: datapoint
+  datapoint_table: data
   span_table: span
 
 
@@ -14,3 +14,4 @@ mysql:
   spanstream_table: spanstream
   processing_module_table: processing_module
   user_table: user
+  study_table: study

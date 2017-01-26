@@ -28,15 +28,19 @@ from typing import Any
 
 class DataPoint:
     def __init__(self,
-                 timestamp: datetime = None,
-                 sample: Any = None) -> None:
+                 startTime: datetime = None,
+                 endTime: datetime = None,
+                 sample: Any = None,
+                 metadata: dict=None) -> None:
         """
-        :param timestamp: Python datetime object with timezone information
+        :param startTime: Python datetime object with timezone information
         :param sample: Python object representing any data
         """
 
-        self._timestamp = timestamp
+        self.startTime = startTime
+        self.endTime = endTime
         self._sample = sample
+        self.metadata = metadata
 
     def get_sample(self) -> Any:
         """
@@ -50,11 +54,20 @@ class DataPoint:
         """
         self._sample = value
 
-    def get_timestamp(self) -> datetime:
+    def getStartTime(self) -> datetime:
         """
         :return:
         """
-        return self._timestamp
+        return self.startTime
+
+    def getEndTime(self) -> datetime:
+        """
+        :return:
+        """
+        return self.endTime
+
+    def getMetadata(self):
+        return self.metadata
 
     def get_timestamp_epoch(self, tzinfo: timezone = timezone.utc) -> int:
         # TODO: Handle timezone information
@@ -62,10 +75,10 @@ class DataPoint:
         :param tzinfo:
         :return:
         """
-        if self._timestamp is None:
+        if self.startTime is None:
             raise ValueError
 
-        return int(self._timestamp.timestamp() * 1e6)
+        return int(self.startTime.timestamp() * 1e6)
 
     @classmethod
     def from_tuple(cls, timestamp: datetime, sample: Any):
@@ -77,4 +90,4 @@ class DataPoint:
         return cls(timestamp=timestamp, sample=sample)
 
     def __str__(self):
-        return str(self._datastreamID)+" - "+str(self._timestamp)+" - "+str(self._sample)
+        return str(self._datastreamID)+" - "+str(self.startTime) + " - " + str(self._sample)

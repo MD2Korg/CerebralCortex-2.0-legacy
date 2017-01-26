@@ -49,40 +49,39 @@ class StoreData:
         """
         self.storeData(df, self.spanTable)
 
-    def mapDatapointToDataframe(self, datastreamID, sc, sqlContext, datapointList):
+    def mapDatapointToDataframe(self, datastreamID, datapointList):
         temp = []
         for i in datapointList:
-            day = i.get_timestamp()
+            day = i.getStartTime()
             day = day.strftime("%Y%m%d")
-            dp = datastreamID,day, i.get_timestamp(), "", i.get_sample()
+            dp = datastreamID, day, i.getStartTime(), i.getEndTime(), i.get_sample(), i.getMetadata()
             temp.append(dp)
 
 
-        tempRDD = sc.parallelize(temp)
-        df = sqlContext.createDataFrame(tempRDD)
+        tempRDD = self.sparkContext.parallelize(temp)
+        df = self.sqlContext.createDataFrame(tempRDD,["datastream_id", "day", "start_time", "end_time", "sample", "metadata"])
+        df.printSchema()
 
         return df
 
     def storeDatastream(self, datastreamObj):
         datastreamID = datastreamObj.get_identifier()
-        userID = datastreamObj.get_user_id()
-        studyIDs = datastreamObj.get_study_ids()
-        processingModuleID = datastreamObj.get_processing_module_id()
+        studyIDs = datastreamObj.getStudyIDs()
+        userID = datastreamObj.userObj.getID()
+
+        processingModuleID = datastreamObj.processingModuleObj.getID()
         datastreamType = datastreamObj.get_datastream_type()
+        metadata = datastreamObj.getMetadata().getMetadata()
         sourceIDs = datastreamObj.get_source_ids()
         data = datastreamObj.get_datapoints()
 
         #if datastreamID is empty then create a new datastreamID in MySQL database and return the newly added datastreamID
+        lastAddedRecordID = Metadata(self.configuration).storeDatastrem(datastreamID, studyIDs, userID,processingModuleID, sourceIDs, datastreamType, metadata)
+
         if(datastreamID==""):
-            Metadata().storeDatastrem(userID,processingModuleID,)
+            datastreamID = lastAddedRecordID
 
+        dataDF = self.mapDatapointToDataframe(datastreamID, data)
 
+        self.saveDatapoint(dataDF)
 
-
-
-        #query datastream(mysql) to store/update metadata
-        #call get datapoint method to get a list
-        #populate struct of datastream
-
-
-        pass
