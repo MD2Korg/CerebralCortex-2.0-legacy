@@ -22,8 +22,11 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import datetime
+import time
 
+import matplotlib.pyplot as plt
 import numpy as np
+from fastdtw import fastdtw
 
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
@@ -33,20 +36,120 @@ def interpolate_gaps(datastream: DataStream,
                      sampling_frequency: float = None) -> DataStream:
     sampling_interval = 1.0 / sampling_frequency
 
-    max_interpolation_gap = 1.0 / (sampling_frequency * 0.1)
+    max_interpolation_gap = sampling_interval * 10
 
     data = datastream.get_datapoints()
-    timedeltas = np.diff([dp.get_timestamp() for dp in data])
+    time_deltas = np.diff([dp.get_timestamp() for dp in data])
 
     gap_points = []
     low_limit = datetime.timedelta(seconds=2 * sampling_interval)
     high_limit = datetime.timedelta(seconds=max_interpolation_gap)
-    for index, value in enumerate(timedeltas):
 
+    for index, value in enumerate(time_deltas):
         if low_limit <= value <= high_limit:
             gap_points.append(data[index])
 
+    gap_index = 0
+    in_gap = False
+    gap_data = []
+    low_time = gap_points[gap_index].get_timestamp() - datetime.timedelta(seconds=max_interpolation_gap)
+    high_time = gap_points[gap_index].get_timestamp() + datetime.timedelta(seconds=max_interpolation_gap)
+
+    # TODO: Fix pchip https://docs.scipy.org/doc/scipy-0.18.1/reference/generated/scipy.interpolate.PchipInterpolator.html#scipy.interpolate.PchipInterpolator
+    # TODO: output proper values once timestamp corrected
+    for dp in data:
+
+        if low_time <= dp.get_timestamp() <= high_time:
+            in_gap = True
+            gap_data.append(dp)
+        elif in_gap:
+            in_gap = False
+            gap_index += 1
+            low_time = gap_points[gap_index].get_timestamp() - datetime.timedelta(seconds=max_interpolation_gap)
+            high_time = gap_points[gap_index].get_timestamp() + datetime.timedelta(seconds=max_interpolation_gap)
+
+            gap_data = [dp for dp in gap_data if low_time <= dp.get_timestamp() <= high_time]
+            # print(len(gap_data))
+
+    for gp in gap_points:
+        low_time = gp.get_timestamp() - datetime.timedelta(seconds=max_interpolation_gap)
+        high_time = gp.get_timestamp() + datetime.timedelta(seconds=max_interpolation_gap)
+        # print(len([dp for dp in data if low_time <= dp.get_timestamp() <= high_time]))
+
     print('gaps:', len(gap_points))
+    print('gap_i:', gap_index)
+
+
+def frange(start, stop, step):
+    i = start
+    while i <= stop:
+        yield i
+        i += step
+
+
+def split_by_gaps(datastream: DataStream,
+                  min_available_gaps: int = 3600,
+                  min_split_gap: datetime.timedelta = datetime.timedelta(seconds=30),
+                  max_data_points_per_segment: int = 100000000):
+    data = datastream.get_datapoints()
+    time_deltas = np.diff([dp.get_timestamp() for dp in data])
+
+    gap_points = [data[0]]
+    for index, value in enumerate(time_deltas):
+        if value > min_split_gap:
+            gap_points.append(data[index])
+    gap_points.append(data[-1])
+
+    segments = []
+    segment_data = []
+    gap_index = 0
+    low_time = gap_points[gap_index].get_timestamp()
+    high_time = gap_points[gap_index + 1].get_timestamp()
+    for dp in data:
+        if len(segment_data) >= max_data_points_per_segment:
+            segments.append(segment_data)
+            segment_data = []
+
+        if low_time <= dp.get_timestamp() <= high_time:
+            segment_data.append(dp)
+        else:
+            segments.append(segment_data)
+            gap_index += 1
+            low_time = gap_points[gap_index].get_timestamp()
+            high_time = gap_points[gap_index + 1].get_timestamp()
+            segment_data = []
+    segments.append(segment_data)
+
+    start = time.time()
+    for s in segments:
+        loop_start = time.time()
+        begin_time = s[0].get_timestamp().timestamp()
+        end_time = s[-1].get_timestamp().timestamp()
+
+        x = np.array([i for i in frange(begin_time, end_time, 1.0 / 64.0)], dtype='float')
+        y = np.array([dp.get_timestamp().timestamp() for dp in s], dtype='float')
+
+        distance, path = fastdtw(x, y, radius=25)  # dist=euclidean,
+        loop_end = time.time()
+        print('loop_time', loop_end - loop_start)
+
+        yy = [0 for i in y]
+        xx = [0 for i in y]
+        for si, ei in path:
+            xx[ei] = x[si]
+            yy[ei] = y[ei]
+
+        # plt.plot(y, xx, 'o')
+        # plt.plot(y, xx2, '-')
+        # plt.plot(x, [i/len(x) for i in range(0,len(x))], '-x')
+        # plt.plot(y, [i/len(y) for i in range(0,len(y))], '-o')
+        # plt.plot(yy, [i/len(yy) for i in range(0,len(yy))], '-+')
+        plt.plot(xx, yy, '-+')
+
+    end = time.time()
+    print('total_time:', end - start)
+    plt.show()
+
 
 def timestamp_correct(datastream: DataStream,
                       sampling_frequency: float = None) -> DataStream:
