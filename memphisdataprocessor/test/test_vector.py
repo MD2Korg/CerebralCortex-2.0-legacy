@@ -33,7 +33,7 @@ import pytz
 
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-from memphisdataprocessor.signalprocessing.alignment import interpolate_gaps
+from memphisdataprocessor.signalprocessing.alignment import interpolate_gaps, split_by_gaps
 from memphisdataprocessor.signalprocessing.vector import normalize, magnitude
 
 
@@ -43,6 +43,7 @@ class TestVector(unittest.TestCase):
         super(TestVector, cls).setUpClass()
         tz = pytz.timezone('US/Eastern')
         cls.ecg = []
+        cls.sample_rate = 64.0
         with gzip.open(os.path.join(os.path.dirname(__file__), 'res/ecg.csv.gz'), 'rt') as f:
             for l in f:
                 values = list(map(int, l.split(',')))
@@ -80,7 +81,15 @@ class TestVector(unittest.TestCase):
         ds.set_datapoints(self.ecg)
 
         print('ecg size:', len(self.ecg))
-        result = interpolate_gaps(ds, 64.0)
+        result = interpolate_gaps(ds, self.sample_rate)
+
+    def test_split_by_gaps(self):
+        ds = DataStream(None, None)
+        # ds.set_datapoints(self.ecg)
+        ds.set_datapoints(self.ecg[:500])
+
+        result = split_by_gaps(ds)
+
 
 if __name__ == '__main__':
     unittest.main()
