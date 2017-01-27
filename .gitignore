@@ -90,4 +90,21 @@ ENV/
 
 
 
-
+# IntelliJ
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/find.xml
+/schema/
+/cerebralcortex/kernel/DataStoreEngine/spark-warehouse/
+.idea/copyright/
+.idea/dictionaries/
+.idea/inspectionProfiles/
+.idea/libraries/
+.idea/misc.xml
+.idea/modules.xml
+.idea/runConfigurations/
+.idea/vcs.xml
+cerebralcortex/kernel/DataStoreEngine/Metadata/LoadMetadata.py
+cerebralcortex/kernel/DataStoreEngine/Metadata/StoreMetadata.py
+cerebralcortex/kernel/DataStoreEngine/Metadata/__init__.py
+spark-warehouse/
