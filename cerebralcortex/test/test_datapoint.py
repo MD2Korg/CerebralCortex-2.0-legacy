@@ -31,9 +31,10 @@ from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 class TestDataPoint(unittest.TestCase):
     def test_DataPoint_None(self):
         dp = DataPoint()
+        self.assertIsNone(dp.getStartTime())
+        self.assertIsNone(dp.getEndTime())
         self.assertIsNone(dp.get_sample())
-        self.assertIsNone(dp.get_datastream_id())
-        self.assertIsNone(dp.get_timestamp())
+        self.assertIsNone(dp.getMetadata())
         self.assertRaises(ValueError, dp.get_timestamp_epoch)
 
 
