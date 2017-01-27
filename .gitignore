@@ -104,7 +104,4 @@ ENV/
 .idea/modules.xml
 .idea/runConfigurations/
 .idea/vcs.xml
-cerebralcortex/kernel/DataStoreEngine/Metadata/LoadMetadata.py
-cerebralcortex/kernel/DataStoreEngine/Metadata/StoreMetadata.py
-cerebralcortex/kernel/DataStoreEngine/Metadata/__init__.py
 spark-warehouse/
