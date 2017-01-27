@@ -3,9 +3,8 @@ import math
 
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
-import cerebralcortex
 
-from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
+import cerebralcortex
 
 
 def main():

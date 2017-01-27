@@ -29,12 +29,12 @@ from cerebralcortex.kernel.datatypes.metadata import Metadata
 class Processing:
     """A processing  class"""
 
-    def __init__(self, id, metadata=Metadata()):
-        self.id = id
+    def __init__(self, processingModuleID, metadata=Metadata()):
+        self.processingModuleID = processingModuleID
         self.metadata = metadata
 
     def getID(self):
-        return self.id
+        return self.processingModuleID
 
     def getMetadata(self):
         return self.metadata

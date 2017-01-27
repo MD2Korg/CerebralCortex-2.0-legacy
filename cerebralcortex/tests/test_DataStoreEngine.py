@@ -26,8 +26,6 @@ import unittest
 
 from cerebralcortex import CerebralCortex
 from cerebralcortex.configuration import Configuration
-from cerebralcortex.kernel.DataStoreEngine.Data import Data
-from cerebralcortex.kernel.DataStoreEngine.Metadata import Metadata
 
 
 class TestDataStoreEngine(unittest.TestCase):

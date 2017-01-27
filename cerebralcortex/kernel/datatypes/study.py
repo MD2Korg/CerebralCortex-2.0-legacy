@@ -41,4 +41,4 @@ class Study:
         return self.userID
 
     def getMetadata(self):
-        self.metadata
+        return self.metadata
