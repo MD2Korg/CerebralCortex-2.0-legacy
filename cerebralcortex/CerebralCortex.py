@@ -24,7 +24,11 @@
 
 
 from pyspark.sql import SparkSession
+from pyspark.sql import SQLContext
+from cerebralcortex.configuration import Configuration
+from cerebralcortex.kernel.DataStoreEngine.Data.Data import Data
 
+import os
 
 class CerebralCortex:
     def __init__(self, master=None, name=None):
@@ -38,14 +42,19 @@ class CerebralCortex:
 
         self.sc = self.sparkSession.sparkContext
 
+        self.sqlContext = SQLContext(self.sc)
+
+        testConfigFile = os.path.join(os.path.dirname(__file__), '../cerebralcortex.yml')
+        self.configuration = Configuration(filepath=testConfigFile).config
+
 
     def get_datastream(self, stream_identifier):
-
-        datastream = Data(configuration, self.mysql).getDatastream(stream_identifier)
-
-        datapoints = Data(configuration, self.sparkSession).getDatastream(stream_identifier)
+        return Data(self.sc, self.sqlContext, self.configuration).getDatastream(stream_identifier)
 
 
+
+    def save_datastream(self, datastream):
+        Data(self.sc, self.sqlContext, self.configuration).storeDatastream(datastream)
 
 
 
