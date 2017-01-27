@@ -39,19 +39,21 @@ class TestDataPoint(unittest.TestCase):
 
     def test_DataPoint(self):
         ts = datetime.datetime.now()
-        dp = DataPoint(datastream=4, timestamp=ts, sample={'Foo': 123})
+        dp = DataPoint(startTime=ts, endTime=ts, sample={'Foo': 123}, metadata={'label': 'good'})
         self.assertDictEqual(dp.get_sample(), {'Foo': 123})
-        self.assertEqual(dp.get_datastream_id(), 4)
-        self.assertEqual(dp.get_timestamp(), ts)
+        self.assertEqual(dp.getStartTime(), ts)
+        self.assertEqual(dp.getEndTime(), ts)
+        self.assertEqual(dp.getMetadata(), {'label': 'good'})
         self.assertEqual(dp.get_timestamp_epoch(), ts.timestamp() * 1e6)
 
     def test_classmethod_from_tuple(self):
         ts = datetime.datetime.now()
-        dp = DataPoint.from_tuple(datastream=234, timestamp=ts, sample=[1, 2, 3])
+        dp = DataPoint.from_tuple(startTime=ts, endTime=ts, sample=[1, 2, 3], metadata={'label': 'good'})
         self.assertIsInstance(dp, DataPoint)
-        self.assertEqual(dp.get_timestamp(), ts)
+        self.assertEqual(dp.getStartTime(), ts)
+        self.assertEqual(dp.getEndTime(), ts)
         self.assertEqual(dp.get_sample(), [1, 2, 3])
-        self.assertEqual(dp.get_datastream_id(), 234)
+        self.assertEqual(dp.getMetadata(), {'label': 'good'})
 
 
 if __name__ == '__main__':

@@ -81,13 +81,15 @@ class DataPoint:
         return int(self.startTime.timestamp() * 1e6)
 
     @classmethod
-    def from_tuple(cls, timestamp: datetime, sample: Any):
+    def from_tuple(cls, startTime: datetime, endTime: datetime, sample: Any, metadata: Any):
         """
-        :param timestamp:
+        :param startTime:
+        :param endTime:
         :param sample:
+        :param metadata:
         :return:
         """
-        return cls(timestamp=timestamp, sample=sample)
+        return cls(startTime=startTime, endTime=endTime, sample=sample, metadata=metadata)
 
     def __str__(self):
         return str(self._datastreamID)+" - "+str(self.startTime) + " - " + str(self._sample)
