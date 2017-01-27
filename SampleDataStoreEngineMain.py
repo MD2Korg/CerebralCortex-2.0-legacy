@@ -5,6 +5,7 @@ from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
+import cerebralcortex
 
 from cerebralcortex.kernel.DataStoreEngine.Data.LoadData import LoadData
 from cerebralcortex.kernel.DataStoreEngine.Metadata.StoreMetadata import StoreMetadata
@@ -16,32 +17,55 @@ import os
 from datetime import datetime, timezone
 
 def main():
-    conf = SparkConf().setAppName("DataStore")
-    sc = SparkContext(conf=conf)
-    sqlContext = SQLContext(sc)
+    CC = cerebralcortex.CerebralCortex(master="local[*]", name="Memphis cStress Development App")
 
+    df = CC.get_datastream(1992)
 
-    testConfigFile = os.path.join(os.path.dirname(__file__), 'cerebralcortex.yml')
-    configuration = Configuration(filepath=testConfigFile).config
+    #df.setID(1111)
 
-    df = Data(sc, sqlContext, configuration).getDatastream(1992)
+    # print(df)
+    # dp = df.get_datapoints()
+    # print(df.userObj.getMetadata())
+    # #df.show()
+    #
+    # # cc.get_datastream(1992)
+    # temp = []
+    # for i in dp:
+    #     print(i.getStartTime())
+    #     day = i.getStartTime()
+    #     day = day.strftime("%Y%m%d")
+    #     dp = "", day, i.getStartTime(), "", i.get_sample()
+    #     temp.append(dp)
+    # print(temp)
 
-    print(df)
-    dp = df.get_datapoints()
-    print(df.userObj.getMetadata())
-    #df.show()
+    CC.save_datastream(df)
 
-    # cc.get_datastream(1992)
-    temp = []
-    for i in dp:
-        print(i.getStartTime())
-        day = i.getStartTime()
-        day = day.strftime("%Y%m%d")
-        dp = "", day, i.getStartTime(), "", i.get_sample()
-        temp.append(dp)
-    print(temp)
-
-    Data(sc, sqlContext, configuration).storeDatastream(df)
+    # conf = SparkConf().setAppName("DataStore")
+    # sc = SparkContext(conf=conf)
+    # sqlContext = SQLContext(sc)
+    #
+    #
+    # testConfigFile = os.path.join(os.path.dirname(__file__), 'cerebralcortex.yml')
+    # configuration = Configuration(filepath=testConfigFile).config
+    #
+    # df = Data(sc, sqlContext, configuration).getDatastream(1992)
+    #
+    # print(df)
+    # dp = df.get_datapoints()
+    # print(df.userObj.getMetadata())
+    # #df.show()
+    #
+    # # cc.get_datastream(1992)
+    # temp = []
+    # for i in dp:
+    #     print(i.getStartTime())
+    #     day = i.getStartTime()
+    #     day = day.strftime("%Y%m%d")
+    #     dp = "", day, i.getStartTime(), "", i.get_sample()
+    #     temp.append(dp)
+    # print(temp)
+    #
+    # Data(sc, sqlContext, configuration).storeDatastream(df)
 
     # dfp = sc.parallelize(df)
     # dfp2 = sqlContext.createDataFrame(dfp)

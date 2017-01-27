@@ -35,26 +35,23 @@ from cerebralcortex.configuration import Configuration
 import os
 import json
 
+
 class LoadData:
-
-    def __init__(self):
-        self.df = ""
-
     def loadData(self, tableName: str, whereClause: str) -> object:
         """
         Establish connection with cassandra, load data, and filter based on the condition passed in whereClause argument
+        :return:
         :param tableName:
         :param whereClause:
         :return: spark dataframe
         """
-        df = self.sqlContext.read.format("org.apache.spark.sql.cassandra").options(table=tableName,
-                                                                                   keyspace=self.keyspaceName).load().filter(
+        dataFrame = self.sqlContext.read.format("org.apache.spark.sql.cassandra").options(table=tableName,
+                                                                                          keyspace=self.keyspaceName).load().filter(
             whereClause)
 
+        return dataFrame
 
-        return df
-
-    def getDatastream(self, datastreamID: int, startTime: int = "", endTime: int = "") -> object:
+    def getDatastream(self, datastreamID: int, startTime: int = "", endTime: int = "") -> DataStream:
         """
         :param datastreamID:
         :param startTime:
@@ -70,36 +67,36 @@ class LoadData:
         if (datastreamID == ""):
             raise "datastreamID cannot be empty"
         if (startTime != ""):
-            whereClause += " and datetime>='" + startTime + "'"
+            whereClause += " and datetime>='" + str(startTime) + "'"
         if (endTime != ""):
-            whereClause += " and datetime<='" + endTime + "'"
+            whereClause += " and datetime<='" + str(endTime) + "'"
 
         datapoints = self.mapDataframeToDatapoint(self.loadData(self.datapointTable, whereClause))
         datastream = self.mapDatapointAndMetadataToDatastream(datastreamID, datapoints)
 
         return datastream
 
-    def getSpan(self, spanID: int, startTime: int = "", endTime: int = "") -> object:
-        """
-        :param spanID:
-        :param startTime:
-        :param endTime:
-        :return: spark dataframe
-        """
-        spanID = str(spanID)
-        startTime = str(startTime)
-        endTime = str(endTime)
-
-        whereClause = "span_id=" + spanID
-
-        if (spanID == ""):
-            raise "spanID cannot be empty"
-        if (startTime != ""):
-            whereClause += " and datetime>=" + startTime
-        if (endTime != ""):
-            whereClause += " and datetime<=" + endTime
-
-        return self.loadData(self.spanTable, whereClause)
+    # def getSpan(self, spanID: int, startTime: int = "", endTime: int = "") -> object:
+    #     """
+    #     :param spanID:
+    #     :param startTime:
+    #     :param endTime:
+    #     :return: spark dataframe
+    #     """
+    #     spanID = str(spanID)
+    #     startTime = str(startTime)
+    #     endTime = str(endTime)
+    #
+    #     whereClause = "span_id=" + spanID
+    #
+    #     if (spanID == ""):
+    #         raise "spanID cannot be empty"
+    #     if (startTime != ""):
+    #         whereClause += " and datetime>=" + startTime
+    #     if (endTime != ""):
+    #         whereClause += " and datetime<=" + endTime
+    #
+    #     return self.loadData(self.spanTable, whereClause)
 
     def mapDataframeToDatapoint(self, df: object) -> list:
         """
@@ -114,7 +111,7 @@ class LoadData:
             temps.append(dp)
         return temps
 
-    def mapDatapointAndMetadataToDatastream(self, datastreamID: int, data: list) -> object:
+    def mapDatapointAndMetadataToDatastream(self, datastreamID: int, data: list) -> DataStream:
         """
         This method will map the datapoint and metadata to datastream object
         :param datastreamID:
@@ -122,30 +119,27 @@ class LoadData:
         :return: datastream object
         """
 
-        #query datastream(mysql) for metadata and user-id
+        # query datastream(mysql) for metadata and user-id
         datastreamInfo = Metadata(self.configuration).getDatastreamInfo(datastreamID)
 
-        #load data from MySQL
+        # load data from MySQL
         studyObjList = []
         studyList = json.loads(datastreamInfo[0][1])
-        print(studyList)
         for studyID in studyList:
-            print(studyID)
             studyInfo = Metadata(self.configuration).getStudyInfo(studyID)
-            study = Study(studyInfo[0][0],studyInfo[0][1], MetadataStruct(studyInfo[0][2]))
+            study = Study(studyInfo[0][0], studyInfo[0][1], MetadataStruct(studyInfo[0][2]))
             studyObjList.append(study)
-
 
         userInfo = Metadata(self.configuration).getUserInfo(datastreamInfo[0][2])
         processingModuleInfo = Metadata(self.configuration).getProcessingModuleInfo(datastreamInfo[0][3])
 
-        #create/populate objects
+        # create/populate objects
         user = User(datastreamInfo[0][2], MetadataStruct(userInfo[0][1]))
         processingModule = Processing(processingModuleInfo[0][0], MetadataStruct(processingModuleInfo[0][1]))
-
 
         sourceIDs = datastreamInfo[0][4]
         datastreamType = datastreamInfo[0][5]
         datastreamMetadata = MetadataStruct(datastreamInfo[0][6])
 
-        return DataStream(user, studyObjList, processingModule, datastreamType, datastreamMetadata, sourceIDs, datastreamID, data)
+        return DataStream(user, studyObjList, processingModule, datastreamType, datastreamMetadata, sourceIDs,
+                          datastreamID, data)

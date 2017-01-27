@@ -24,30 +24,30 @@
 
 from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 
-class StoreData:
 
+class StoreData:
     def storeData(self, dfData: object, tableName: str):
         """
-        :param dfData:
-        :param tableName:
+        :param dfData: pyspark Dataframe
+        :param tableName: Cassandra table name
         """
         dfData.write.format("org.apache.spark.sql.cassandra") \
             .mode('append') \
             .options(table=tableName, keyspace=self.keyspaceName) \
             .save()
 
-    #These two methods will be moved to struct classes
+    # These two methods will be moved to struct classes
     def saveDatapoint(self, df: object):
         """
         :param df:
         """
         self.storeData(df, self.datapointTable)
 
-    def saveSpan(self, df: object):
-        """
-        :param df:
-        """
-        self.storeData(df, self.spanTable)
+    # def saveSpan(self, df: object):
+    #     """
+    #     :param df:
+    #     """
+    #     self.storeData(df, self.spanTable)
 
     def mapDatapointToDataframe(self, datastreamID, datapointList):
         temp = []
@@ -57,16 +57,15 @@ class StoreData:
             dp = datastreamID, day, i.getStartTime(), i.getEndTime(), i.get_sample(), i.getMetadata()
             temp.append(dp)
 
-
         tempRDD = self.sparkContext.parallelize(temp)
-        df = self.sqlContext.createDataFrame(tempRDD,["datastream_id", "day", "start_time", "end_time", "sample", "metadata"])
-        df.printSchema()
+        df = self.sqlContext.createDataFrame(tempRDD,
+                                             ["datastream_id", "day", "start_time", "end_time", "sample", "metadata"])
 
         return df
 
     def storeDatastream(self, datastreamObj):
         datastreamID = datastreamObj.get_identifier()
-        studyIDs = datastreamObj.getStudyIDs()
+        studyIDs = datastreamObj.getStudyIDs()  # TO-DO, only add study-ids if they exist
         userID = datastreamObj.userObj.getID()
 
         processingModuleID = datastreamObj.processingModuleObj.getID()
@@ -75,13 +74,14 @@ class StoreData:
         sourceIDs = datastreamObj.get_source_ids()
         data = datastreamObj.get_datapoints()
 
-        #if datastreamID is empty then create a new datastreamID in MySQL database and return the newly added datastreamID
-        lastAddedRecordID = Metadata(self.configuration).storeDatastrem(datastreamID, studyIDs, userID,processingModuleID, sourceIDs, datastreamType, metadata)
+        # if datastreamID is empty then create a new datastreamID in MySQL database and return the newly added datastreamID
+        lastAddedRecordID = Metadata(self.configuration).storeDatastrem(datastreamID, studyIDs, userID,
+                                                                        processingModuleID, sourceIDs, datastreamType,
+                                                                        metadata)
 
-        if(datastreamID==""):
+        if (datastreamID == ""):
             datastreamID = lastAddedRecordID
 
         dataDF = self.mapDatapointToDataframe(datastreamID, data)
 
         self.saveDatapoint(dataDF)
-

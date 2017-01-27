@@ -26,7 +26,7 @@ from uuid import UUID
 
 from cerebralcortex import CerebralCortex
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
-from cerebralcortex.kernel.datatypes.metadata import Metadata as MetadataStruct
+from cerebralcortex.kernel.datatypes.metadata import Metadata as MetadataStruct #TO-DO change class name to solve unambiguity between Metadata struct class and DataStoreEngine.Metadata
 from cerebralcortex.kernel.datatypes.user import User
 from cerebralcortex.kernel.datatypes.processing import Processing
 from cerebralcortex.kernel.datatypes.study import Study
@@ -69,6 +69,8 @@ class DataStream:
         self._source_ids = source_ids
         self._datapoints = data
 
+    def setID(self, id):
+        self._id = id
 
     def getMetadata(self):
         return self.metadata
