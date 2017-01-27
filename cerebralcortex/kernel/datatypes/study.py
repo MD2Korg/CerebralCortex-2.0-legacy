@@ -22,30 +22,23 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import cerebralcortex.kernel.DataStoreEngine.Configuration.DataStoreConfiguration as Config
 
-class StoreData:
-    def __init__(self):
-        pass
+from cerebralcortex.kernel.datatypes.metadata import Metadata
 
-    def storeData(self, dfData: object, tableName: str):
-        """
-        :param dfData:
-        :param tableName:
-        """
-        dfData.write.format("org.apache.spark.sql.cassandra") \
-            .mode('append') \
-            .options(table=tableName, keyspace=Config.Cassandra["KEYSPACE"]) \
-            .save()
 
-    def datapoint(self, df: object):
-        """
-        :param df:
-        """
-        self.storeData(df, Config.Cassandra["DATAPOINT_TABLE"])
+class Study:
+    """A study class"""
 
-    def span(self, df: object):
-        """
-        :param df:
-        """
-        self.storeData(df, Config.Cassandra["SPAN_TABLE"])
+    def __init__(self, studyID, userID, metadata=Metadata()):
+        self.studyID = studyID
+        self.userID = userID
+        self.metadata = metadata
+
+    def getStudyID(self):
+        return self.studyID
+
+    def getUserID(self):
+        return self.userID
+
+    def getMetadata(self):
+        return self.metadata
