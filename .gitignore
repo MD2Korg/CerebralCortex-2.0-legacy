@@ -94,6 +94,5 @@ ENV/
 .idea/workspace.xml
 .idea/tasks.xml
 .idea/find.xml
-/.idea/
 /schema/
 /cerebralcortex/kernel/DataStoreEngine/spark-warehouse/
