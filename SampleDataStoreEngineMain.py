@@ -1,20 +1,12 @@
 import json
 import math
 
-from pyspark import SparkContext, SparkConf
-from pyspark.sql import SQLContext
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
 import cerebralcortex
 
-from cerebralcortex.kernel.DataStoreEngine.Data.LoadData import LoadData
-from cerebralcortex.kernel.DataStoreEngine.Metadata.StoreMetadata import StoreMetadata
-
-from cerebralcortex.configuration import Configuration
-from cerebralcortex.kernel.DataStoreEngine.Data.Data import Data
 from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
-import os
-from datetime import datetime, timezone
+
 
 def main():
     CC = cerebralcortex.CerebralCortex(master="local[*]", name="Memphis cStress Development App")

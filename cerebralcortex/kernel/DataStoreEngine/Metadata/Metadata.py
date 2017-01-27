@@ -22,9 +22,11 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import mysql.connector
+
 from cerebralcortex.kernel.DataStoreEngine.Metadata.LoadMetadata import LoadMetadata
 from cerebralcortex.kernel.DataStoreEngine.Metadata.StoreMetadata import StoreMetadata
-import mysql.connector
+
 
 class Metadata(LoadMetadata, StoreMetadata):
     def __init__(self, configuration):

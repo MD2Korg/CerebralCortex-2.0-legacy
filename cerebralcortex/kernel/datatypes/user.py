@@ -33,12 +33,6 @@ class User:
         self.id = id
         self.metadata = metadata
 
-    def setID(self, id):
-        self.id = id
-
-    def setMetadata(self, metadata):
-        self.metadata = metadata
-
     def getID(self):
         return self.id
 

@@ -22,17 +22,14 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from typing import List
-from uuid import UUID
 
 from cerebralcortex import CerebralCortex
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.metadata import Metadata as MetadataStruct #TO-DO change class name to solve unambiguity between Metadata struct class and DataStoreEngine.Metadata
-from cerebralcortex.kernel.datatypes.user import User
 from cerebralcortex.kernel.datatypes.processing import Processing
-from cerebralcortex.kernel.datatypes.study import Study
 from cerebralcortex.kernel.datatypes.spanstream import SpanStream
-
-from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
+from cerebralcortex.kernel.datatypes.study import Study
+from cerebralcortex.kernel.datatypes.user import User
 
 
 class DataStream:
@@ -69,8 +66,7 @@ class DataStream:
         self._source_ids = source_ids
         self._datapoints = data
 
-    def setID(self, id):
-        self._id = id
+
 
     def getMetadata(self):
         return self.metadata
@@ -78,8 +74,8 @@ class DataStream:
     def getStudyIDs(self):
         studyIDs = []
         for studyObj in self.studyObjList:
-            id = studyObj.getStudyID()
-            studyIDs.append(id)
+            studyID = studyObj.getStudyID()
+            studyIDs.append(studyID)
         return studyIDs
 
     def get_cc(self) -> CerebralCortex:

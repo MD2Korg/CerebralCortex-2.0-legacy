@@ -40,17 +40,13 @@ class TestDataStoreEngine(unittest.TestCase):
 
         # TODO: populate databases with sample information for these tests
 
-    def test_Data_datastream(self):
-        data_frame = Data(self.configuration, self.CC.sparkSession)
-        data = data_frame.get_datastream(1992)
-        data.show()
-        # StoreData().datapoint(df)
+    def test_Data_datastreamRead(self):
+        datastream = self.CC.get_datastream(1992)
+        print(datastream)
 
-    def test_Metadata_load_save(self):
-        meta = Metadata(self.configuration)
-        processing = meta.getProcessingModuleInfo(7)
-        print(processing)
-        # StoreMetadata().storeProcessingModule('{"key":"value"}', 8)
+    def test_Data_datastreamWrite(self, datastream):
+        self.CC.save_datastream(datastream)
+
 
 
 

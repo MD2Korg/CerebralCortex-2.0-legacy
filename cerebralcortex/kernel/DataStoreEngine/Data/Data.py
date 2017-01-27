@@ -24,7 +24,6 @@
 
 from cerebralcortex.kernel.DataStoreEngine.Data.LoadData import LoadData
 from cerebralcortex.kernel.DataStoreEngine.Data.StoreData import StoreData
-import mysql.connector
 
 
 class Data(LoadData, StoreData):

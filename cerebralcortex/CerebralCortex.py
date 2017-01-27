@@ -23,12 +23,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from pyspark.sql import SparkSession
+import os
+
 from pyspark.sql import SQLContext
+from pyspark.sql import SparkSession
+
 from cerebralcortex.configuration import Configuration
 from cerebralcortex.kernel.DataStoreEngine.Data.Data import Data
 
-import os
 
 class CerebralCortex:
     def __init__(self, master=None, name=None):

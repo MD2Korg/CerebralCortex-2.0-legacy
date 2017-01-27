@@ -22,18 +22,14 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from cerebralcortex.kernel.datatypes.datapoint import *
-from cerebralcortex.kernel.datatypes.datastream import *
-from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import *
+import json
 
+from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
+from cerebralcortex.kernel.datatypes.datastream import *
 from cerebralcortex.kernel.datatypes.metadata import Metadata as MetadataStruct
-from cerebralcortex.kernel.datatypes.user import User
 from cerebralcortex.kernel.datatypes.processing import Processing
 from cerebralcortex.kernel.datatypes.study import Study
-
-from cerebralcortex.configuration import Configuration
-import os
-import json
+from cerebralcortex.kernel.datatypes.user import User
 
 
 class LoadData:
@@ -76,28 +72,8 @@ class LoadData:
 
         return datastream
 
-    # def getSpan(self, spanID: int, startTime: int = "", endTime: int = "") -> object:
-    #     """
-    #     :param spanID:
-    #     :param startTime:
-    #     :param endTime:
-    #     :return: spark dataframe
-    #     """
-    #     spanID = str(spanID)
-    #     startTime = str(startTime)
-    #     endTime = str(endTime)
-    #
-    #     whereClause = "span_id=" + spanID
-    #
-    #     if (spanID == ""):
-    #         raise "spanID cannot be empty"
-    #     if (startTime != ""):
-    #         whereClause += " and datetime>=" + startTime
-    #     if (endTime != ""):
-    #         whereClause += " and datetime<=" + endTime
-    #
-    #     return self.loadData(self.spanTable, whereClause)
 
+    @classmethod
     def mapDataframeToDatapoint(self, df: object) -> list:
         """
         Converts a PySpark DataFrame into a list of datapoing objects
