@@ -91,8 +91,4 @@ ENV/
 
 
 # IntelliJ
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/find.xml
-/schema/
-/cerebralcortex/kernel/DataStoreEngine/spark-warehouse/
+
