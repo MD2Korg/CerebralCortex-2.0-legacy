@@ -105,3 +105,4 @@ ENV/
 .idea/runConfigurations/
 .idea/vcs.xml
 spark-warehouse/
+/.idea/
