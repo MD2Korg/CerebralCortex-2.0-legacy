@@ -1,34 +1,85 @@
-from pyspark import SparkContext, SparkConf
-from pyspark.sql import SQLContext
-
-from cerebralcortex.kernel.DataStoreEngine.LoadData.LoadData import LoadData
-from cerebralcortex.kernel.DataStoreEngine.StoreData.StoreData import StoreData
-from cerebralcortex.kernel.DataStoreEngine.LoadData.LoadMetadata import LoadMetadata
-from cerebralcortex.kernel.DataStoreEngine.StoreData.StoreMetadata import StoreMetadata
-from pyspark.sql.types import *
-from pyspark.sql.functions import *
 import json
 import math
 
-def main():
-    conf = SparkConf().setAppName("DataStore")
-    sc = SparkContext(conf=conf)
-    sqlContext = SQLContext(sc)
+from pyspark.sql.functions import *
+from pyspark.sql.types import *
 
-    df = LoadData(sqlContext).datastream(1992)
-    df.show()
-    StoreData().datapoint(df)
+import cerebralcortex
+
+
+def main():
+    CC = cerebralcortex.CerebralCortex(master="local[*]", name="Memphis cStress Development App")
+
+    df = CC.get_datastream(1992)
+
+    #df.setID(1111)
+
+    # print(df)
+    # dp = df.get_datapoints()
+    # print(df.userObj.getMetadata())
+    # #df.show()
+    #
+    # # cc.get_datastream(1992)
+    # temp = []
+    # for i in dp:
+    #     print(i.getStartTime())
+    #     day = i.getStartTime()
+    #     day = day.strftime("%Y%m%d")
+    #     dp = "", day, i.getStartTime(), "", i.get_sample()
+    #     temp.append(dp)
+    # print(temp)
+
+    CC.save_datastream(df)
+
+    # conf = SparkConf().setAppName("DataStore")
+    # sc = SparkContext(conf=conf)
+    # sqlContext = SQLContext(sc)
+    #
+    #
+    # testConfigFile = os.path.join(os.path.dirname(__file__), 'cerebralcortex.yml')
+    # configuration = Configuration(filepath=testConfigFile).config
+    #
+    # df = Data(sc, sqlContext, configuration).getDatastream(1992)
+    #
+    # print(df)
+    # dp = df.get_datapoints()
+    # print(df.userObj.getMetadata())
+    # #df.show()
+    #
+    # # cc.get_datastream(1992)
+    # temp = []
+    # for i in dp:
+    #     print(i.getStartTime())
+    #     day = i.getStartTime()
+    #     day = day.strftime("%Y%m%d")
+    #     dp = "", day, i.getStartTime(), "", i.get_sample()
+    #     temp.append(dp)
+    # print(temp)
+    #
+    # Data(sc, sqlContext, configuration).storeDatastream(df)
+
+    # dfp = sc.parallelize(df)
+    # dfp2 = sqlContext.createDataFrame(dfp)
+    #
+    # dfp2.printSchema()
+    # dfp2.show()
+
+
+    #StoreData().datapoint(df)
+
+
 
     #####################Example to calculate magnitude on the sample column#######
-    computeMagnitudeUDF = udf(computeMagnitude, StringType())
-    df = df.withColumn("Magnitude", computeMagnitudeUDF(col("sample")))
-    df.show()
+    # computeMagnitudeUDF = udf(computeMagnitude, StringType())
+    # df = df.withColumn("Magnitude", computeMagnitudeUDF(col("sample")))
+    # df.show()
 
 
-    res = LoadMetadata().getProcessingModulemetadata(7)
-    print(res)
+    #res = Metadata(configuration).getProcessingModuleInfo(7)
+    #print(res)
+    # print(res[0][1])
 
-    StoreMetadata().storeProcessingModule('{"key":"value"}', 8)
+    #StoreMetadata().storeProcessingModule('{"key":"value"}', 8)
 
 def computeMagnitude(sample):
     data = json.loads(sample)
@@ -37,6 +88,8 @@ def computeMagnitude(sample):
     magni = math.sqrt(val)
     return magni
 
+def dfTodp():
+    pass
 
 if __name__ == "__main__":
     main()

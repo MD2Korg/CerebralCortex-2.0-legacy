@@ -31,23 +31,30 @@ from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 class TestDataPoint(unittest.TestCase):
     def test_DataPoint_None(self):
         dp = DataPoint()
+        self.assertIsNone(dp.getStartTime())
+        self.assertIsNone(dp.getEndTime())
         self.assertIsNone(dp.get_sample())
-        self.assertIsNone(dp.get_timestamp())
+        self.assertIsNone(dp.getMetadata())
         self.assertRaises(ValueError, dp.get_timestamp_epoch)
+
 
     def test_DataPoint(self):
         ts = datetime.datetime.now()
-        dp = DataPoint(timestamp=ts, sample={'Foo': 123})
+        dp = DataPoint(startTime=ts, endTime=ts, sample={'Foo': 123}, metadata={'label': 'good'})
         self.assertDictEqual(dp.get_sample(), {'Foo': 123})
-        self.assertEqual(dp.get_timestamp(), ts)
+        self.assertEqual(dp.getStartTime(), ts)
+        self.assertEqual(dp.getEndTime(), ts)
+        self.assertEqual(dp.getMetadata(), {'label': 'good'})
         self.assertEqual(dp.get_timestamp_epoch(), ts.timestamp() * 1e6)
 
     def test_classmethod_from_tuple(self):
         ts = datetime.datetime.now()
-        dp = DataPoint.from_tuple(timestamp=ts, sample=[1, 2, 3])
+        dp = DataPoint.from_tuple(startTime=ts, endTime=ts, sample=[1, 2, 3], metadata={'label': 'good'})
         self.assertIsInstance(dp, DataPoint)
-        self.assertEqual(dp.get_timestamp(), ts)
+        self.assertEqual(dp.getStartTime(), ts)
+        self.assertEqual(dp.getEndTime(), ts)
         self.assertEqual(dp.get_sample(), [1, 2, 3])
+        self.assertEqual(dp.getMetadata(), {'label': 'good'})
 
 
 if __name__ == '__main__':
