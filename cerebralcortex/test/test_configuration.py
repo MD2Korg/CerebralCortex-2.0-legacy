@@ -35,7 +35,7 @@ class TestConfiguration(unittest.TestCase):
         cfg = Configuration()
         self.assertIsNone(cfg.config)
 
-    def test_ConfiguationFile(self):
+    def test_ConfigurationFile(self):
         cfg = Configuration(filepath=self.testConfigFile)
 
         cassandra = cfg.config['cassandra']
