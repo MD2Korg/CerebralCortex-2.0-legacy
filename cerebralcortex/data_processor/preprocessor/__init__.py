@@ -21,39 +21,6 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-import os
-import unittest
-
-from cerebralcortex.configuration import Configuration
 
 
-class TestConfiguration(unittest.TestCase):
-    def setUp(self):
-        self.testConfigFile = os.path.join(os.path.dirname(__file__), 'res/test_configuration.yml')
-
-    def test_None(self):
-        cfg = Configuration()
-        self.assertIsNone(cfg.config)
-
-    def test_ConfigurationFile(self):
-        cfg = Configuration(filepath=self.testConfigFile)
-
-        cassandra = cfg.config['cassandra']
-        mysql = cfg.config['mysql']
-
-        self.assertEqual(cassandra['keyspace'], 'cortex')
-        self.assertEqual(cassandra['db_user'], '')
-        self.assertEqual(cassandra['db_pass'], '')
-        self.assertEqual(cassandra['datapoint_table'], 'datapoint')
-
-        self.assertEqual(mysql['database'], 'cortex')
-        self.assertEqual(mysql['db_user'], 'root')
-        self.assertEqual(mysql['db_pass'], 'pass')
-        self.assertEqual(mysql['datastream_table'], 'datastream')
-        self.assertEqual(mysql['processing_module_table'], 'processing_module')
-        self.assertEqual(mysql['user_table'], 'user')
-        self.assertEqual(mysql['study_table'], 'study')
-
-
-if __name__ == '__main__':
-    unittest.main()
+__all__ = ['parser']
