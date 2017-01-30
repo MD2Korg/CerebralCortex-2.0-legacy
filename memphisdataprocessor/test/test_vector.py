@@ -85,8 +85,8 @@ class TestVector(unittest.TestCase):
 
     def test_split_by_gaps(self):
         ds = DataStream(None, None)
-        # ds.set_datapoints(self.ecg)
-        ds.set_datapoints(self.ecg[:500])
+        ds.set_datapoints(self.ecg)
+        # ds.set_datapoints(self.ecg[:500])
 
         result = split_by_gaps(ds)
 
