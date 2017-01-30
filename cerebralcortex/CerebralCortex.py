@@ -23,8 +23,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import os
-
 from pyspark.sql import SQLContext
 from pyspark.sql import SparkSession
 
@@ -50,11 +48,11 @@ class CerebralCortex:
 
 
     def get_datastream(self, stream_identifier):
-        return Data(self.sc, self.sqlContext, self.configuration).getDatastream(stream_identifier)
+        return Data(self.sc, self.sqlContext, self.configuration).get_datastream(stream_identifier)
 
 
     def save_datastream(self, datastream):
-        Data(self.sc, self.sqlContext, self.configuration).storeDatastream(datastream)
+        Data(self.sc, self.sqlContext, self.configuration).store_datastream(datastream)
 
 
     def find(self, query):

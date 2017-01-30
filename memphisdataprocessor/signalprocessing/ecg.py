@@ -77,7 +77,7 @@ def filter_bad_ecg(ecg: DataStream,
     ecg_filtered_array = []
 
     # TODO: CODE_REVIEW: Should these thresholds be brought out to the outmost layer?
-    for key, data in window_data:
+    for data in window_data.items():
         if classify_ecg_window(data, range_threshold=200, slope_threshold=50, maximum_value=4000):
             ecg_filtered_array.extend(data)
 
@@ -307,8 +307,8 @@ def remove_close_peaks(rpeak_temp1: List[DataPoint],
 
         # index of the closest peak to discard
         temp_ind = []
-        for i in range(len(temp)):
-            if temp[i] < .5 * fs:  # TODO: CODE_REVIEW: Hard coded constant
+        for i, value in enumerate(temp):
+            if value < .5 * fs:  # TODO: CODE_REVIEW: Hard coded constant
                 if sample[rpeak_temp1[i]] > sample[rpeak_temp1[i + 1]]:
                     temp_ind.append(i)
                 else:
