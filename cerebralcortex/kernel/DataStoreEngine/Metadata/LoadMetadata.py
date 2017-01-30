@@ -81,8 +81,8 @@ class LoadMetadata:
             "tableName"] + " " + whereClause + " " + orderedByColumnName + " " + sortingOrder + " " + limitBy
         return qry
 
-    def getDatastreamInfo(self, datastreamID, userID: int = "", processinModuleID: int = "",
-                          limitRecords: str = "") -> list:
+    def get_datastream_info(self, datastreamID, userID: int = "", processinModuleID: int = "",
+                            limitRecords: str = "") -> list:
         """
         :param datastreamID:
         :param userID:
@@ -151,7 +151,7 @@ class LoadMetadata:
         }
         return self.executeQuery(self.mySQLQueryBuilder(jsonQueryParam))
 
-    def getStudyInfo(self, studyID, limitRecords: str = "") -> list:
+    def get_study_info(self, studyID, limitRecords: str = "") -> list:
         """
         :param studyID:
         :param limitRecords: range (e.g., 1,10 or 130,200)
