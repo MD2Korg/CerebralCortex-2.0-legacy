@@ -26,22 +26,22 @@ from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 
 
 class StoreData:
-    def storeData(self, dfData: object, tableName: str):
+    def store_data(self, dataframe_data: object, table_name: str):
         """
-        :param dfData: pyspark Dataframe
-        :param tableName: Cassandra table name
+        :param dataframe_data: pyspark Dataframe
+        :param table_name: Cassandra table name
         """
-        dfData.write.format("org.apache.spark.sql.cassandra") \
+        dataframe_data.write.format("org.apache.spark.sql.cassandra") \
             .mode('append') \
-            .options(table=tableName, keyspace=self.keyspaceName) \
+            .options(table=table_name, keyspace=self.keyspaceName) \
             .save()
 
     # These two methods will be moved to struct classes
-    def saveDatapoint(self, df: object):
+    def save_datapoint(self, df: object):
         """
         :param df:
         """
-        self.storeData(df, self.datapointTable)
+        self.store_data(df, self.datapointTable)
 
     # def saveSpan(self, df: object):
     #     """
@@ -49,39 +49,40 @@ class StoreData:
     #     """
     #     self.storeData(df, self.spanTable)
 
-    def mapDatapointToDataframe(self, datastreamID, datapointList):
+    def map_datapoint_to_dataframe(self, datastream_id, datapoints):
         temp = []
-        for i in datapointList:
+        for i in datapoints:
             day = i.getStartTime()
             day = day.strftime("%Y%m%d")
-            dp = datastreamID, day, i.getStartTime(), i.getEndTime(), i.sample, i.getMetadata()
+            dp = datastream_id, day, i.getStartTime(), i.getEndTime(), i.sample, i.getMetadata()
             temp.append(dp)
 
-        tempRDD = self.sparkContext.parallelize(temp)
-        df = self.sqlContext.createDataFrame(tempRDD,
+        temp_RDD = self.sparkContext.parallelize(temp)
+        df = self.sqlContext.createDataFrame(temp_RDD,
                                              ["datastream_id", "day", "start_time", "end_time", "sample", "metadata"])
 
         return df
 
-    def storeDatastream(self, datastreamObj):
-        datastreamID = datastreamObj.get_identifier()
-        studyIDs = datastreamObj.getStudyIDs()  # TO-DO, only add study-ids if they exist
-        userID = datastreamObj.userObj.getID()
+    def store_datastream(self, datastream):
+        datastream_identifier = datastream.get_identifier()
+        study_ids = datastream.getStudyIDs()  # TO-DO, only add study-ids if they exist
+        user_id = datastream.userObj.getID()
 
-        processingModuleID = datastreamObj.processingModuleObj.getID()
-        datastreamType = datastreamObj.get_datastream_type()
-        metadata = datastreamObj.getMetadata().getMetadata()
-        sourceIDs = datastreamObj.get_source_ids()
-        data = datastreamObj.datapoints
+        processing_module_id = datastream.processingModuleObj.getID()
+        datastream_type = datastream.get_datastream_type()
+        metadata = datastream.getMetadata().getMetadata()
+        source_ids = datastream.get_source_ids()
+        data = datastream.datapoints
 
-        # if datastreamID is empty then create a new datastreamID in MySQL database and return the newly added datastreamID
-        lastAddedRecordID = Metadata(self.configuration).storeDatastrem(datastreamID, studyIDs, userID,
-                                                                        processingModuleID, sourceIDs, datastreamType,
+        # if datastream_identifier is empty then create a new datastream_identifier in MySQL database and return the newly added datastream_identifier
+        lastAddedRecordID = Metadata(self.configuration).storeDatastrem(datastream_identifier, study_ids, user_id,
+                                                                        processing_module_id, source_ids,
+                                                                        datastream_type,
                                                                         metadata)
 
-        if (datastreamID == ""):
-            datastreamID = lastAddedRecordID
+        if datastream_identifier == "":
+            datastream_identifier = lastAddedRecordID
 
-        dataDF = self.mapDatapointToDataframe(datastreamID, data)
+        dataframe = self.map_datapoint_to_dataframe(datastream_identifier, data)
 
-        self.saveDatapoint(dataDF)
+        self.save_datapoint(dataframe)
