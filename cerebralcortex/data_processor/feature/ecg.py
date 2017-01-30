@@ -62,9 +62,9 @@ def heart_rate_power(power: np.ndarray,
     :return: sum of power for the frequency range
     """
     result_power = 0
-    for i in range(len(power)):
+    for i, value in enumerate(power):
         if low_rate <= frequency[i] <= high_rate:
-            result_power += power[i]
+            result_power += value
     return result_power
 
 
