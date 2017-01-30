@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="7d2aa552-00bb-4f30-a99c-7197d289f4cf" name="Default" comment="Working on DTW solution for timestamp correction">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/memphisdataprocessor/signalprocessing/alignment.py" afterPath="$PROJECT_DIR$/memphisdataprocessor/signalprocessing/alignment.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/memphisdataprocessor/test/test_vector.py" afterPath="$PROJECT_DIR$/memphisdataprocessor/test/test_vector.py" />
-    </list>
+    <list default="true" id="7d2aa552-00bb-4f30-a99c-7197d289f4cf" name="Default" comment="Working on DTW solution for timestamp correction" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -52,8 +49,8 @@
       <file leaf-file-name="vector.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/memphisdataprocessor/signalprocessing/vector.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="495">
-              <caret line="38" column="80" lean-forward="true" selection-start-line="38" selection-start-column="80" selection-end-line="38" selection-end-column="80" />
+            <state relative-caret-position="1020">
+              <caret line="73" column="0" lean-forward="true" selection-start-line="73" selection-start-column="0" selection-end-line="73" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -63,10 +60,8 @@
         <entry file="file://$PROJECT_DIR$/memphisdataprocessor/test/test_vector.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="1155">
-              <caret line="89" column="0" lean-forward="false" selection-start-line="89" selection-start-column="0" selection-end-line="89" selection-end-column="0" />
-              <folding>
-                <element signature="e#1345#1360#0" expanded="true" />
-              </folding>
+              <caret line="83" column="0" lean-forward="false" selection-start-line="83" selection-start-column="0" selection-end-line="83" selection-end-column="0" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -74,10 +69,10 @@
       <file leaf-file-name="alignment.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/memphisdataprocessor/signalprocessing/alignment.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2100">
-              <caret line="151" column="0" lean-forward="false" selection-start-line="151" selection-start-column="0" selection-end-line="151" selection-end-column="0" />
+            <state relative-caret-position="735">
+              <caret line="49" column="0" lean-forward="false" selection-start-line="49" selection-start-column="0" selection-end-line="49" selection-end-column="0" />
               <folding>
-                <element signature="e#1344#1359#0" expanded="true" />
+                <marker date="1485795473000" expanded="true" signature="2285:2426" ph="..." />
               </folding>
             </state>
           </provider>
@@ -124,7 +119,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="master" />
+        <entry key="$PROJECT_DIR$" value="feature_timestamp_correction_and_interpolation" />
       </map>
     </option>
   </component>
@@ -1259,7 +1254,7 @@
       <workItem from="1485338481772" duration="2613000" />
       <workItem from="1485342264916" duration="527000" />
       <workItem from="1485360620501" duration="41744000" />
-      <workItem from="1485746388281" duration="1633000" />
+      <workItem from="1485746388281" duration="1814000" />
     </task>
     <task id="LOCAL-00001" summary="Forcing Intellij configurations into repo until a resolution can be found">
       <created>1484895168915</created>
@@ -1485,7 +1480,14 @@
       <option name="project" value="LOCAL" />
       <updated>1485473417845</updated>
     </task>
-    <option name="localTasksCounter" value="33" />
+    <task id="LOCAL-00033" summary="Working on DTW solution for timestamp correction">
+      <created>1485795459589</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1485795459589</updated>
+    </task>
+    <option name="localTasksCounter" value="34" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1521,7 +1523,7 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="101777000" />
+    <option name="totallyTimeSpent" value="101958000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -1910,19 +1912,17 @@
     <entry file="file://$PROJECT_DIR$/memphisdataprocessor/test/test_vector.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1155">
-          <caret line="89" column="0" lean-forward="false" selection-start-line="89" selection-start-column="0" selection-end-line="89" selection-end-column="0" />
-          <folding>
-            <element signature="e#1345#1360#0" expanded="true" />
-          </folding>
+          <caret line="83" column="0" lean-forward="false" selection-start-line="83" selection-start-column="0" selection-end-line="83" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/memphisdataprocessor/signalprocessing/alignment.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2100">
-          <caret line="151" column="0" lean-forward="false" selection-start-line="151" selection-start-column="0" selection-end-line="151" selection-end-column="0" />
+        <state relative-caret-position="735">
+          <caret line="49" column="0" lean-forward="false" selection-start-line="49" selection-start-column="0" selection-end-line="49" selection-end-column="0" />
           <folding>
-            <element signature="e#1344#1359#0" expanded="true" />
+            <marker date="1485795473000" expanded="true" signature="2285:2426" ph="..." />
           </folding>
         </state>
       </provider>
@@ -1945,8 +1945,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/memphisdataprocessor/signalprocessing/vector.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="495">
-          <caret line="38" column="80" lean-forward="true" selection-start-line="38" selection-start-column="80" selection-end-line="38" selection-end-column="80" />
+        <state relative-caret-position="1020">
+          <caret line="73" column="0" lean-forward="true" selection-start-line="73" selection-start-column="0" selection-end-line="73" selection-end-column="0" />
           <folding />
         </state>
       </provider>
