@@ -38,10 +38,11 @@ def lomb(data: List[DataPoint],
     :param data: List[DataPoint]
     :param high_frequency: float
     :param low_frequency: float
+    :return lomb-scargle pgram and frequency values
     """
 
-    time_stamps = np.array([dp.get_timestamp_epoch() for dp in data])
-    samples = np.array([dp.get_sample() for dp in data])
+    time_stamps = np.array([dp.start_time.timestamp() for dp in data])
+    samples = np.array([dp.sample for dp in data])
     f = np.linspace(low_frequency, high_frequency, len(data))
     result = signal.lombscargle(time_stamps, samples, f)
     return result, f
@@ -49,8 +50,8 @@ def lomb(data: List[DataPoint],
 
 def heart_rate_power(power: np.ndarray,
                      frequency: np.ndarray,
-                     high_rate: float,
-                     low_rate: float):
+                     low_rate: float,
+                     high_rate: float):
     """
     Compute Heart Rate Power for specific frequency range
     :param power: np.ndarray
@@ -66,15 +67,27 @@ def heart_rate_power(power: np.ndarray,
     return result_power
 
 
-def low_high_ratio(data: List[DataPoint]):
-    pass
-
-
 def ecg_feature_computation(datastream: DataStream,
                             window_size: float,
-                            window_offset: float):
+                            window_offset: float,
+                            low_frequency: float = 0.01,
+                            high_frequency: float = 0.7,
+                            low_rate_vlf: float = 0.0009,
+                            high_rate_vlf: float = 0.04,
+                            low_rate_hf: float = 0.15,
+                            high_rate_hf: float = 0.4,
+                            low_rate_lf: float = 0.04,
+                            high_rate_lf: float = 0.15):
     """
     ECG Feature Implementation
+    :param high_rate_lf: float
+    :param low_rate_lf: float
+    :param high_rate_hf: float
+    :param low_rate_hf: float
+    :param high_rate_vlf: float
+    :param low_rate_vlf: float
+    :param high_frequency: float
+    :param low_frequency: float
     :param datastream: DataStream
     :param window_size: float
     :param window_offset: float
@@ -84,12 +97,12 @@ def ecg_feature_computation(datastream: DataStream,
     if datastream is None:
         return None
 
-    if len(datastream) == 0:
+    if len(datastream.datapoints) == 0:
         return None
 
     # perform windowing of datastream
 
-    window_data = window_sliding(datastream, window_size, window_offset)
+    window_data = window_sliding(datastream.datapoints, window_size, window_offset)
 
     # initialize each ecg feature array
 
@@ -102,31 +115,56 @@ def ecg_feature_computation(datastream: DataStream,
     rr_HF_data = []
     rr_LF_data = []
     rr_VLF_data = []
-    rr_MF_data = []
     rr_LF_HF_data = []
-
-    # ds_rr_variance = DataStream.from_DataStream(datastream)
 
     # iterate over each window and calculate features
 
     for key, value in window_data.items():
-        reference_data = np.array([i.get_sample() for i in value])
-        rr_variance_data.append(DataPoint(key[0],np.var(reference_data)))
-        power, frequency = lomb(data=reference_data, low_frequency=0.01, high_frequency=0.4)
-        rr_HF_data.append(heart_rate_power(power, frequency, 0.15, 0.4))
-        # rr_MF_data.append(heart_rate_power(power, frequency, )
-        rr_LF_data.append(heart_rate_power(power, frequency, 0.15, 0.4))
-        rr_VLF_data.append(heart_rate_power(power, frequency, 0.15, 0.4))
-        rr_LF_HF_data.append((low_high_ratio(reference_data,len(reference_data))))
-        rr_mean_data.append(np.mean(reference_data))
-        rr_median_data.append(np.median(reference_data))
-        rr_quartile_deviation_data.append((0.5 * (np.percentile(reference_data, 75) - np.percentile(reference_data, 25))))
-        rr_80percentile_data.append((np.percentile(reference_data, 80)))
-        rr_20percentile_data.append((np.percentile(reference_data, 20)))
-        # ds_rr_variance.set_data(rr_variance)
-        # return ds_rr_variance
+        reference_data = np.array([i.sample for i in value])
+        rr_variance_data.append(DataPoint.from_tuple(start_time=key[0], end_time=key[1], sample=np.var(reference_data)))
+        power, frequency = lomb(data=value, low_frequency=low_frequency, high_frequency=high_frequency)
+        rr_VLF_data.append(DataPoint.from_tuple(start_time=key[0], end_time=key[1], sample=heart_rate_power(power, frequency, low_rate_vlf, high_rate_vlf)))
+        rr_HF_data.append(DataPoint.from_tuple(start_time=key[0], end_time=key[1], sample=heart_rate_power(power, frequency, low_rate_hf, high_rate_hf)))
+        rr_LF_data.append(DataPoint.from_tuple(start_time=key[0], end_time=key[1], sample=heart_rate_power(power, frequency, low_rate_lf, high_rate_lf)))
+        if heart_rate_power(power, frequency, low_rate_hf, high_rate_hf) != 0:
+            rr_LF_HF_data.append(DataPoint.from_tuple(start_time=key[0], end_time=key[1],
+                                           sample=float(
+                                               heart_rate_power(power, frequency, low_rate_lf,
+                                                                high_rate_lf) / heart_rate_power(power,
+                                                                                                 frequency,
+                                                                                                 low_rate_hf,
+                                                                                                 high_rate_hf))))
+        else:
+            rr_LF_HF_data.append(DataPoint.from_tuple(start_time=key[0], end_time=key[1], sample=0))
 
-        # rr_variance = DataStream.from_datastream([datastream])
-        # rr_variance.set_datapoints(rr_variance_data)
-    return rr_variance_data\
-        # , rr_mean, rr_median, rr_quartile_deviation, rr_80percentile, rr_20percentile
+        rr_mean_data.append(DataPoint.from_tuple(start_time=key[0], end_time=key[1], sample=np.mean(reference_data)))
+        rr_median_data.append(DataPoint.from_tuple(start_time=key[0], end_time=key[1], sample=np.median(reference_data)))
+        rr_quartile_deviation_data.append(DataPoint.from_tuple(start_time=key[0], end_time=key[1],
+                                                               sample=(0.5 * (
+                                                        np.percentile(reference_data, 75) - np.percentile(
+                                                            reference_data,
+                                                            25)))))
+        rr_80percentile_data.append(DataPoint.from_tuple(start_time=key[0], end_time=key[1], sample=np.percentile(reference_data, 80)))
+        rr_20percentile_data.append(DataPoint.from_tuple(start_time=key[0], end_time=key[1], sample=np.percentile(reference_data, 20)))
+
+    rr_variance = DataStream.from_datastream([datastream])
+    rr_variance.datapoints = rr_variance_data
+    rr_vlf = DataStream.from_datastream([datastream])
+    rr_vlf.datapoints = rr_VLF_data
+    rr_hf = DataStream.from_datastream([datastream])
+    rr_hf.datapoints = rr_HF_data
+    rr_lf = DataStream.from_datastream([datastream])
+    rr_lf.datapoints = rr_LF_data
+    rr_lf_hf = DataStream.from_datastream([datastream])
+    rr_lf_hf.datapoints = rr_LF_HF_data
+    rr_mean = DataStream.from_datastream([datastream])
+    rr_mean.datapoints = rr_mean_data
+    rr_median = DataStream.from_datastream([datastream])
+    rr_median.datapoints = rr_median_data
+    rr_quartile = DataStream.from_datastream([datastream])
+    rr_quartile.datapoints = rr_quartile_deviation_data
+    rr_80 = DataStream.from_datastream([datastream])
+    rr_80.datapoints = rr_80percentile_data
+    rr_20 = DataStream.from_datastream([datastream])
+    rr_20.datapoints = rr_20percentile_data
+    return rr_variance, rr_vlf, rr_hf, rr_lf, rr_lf_hf, rr_mean, rr_median, rr_quartile, rr_80, rr_20
