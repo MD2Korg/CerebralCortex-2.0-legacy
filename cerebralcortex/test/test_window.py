@@ -49,7 +49,7 @@ class TestWindowing(unittest.TestCase):
     def test_Window_Valid(self):
         data = []
         for i in range(0, 100):
-            data.append(DataPoint(datetime.now(tz=self.timezone), random()))
+            data.append(DataPoint.from_tuple(datetime.now(tz=self.timezone), None, random()))
             sleep(0.01)
 
         self.assertEqual(100, len(data))

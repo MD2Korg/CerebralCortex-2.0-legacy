@@ -21,111 +21,112 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from typing import List
+from typing import List, Dict
 
 from cerebralcortex import CerebralCortex
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
-from cerebralcortex.kernel.datatypes.metadata import Metadata as MetadataStruct # TODO: change class name to solve unambiguity between Metadata struct class and DataStoreEngine.Metadata
+from cerebralcortex.kernel.datatypes.metadata import \
+    Metadata as MetadataStruct  # TODO: change class name to solve unambiguity between Metadata struct class and DataStoreEngine.Metadata
 from cerebralcortex.kernel.datatypes.processing import Processing
-from cerebralcortex.kernel.datatypes.spanstream import SpanStream
 from cerebralcortex.kernel.datatypes.study import Study
 from cerebralcortex.kernel.datatypes.user import User
 
 
 class DataStream:
     def __init__(self,
-                 cerebralcortex: CerebralCortex,
-                 userObj: User,
-                 studyObjList: List[Study], #all the study info related to a datastream
-                 processingModuleObj: Processing,
-                 datastream_type: str,
-                 metadata: MetadataStruct,
+                 cerebral_cortex: CerebralCortex,
+                 user: User,
+                 study_list: List[Study] = None,  # all the study info related to a datastream
+                 processing_module: Processing = None,
+                 datastream_type: str = None,
+                 metadata: MetadataStruct = None,
                  source_ids: dict = None,
                  identifier: int = None,
                  data: List[DataPoint] = None
                  ) -> None:
         """
         The primary object in Cerebral Cortex which represents data
-        :param cerebralcortex: Reference to the Cerebral Cortex object
-        :param identifier:
-        :param data:
-        :param user_id:
-        :param processing:
-        :param sharing:
-        :param metadata:
-        :param windows:
         """
 
-        self._cc = cerebralcortex
+        self._cc = cerebral_cortex
         self._id = identifier
-        self.userObj = userObj
-        self.studyObjList = studyObjList
-        self.processingModuleObj = processingModuleObj
+        self._user = user
+        self._study_list = study_list
+        self._processing_module = processing_module
         self._datastream_type = datastream_type
-        self.metadata = metadata
+        self._metadata = metadata
         self._source_ids = source_ids
-        self._datapoints = data
+        self._data = data
 
-
-
-    def getMetadata(self):
-        return self.metadata
-
-    def getStudyIDs(self):
-        studyIDs = []
-        for studyObj in self.studyObjList:
-            studyID = studyObj.getStudyID()
-            studyIDs.append(studyID)
-        return studyIDs
-
-    def get_cc(self) -> CerebralCortex:
-        """
-        :return:
-        """
+    @property
+    def cerebral_cortex(self) -> CerebralCortex:
         return self._cc
 
-    def get_identifier(self) -> int:
-        """
-        :return:
-        """
+    @cerebral_cortex.setter
+    def cerebral_cortex(self, cc: CerebralCortex):
+        self._cc = cc
+
+    @property
+    def identifier(self):
         return self._id
 
-    def get_datapoints(self) -> List[DataPoint]:
-        """
-        :return:
-        """
-        return self._datapoints
+    @property
+    def datapoints(self) -> List[DataPoint]:
+        return self._data
 
-    def set_datapoints(self, data: list) -> None:
-        """
-        :param data:
-        """
-        self._datapoints = data
+    @datapoints.setter
+    def datapoints(self, value: List[DataPoint]):
+        self._data = value
 
-    def get_datastream_type(self):
+    @property
+    def datastream_type(self):
         return self._datastream_type
 
-    def get_source_ids(self):
+    @property
+    def source_ids(self):
         return self._source_ids
 
+    @property
+    def user(self):
+        return self._user
+
+    @property
+    def processing_module(self):
+        return self._processing_module
+
+    @property
+    def metadata(self):
+        return self._metadata
+
+    @metadata.setter
+    def metadata(self, value: Dict):
+        self._metadata = value
+
+    @property
+    def study_ids(self):
+        study_ids = []
+        for studyObj in self.study_list:
+            study_id = studyObj.getStudyID()
+            study_ids.append(study_id)
+        return study_ids
+
+    @property
+    def study_list(self):
+        return self._study_list
+
     @classmethod
-    def from_datastream(cls, input_streams: list):
+    def from_datastream(cls, input_streams: List):
         """
         :param input_streams:
         :return:
         """
-        result = cls(cerebralcortex=input_streams[0]._cc,
-                     user=input_streams[0].get_user())
+        result = cls(cerebral_cortex=input_streams[0].cerebral_cortex,
+                     user=input_streams[0].user)
 
         # TODO: Something with provenance tracking from datastream list
 
         return result
 
-    def add_span_stream(self, spanstream: SpanStream) -> None:
-        """
-        :param spanstream:
-        """
-        self._spanstreams.append(spanstream)
-
     def __str__(self):
-        return str(self._id)+" - "+str(self.userObj.getMetadata()) + " - " + str(self.processingModuleObj.getMetadata()) + " - " + str(self.metadata) + " - " + str(self._datapoints)
+        return str(self.identifier) + " - " + str(self.user.getMetadata()) + " - " + str(
+            self.processing_module.getMetadata()) + " - " + str(self.metadata) + " - " + str(self.datapoints)

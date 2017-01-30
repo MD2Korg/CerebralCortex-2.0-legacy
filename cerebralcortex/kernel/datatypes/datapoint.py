@@ -22,74 +22,63 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from datetime import datetime, timezone
-from typing import Any
+from datetime import datetime
+from typing import Any, Dict
 
 
 class DataPoint:
     def __init__(self,
-                 startTime: datetime = None,
-                 endTime: datetime = None,
+                 datastream_id: int = None,
+                 start_time: datetime = None,
+                 end_time: datetime = None,
                  sample: Any = None,
-                 metadata: dict=None) -> None:
-        """
-        :param startTime: Python datetime object with timezone information
-        :param sample: Python object representing any data
-        """
-
-        self.startTime = startTime
-        self.endTime = endTime
+                 metadata: dict = None) -> None:
+        self._start_time = start_time
+        self._end_time = end_time
         self._sample = sample
-        self.metadata = metadata
+        self._metadata = metadata
+        self._datastream_id = datastream_id
 
-    def get_sample(self) -> Any:
-        """
-        :return:
-        """
+    @property
+    def sample(self):
+        """Getter of sample"""
         return self._sample
 
-    def set_sample(self, value: Any) -> None:
-        """
-        :param value:
-        """
+    @sample.setter
+    def sample(self, value: Any):
         self._sample = value
 
-    def getStartTime(self) -> datetime:
-        """
-        :return:
-        """
-        return self.startTime
+    @property
+    def start_time(self):
+        return self._start_time
 
-    def getEndTime(self) -> datetime:
-        """
-        :return:
-        """
-        return self.endTime
+    @start_time.setter
+    def start_time(self, ts: datetime):
+        self._start_time = ts
 
-    def getMetadata(self):
-        return self.metadata
+    @property
+    def end_time(self):
+        return self._end_time
 
-    def get_timestamp_epoch(self, tzinfo: timezone = timezone.utc) -> int:
-        # TODO: Handle timezone information
-        """
-        :param tzinfo:
-        :return:
-        """
-        if self.startTime is None:
-            raise ValueError
+    @end_time.setter
+    def end_time(self, ts: datetime):
+        self._end_time = ts
 
-        return int(self.startTime.timestamp() * 1e6)
+    @property
+    def metadata(self):
+        return self._metadata
+
+    @metadata.setter
+    def metadata(self, meta: Dict):
+        self._end_time = meta
+
+    @property
+    def datastream_id(self):
+        return self._datastream_id
 
     @classmethod
-    def from_tuple(cls, startTime: datetime, endTime: datetime, sample: Any, metadata: Any):
-        """
-        :param startTime:
-        :param endTime:
-        :param sample:
-        :param metadata:
-        :return:
-        """
-        return cls(startTime=startTime, endTime=endTime, sample=sample, metadata=metadata)
+    def from_tuple(cls, start_time: datetime, sample: Any, end_time: datetime = None, metadata: Any = None):
+        return cls(None, start_time, end_time, sample, metadata)
 
     def __str__(self):
-        return str(self._datastreamID)+" - "+str(self.startTime) + " - " + str(self._sample)
+        return str(self.datastream_id) + " - " + str(self.start_time) + " - " + str(self.sample)

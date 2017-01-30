@@ -1,8 +1,6 @@
 import json
-import math
 
 from pyspark.sql.functions import *
-from pyspark.sql.types import *
 
 import cerebralcortex
 
@@ -15,7 +13,7 @@ def main():
     #df.setID(1111)
 
     # print(df)
-    # dp = df.get_datapoints()
+    # dp = df.datapoints
     # print(df.userObj.getMetadata())
     # #df.show()
     #
@@ -25,7 +23,7 @@ def main():
     #     print(i.getStartTime())
     #     day = i.getStartTime()
     #     day = day.strftime("%Y%m%d")
-    #     dp = "", day, i.getStartTime(), "", i.get_sample()
+    #     dp = "", day, i.getStartTime(), "", i.sample
     #     temp.append(dp)
     # print(temp)
 
@@ -42,7 +40,7 @@ def main():
     # df = Data(sc, sqlContext, configuration).getDatastream(1992)
     #
     # print(df)
-    # dp = df.get_datapoints()
+    # dp = df.datapoints
     # print(df.userObj.getMetadata())
     # #df.show()
     #
@@ -52,7 +50,7 @@ def main():
     #     print(i.getStartTime())
     #     day = i.getStartTime()
     #     day = day.strftime("%Y%m%d")
-    #     dp = "", day, i.getStartTime(), "", i.get_sample()
+    #     dp = "", day, i.getStartTime(), "", i.sample
     #     temp.append(dp)
     # print(temp)
     #

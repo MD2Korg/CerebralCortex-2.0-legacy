@@ -45,7 +45,7 @@ def classify_ecg_window(data: List[DataPoint],
     :return: True/False decision based on the three parameters
     """
 
-    values = np.array([i.get_sample() for i in data])
+    values = np.array([i.sample for i in data])
     if max(values) - min(values) < range_threshold:
         return False
     if max(values) > maximum_value:
@@ -71,7 +71,7 @@ def filter_bad_ecg(ecg: DataStream,
     """
 
     window_length = int(no_of_secs * fs)
-    window_data = window(ecg.get_datapoints(), window_size=window_length)
+    window_data = window(ecg.datapoints, window_size=window_length)
 
     ecg_filtered = DataStream.from_datastream([ecg])
     ecg_filtered_array = []
@@ -375,10 +375,10 @@ def detect_rpeak(ecg: DataStream,
     :return: R peak array of tuples (timestamp, Rpeak interval)
     """
 
-    data = ecg.get_datapoints()
+    data = ecg.datapoints
 
-    sample = np.array([i.get_sample() for i in data])
-    timestamp = np.array([i.get_timestamp() for i in data])
+    sample = np.array([i.sample for i in data])
+    timestamp = np.array([i.start_time for i in data])
 
     # computes the moving window integration of the signal
     blackman_win_len = np.ceil(fs / 5)  # TODO: CODE_REVIEW: Hard coded value of 5

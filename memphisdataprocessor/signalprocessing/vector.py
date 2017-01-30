@@ -36,17 +36,17 @@ def normalize(datastream: DataStream) -> DataStream:
     :param datastream:
     :return:
     """
-    input_data = np.array([i.get_sample() for i in datastream.get_datapoints()])
+    input_data = np.array([i.sample for i in datastream.datapoints])
 
     data = preprocessing.normalize(input_data, axis=0)
 
-    result_data = [DataPoint.from_tuple(timestamp=i.get_timestamp(), sample=None)
-                   for i in datastream.get_datapoints()]
+    result_data = [DataPoint.from_tuple(start_time=i.start_time, sample=None)
+                   for i in datastream.datapoints]
     for i, dp in enumerate(result_data):
-        dp.set_sample(data[i])
+        dp.sample = data[i]
 
     result = DataStream.from_datastream(input_streams=[datastream])
-    result.set_datapoints(result_data)
+    result.datapoints = result_data
 
     return result
 
@@ -57,17 +57,17 @@ def magnitude(datastream: DataStream) -> DataStream:
     :param datastream:
     :return:
     """
-    input_data = np.array([i.get_sample() for i in datastream.get_datapoints()])
+    input_data = np.array([i.sample for i in datastream.datapoints])
 
     data = norm(input_data, axis=1).tolist()  # TODO: Fix function to not compute normalized magnitudes
 
-    result_data = [DataPoint.from_tuple(timestamp=i.get_timestamp(), sample=None)
-                   for i in datastream.get_datapoints()]
+    result_data = [DataPoint.from_tuple(start_time=i.start_time, sample=None)
+                   for i in datastream.datapoints]
 
     for i, dp in enumerate(result_data):
-        dp.set_sample(data[i])
+        dp.sample = data[i]
 
     result = DataStream.from_datastream(input_streams=[datastream])
-    result.set_datapoints(result_data)
+    result.datapoints = result_data
 
     return result

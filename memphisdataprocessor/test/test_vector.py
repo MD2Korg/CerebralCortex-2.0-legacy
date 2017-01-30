@@ -33,7 +33,7 @@ import pytz
 
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-from memphisdataprocessor.signalprocessing.alignment import interpolate_gaps
+from memphisdataprocessor.signalprocessing.alignment import interpolate_gaps, split_by_gaps
 from memphisdataprocessor.signalprocessing.vector import normalize, magnitude
 
 
@@ -43,44 +43,54 @@ class TestVector(unittest.TestCase):
         super(TestVector, cls).setUpClass()
         tz = pytz.timezone('US/Eastern')
         cls.ecg = []
+        cls.sample_rate = 64.0
         with gzip.open(os.path.join(os.path.dirname(__file__), 'res/ecg.csv.gz'), 'rt') as f:
             for l in f:
                 values = list(map(int, l.split(',')))
-                cls.ecg.append(DataPoint(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
+                cls.ecg.append(
+                    DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
 
     def setUp(self):
         self.size = 100
         self.ds = DataStream(None, None)
-        data = [DataPoint.from_tuple(datetime.datetime.now(), [random() * 100, random() * 10, random()]) for i
+        data = [DataPoint.from_tuple(datetime.datetime.now(), None, [random() * 100, random() * 10, random()]) for i
                 in range(0, self.size)]
-        self.ds.set_datapoints(data)
+        self.ds.datapoints = data
 
     @unittest.skip("Skipped test case: Correct value needs fixed")
     def test_normalize(self):
         self.assertIsInstance(self.ds, DataStream)
-        self.assertEqual(len(self.ds.get_datapoints()), self.size)
+        self.assertEqual(len(self.ds.datapoints), self.size)
 
         n = normalize(self.ds)
         self.assertIsInstance(n, DataStream)
-        for dp in n.get_datapoints():
-            self.assertAlmostEqual(np.linalg.norm(dp.get_sample()), 0.1713970501312247, delta=1e-6)
+        for dp in n.datapoints:
+            self.assertAlmostEqual(np.linalg.norm(dp.sample), 0.1713970501312247, delta=1e-6)
 
     @unittest.skip("Skipped test case: Correct value needs fixed")
     def test_magnitude(self):
         self.assertIsInstance(self.ds, DataStream)
-        self.assertEqual(len(self.ds.get_datapoints()), self.size)
+        self.assertEqual(len(self.ds.datapoints), self.size)
 
         m = magnitude(normalize(self.ds))
         self.assertIsInstance(m, DataStream)
-        for sample in m.get_datapoints():
-            self.assertAlmostEqual(sample.get_sample(), 0.12295653034492039, delta=1e-6)
+        for sample in m.datapoints:
+            self.assertAlmostEqual(sample.sample, 0.12295653034492039, delta=1e-6)
 
     def test_interpolate_gaps(self):
         ds = DataStream(None, None)
-        ds.set_datapoints(self.ecg)
+        ds.datapoints = self.ecg
 
         print('ecg size:', len(self.ecg))
-        result = interpolate_gaps(ds, 64.0)
+        result = interpolate_gaps(ds.datapoints, self.sample_rate)
+
+    def test_split_by_gaps(self):
+        ds = DataStream(None, None)
+        # ds.datapoints = self.ecg
+        ds.datapoints = self.ecg[:500]
+
+        result = split_by_gaps(ds)
+
 
 if __name__ == '__main__':
     unittest.main()

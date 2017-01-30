@@ -54,7 +54,7 @@ class StoreData:
         for i in datapointList:
             day = i.getStartTime()
             day = day.strftime("%Y%m%d")
-            dp = datastreamID, day, i.getStartTime(), i.getEndTime(), i.get_sample(), i.getMetadata()
+            dp = datastreamID, day, i.getStartTime(), i.getEndTime(), i.sample, i.getMetadata()
             temp.append(dp)
 
         tempRDD = self.sparkContext.parallelize(temp)
@@ -72,7 +72,7 @@ class StoreData:
         datastreamType = datastreamObj.get_datastream_type()
         metadata = datastreamObj.getMetadata().getMetadata()
         sourceIDs = datastreamObj.get_source_ids()
-        data = datastreamObj.get_datapoints()
+        data = datastreamObj.datapoints
 
         # if datastreamID is empty then create a new datastreamID in MySQL database and return the newly added datastreamID
         lastAddedRecordID = Metadata(self.configuration).storeDatastrem(datastreamID, studyIDs, userID,
