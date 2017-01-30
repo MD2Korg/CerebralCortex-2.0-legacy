@@ -33,7 +33,7 @@ from cerebralcortex.kernel.DataStoreEngine.Data.Data import Data
 
 
 class CerebralCortex:
-    def __init__(self, master=None, name=None):
+    def __init__(self, configuration_file, master=None, name=None):
         ss = SparkSession.builder
         if name:
             ss.appName(name)
@@ -44,28 +44,18 @@ class CerebralCortex:
 
         self.sc = self.sparkSession.sparkContext
 
-        self.sqlContext = SQLContext(self.sc)
+        self.sqlContext = SQLContext(self.sc) # TODO: This may need to become a sparkSession
 
-        testConfigFile = os.path.join(os.path.dirname(__file__), '../cerebralcortex.yml')
-        self.configuration = Configuration(filepath=testConfigFile).config
+        self.configuration = Configuration(filepath=configuration_file).config
 
 
     def get_datastream(self, stream_identifier):
         return Data(self.sc, self.sqlContext, self.configuration).getDatastream(stream_identifier)
 
 
-
     def save_datastream(self, datastream):
         Data(self.sc, self.sqlContext, self.configuration).storeDatastream(datastream)
 
-
-
-    # def register(self, datastream):
-    #     """
-    #     Create a datastream in the system
-    #     :param datastream: Dictionary
-    #     """
-    #     pass
 
     def find(self, query):
         """
@@ -74,11 +64,6 @@ class CerebralCortex:
         """
         pass
 
+
     def readfile(self, filename):
         return self.sc.textFile(filename)
-
-    def read(self):
-        pass
-
-    def save(self, datastreamID):
-        pass

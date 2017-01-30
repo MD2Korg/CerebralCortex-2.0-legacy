@@ -25,29 +25,39 @@
 import math
 from collections import OrderedDict
 from datetime import datetime, timedelta
+from typing import List
 
 import pytz
 
+from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 
-def epoch_align(ts: datetime, offset: float, after: bool = False) -> datetime:
+
+def epoch_align(ts: datetime,
+                offset: float,
+                after: bool = False,
+                time_zone: pytz = pytz.timezone('US/Central'),
+                time_base: int = 1e6) -> datetime:
     """
     Epoch timestamp alignment based on offset
+
+    :param time_zone: Specifiy the timezone of the timestamps, default US/Central
     :param ts: datatime object representing the timestamp to start with
-    :param offset: seconds as a float, supporting microsecond precision
+    :param offset: seconds as a float
     :param after: Flag designating if the result should be after ts
+    :param time_base: specifies the precision with which the time base should be manipulated (1e6 -> microseconds)
     :return: aligned datetime object
     """
-    new_timestamp = math.floor(ts.timestamp() * 1e6 / (offset * 1e6)) * offset * 1e6
+    new_timestamp = math.floor(ts.timestamp() * time_base / (offset * time_base)) * offset * time_base
 
     if after:
-        new_timestamp += offset * 1e6
+        new_timestamp += offset * time_base
 
-    result = datetime.fromtimestamp(new_timestamp / 1e6, pytz.timezone('US/Central'))
+    result = datetime.fromtimestamp(new_timestamp / time_base, time_zone)
     return result
 
 
-def window(data: list,
-           window_size: float):
+def window(data: List[DataPoint],
+           window_size: float) -> OrderedDict:
     """
     Special case of a sliding window with no overlaps
     :param data:
@@ -57,31 +67,7 @@ def window(data: list,
     return window_sliding(data, window_size=window_size, window_offset=window_size)
 
 
-def window_iter(iterable, window_size, window_offset):
-    i = iter(iterable)
-
-    win_size = timedelta(seconds=window_size)
-    starttime = epoch_align(iterable[0].get_timestamp(), window_offset)
-    endtime = starttime + win_size
-    key = (starttime, endtime)
-
-    win = []
-    for e in i:
-        ts = e.get_timestamp()
-        if ts > endtime:
-            yield key, win
-
-            starttime = epoch_align(e.get_timestamp(), window_offset)
-            endtime = starttime + win_size
-            key = (starttime, endtime)
-
-            win = [i for i in win if i.get_timestamp() > starttime]
-
-        win.append(e)
-    yield key, win
-
-
-def window_sliding(data: list,
+def window_sliding(data: List[DataPoint],
                    window_size: float,
                    window_offset: float):
     """
@@ -95,14 +81,47 @@ def window_sliding(data: list,
                                         ...]
     """
     if data is None:
-        return None
+        raise TypeError('data is not List[DataPoint]')
 
     if len(data) == 0:
-        return None
+        raise ValueError('The length of data is zero')
 
     windowed_datastream = OrderedDict()
 
-    count = 0
     for key, data in window_iter(data, window_size, window_offset):
         windowed_datastream[key] = data
+
     return windowed_datastream
+
+
+def window_iter(iterable: List[DataPoint],
+                window_size: float,
+                window_offset: float):
+    """
+    Window interation function that support various common implementations
+    :param iterable:
+    :param window_size:
+    :param window_offset:
+    """
+    iterator = iter(iterable)
+
+    win_size = timedelta(seconds=window_size)
+    start_time = epoch_align(iterable[0].get_timestamp(), window_offset)
+    end_time = start_time + win_size
+    key = (start_time, end_time)
+
+    data = []
+    for element in iterator:
+        timestamp = element.get_timestamp()
+        if timestamp > end_time:
+            yield key, data
+
+            start_time = epoch_align(element.get_timestamp(), window_offset)
+            end_time = start_time + win_size
+            key = (start_time, end_time)
+
+            data = [i for i in data if i.get_timestamp() > start_time]
+
+        data.append(element)
+    yield key, data
+
