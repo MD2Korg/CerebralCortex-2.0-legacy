@@ -27,6 +27,7 @@ from memphisdataprocessor.signalprocessing.accelerometer import accelerometer_fe
 from memphisdataprocessor.signalprocessing.alignment import timestamp_correct, timestamp_correct_and_sequence_align
 from memphisdataprocessor.signalprocessing.dataquality import ECGDataQuality, RIPDataQuality
 from memphisdataprocessor.signalprocessing.ecg import compute_rr_intervals
+from memphisdataprocessor.signalprocessing import rip
 
 
 def cStress(raw_ecg: DataStream,
@@ -90,11 +91,15 @@ def cStress(raw_ecg: DataStream,
     print('mag-deviations-length:', len(accelerometer_win_mag_deviations.get_datapoints()))
     print('accel_activity-length:', len(accel_activity.get_datapoints()))
 
+    # rip features
+    rip_peak_datastream, rip_valley_datastream = rip.compute_peak_valley(raw_rip, rip_sampling_frequency)
+
     # r-peak datastream computation
     ecg_rr_datastream = compute_rr_intervals(raw_ecg, ecg_sampling_frequency)
 
     # r-peak datastream computation
     ecg_rr_datastream = compute_rr_intervals(raw_ecg, ecg_sampling_frequency)
+
 
 
     # TODO: TWH Fix when feature vector result is available

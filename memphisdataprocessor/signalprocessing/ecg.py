@@ -77,7 +77,7 @@ def filter_bad_ecg(ecg: DataStream,
     ecg_filtered_array = []
 
     # TODO: CODE_REVIEW: Should these thresholds be brought out to the outmost layer?
-    for key, data in window_data:
+    for key, data in window_data.items():
         if classify_ecg_window(data, range_threshold=200, slope_threshold=50, maximum_value=4000):
             ecg_filtered_array.extend(data)
 
