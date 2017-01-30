@@ -86,9 +86,9 @@ def cStress(raw_ecg: DataStream,
     # Accelerometer Feature Computation
     accelerometer_magnitude, accelerometer_win_mag_deviations, accel_activity = accelerometer_features(accel)
 
-    print('mag-length:', len(accelerometer_magnitude.get_datapoints()))
-    print('mag-deviations-length:', len(accelerometer_win_mag_deviations.get_datapoints()))
-    print('accel_activity-length:', len(accel_activity.get_datapoints()))
+    print('mag-length:', len(accelerometer_magnitude.datapoints))
+    print('mag-deviations-length:', len(accelerometer_win_mag_deviations.datapoints))
+    print('accel_activity-length:', len(accel_activity.datapoints))
 
     # r-peak datastream computation
     ecg_rr_datastream = compute_rr_intervals(raw_ecg, ecg_sampling_frequency)

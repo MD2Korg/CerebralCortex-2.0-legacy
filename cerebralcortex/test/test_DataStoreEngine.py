@@ -28,6 +28,7 @@ from cerebralcortex import CerebralCortex
 from cerebralcortex.configuration import Configuration
 
 
+@unittest.skip("Skipped test class: Figure out a way to test with MySQLand Cassandra")
 class TestDataStoreEngine(unittest.TestCase):
     def setUp(self):
         self.testConfigFile = os.path.join(os.path.dirname(__file__), 'res/test_configuration.yml')
@@ -44,24 +45,6 @@ class TestDataStoreEngine(unittest.TestCase):
 
     def test_Data_datastreamWrite(self, datastream):
         self.CC.save_datastream(datastream)
-
-
-
-
-
-#
-#     #####################Example to calculate magnitude on the sample column#######
-#     computeMagnitudeUDF = udf(computeMagnitude, StringType())
-#     df = df.withColumn("Magnitude", computeMagnitudeUDF(col("sample")))
-#     df.show()
-
-# def computeMagnitude(sample):
-#     data = json.loads(sample)
-#     for val in data:
-#         val = val + math.pow(val,2)
-#     magni = math.sqrt(val)
-#     return magni
-
 
 if __name__ == '__main__':
     unittest.main()

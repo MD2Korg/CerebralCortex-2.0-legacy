@@ -2,7 +2,12 @@
   <configuration default="false" name="Tests" type="tests" factoryName="Unittests">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
-    <envs />
+    <envs>
+      <env name="PYTHONPATH" value="/Users/hnat/Downloads/spark-2.0.2-bin-hadoop2.7/python:/Users/hnat/Downloads/spark-2.0.2-bin-hadoop2.7/python/lib/py4j-0.10.3-src.zip" />
+      <env name="PYTHONUNBUFFERED" value="1" />
+      <env name="SPARK_HOME" value="/Users/hnat/Downloads/spark-2.0.2-bin-hadoop2.7/" />
+      <env name="PYSPARK_SUBMIT_ARGS" value="--conf spark.cassandra.connection.host\=127.0.0.1 --packages com.datastax.spark:spark-cassandra-connector_2.11:2.0.0-M3 pyspark-shell" />
+    </envs>
     <option name="SDK_HOME" value="$USER_HOME$/.virtualenvs/CerebralCortex/bin/python3.5" />
     <option name="WORKING_DIRECTORY" value="" />
     <option name="IS_MODULE_SDK" value="true" />

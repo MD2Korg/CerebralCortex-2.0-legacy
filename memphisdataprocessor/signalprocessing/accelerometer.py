@@ -40,8 +40,8 @@ def window_std_dev(datapoints: List[DataPoint],
     :param window_start:
     :return:
     """
-    data = np.array([dp.get_sample() for dp in datapoints])
-    return DataPoint(window_start, np.std(data))
+    data = np.array([dp.sample for dp in datapoints])
+    return DataPoint.from_tuple(window_start, np.std(data))
 
 
 def accelerometer_features(accel: DataStream,
@@ -63,23 +63,23 @@ def accelerometer_features(accel: DataStream,
     accelerometer_magnitude = magnitude(normalize(accel))
 
     accelerometer_win_mag_deviations_data = []
-    for key, data in window(accelerometer_magnitude.get_datapoints(), window_length).items():
+    for key, data in window(accelerometer_magnitude.datapoints, window_length).items():
         accelerometer_win_mag_deviations_data.append(window_std_dev(data, key[0]))
 
     accelerometer_win_mag_deviations = DataStream.from_datastream([accel])
-    accelerometer_win_mag_deviations.set_datapoints(accelerometer_win_mag_deviations_data)
+    accelerometer_win_mag_deviations.datapoints = accelerometer_win_mag_deviations_data
 
-    am_values = np.array([dp.get_sample() for dp in accelerometer_magnitude.get_datapoints()])
+    am_values = np.array([dp.sample for dp in accelerometer_magnitude.datapoints])
     low_limit = np.percentile(am_values, percentile_low)
     high_limit = np.percentile(am_values, percentile_high)
     time_range = high_limit - low_limit
 
     accel_activity_data = []
     for dp in accelerometer_win_mag_deviations_data:
-        accel_activity_data.append(
-            DataPoint.from_tuple(dp.get_timestamp(), dp.get_sample() > (low_limit + activity_threshold * time_range)))
+        comparison = dp.sample > (low_limit + activity_threshold * time_range)
+        accel_activity_data.append(DataPoint.from_tuple(dp.start_time, comparison))
 
     accel_activity = DataStream.from_datastream([accel])
-    accel_activity.set_datapoints(accel_activity_data)
+    accel_activity.datapoints = accel_activity_data
 
     return accelerometer_magnitude, accelerometer_win_mag_deviations, accel_activity
