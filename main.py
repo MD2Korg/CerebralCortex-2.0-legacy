@@ -21,6 +21,7 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 import argparse
 import os
 import sys
@@ -28,11 +29,11 @@ import traceback
 import uuid
 
 import cerebralcortex
+from cerebralcortex.data_processor.cStress import cStress
+from cerebralcortex.data_processor.preprocessor import parser
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.legacy import find
-from memphisdataprocessor.cStress import cStress
-from memphisdataprocessor.preprocessor import parser
 
 argparser = argparse.ArgumentParser(description="Cerebral Cortex Test Application")
 argparser.add_argument('--base_directory')
