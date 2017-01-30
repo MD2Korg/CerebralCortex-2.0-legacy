@@ -34,3 +34,6 @@ class Metadata:
 
     def add_window_to_metadata(self, window_metadata):
         pass
+
+    def getMetadata(self):
+        return self._metadata

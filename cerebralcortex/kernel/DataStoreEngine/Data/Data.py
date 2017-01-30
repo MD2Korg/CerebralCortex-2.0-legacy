@@ -22,25 +22,25 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import yaml
+from cerebralcortex.kernel.DataStoreEngine.Data.LoadData import LoadData
+from cerebralcortex.kernel.DataStoreEngine.Data.StoreData import StoreData
 
 
-class Configuration:
-    def __init__(self, filepath: str = None):
+class Data(LoadData, StoreData):
+    def __init__(self, sparkContext, sqlContext, configuration):
         """
-        Initialization for the configuration object
-        :param filepath: path to a yml configuration file for Cerebral Cortex
+        :param sparkContext:
+        :param sparkContext:
+        :param configuration:
+        :param sqlContext:
         """
-        if filepath is not None:
-            self.load_file(filepath)
-        else:
-            self.config = None
-        pass
 
-    def load_file(self, filepath: str):
-        """
-        Helper function to load a yaml file
-        :param filepath: path to a yml configuration file for Cerebral Cortex
-        """
-        with open(filepath, 'r') as ymlfile:
-            self.config = yaml.load(ymlfile)
+        self.configuration = configuration
+        self.keyspaceName = self.configuration['cassandra']['keyspace']
+        self.dbUser = self.configuration['cassandra']['db_user']
+        self.dbPassword = self.configuration['cassandra']['db_pass']
+        self.datapointTable = self.configuration['cassandra']['datapoint_table']
+        self.spanTable = self.configuration['cassandra']['span_table']
+
+        self.sqlContext = sqlContext
+        self.sparkContext = sparkContext

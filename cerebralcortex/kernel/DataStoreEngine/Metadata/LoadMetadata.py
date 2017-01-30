@@ -22,18 +22,8 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import cerebralcortex.kernel.DataStoreEngine.Configuration.DataStoreConfiguration as Config
-import mysql.connector
-
 
 class LoadMetadata:
-    def __init__(self) -> object:
-        """
-        Constructor
-        """
-        self.dbConnection = mysql.connector.connect(user=Config.MySQL["DB_USER"], password=Config.MySQL["DB_PASS"], database=Config.MySQL["DATABASE"])
-        self.cursor = self.dbConnection.cursor()
-
     @classmethod
     def mySQLQueryBuilder(self, jsonQueryParam: dict) -> str:
         """
@@ -91,8 +81,8 @@ class LoadMetadata:
             "tableName"] + " " + whereClause + " " + orderedByColumnName + " " + sortingOrder + " " + limitBy
         return qry
 
-    def getDatastreamMetadata(self, datastreamID: int = "", userID: int = "", processinModuleID: int = "",
-                              limitRecords: str = "") -> list:
+    def getDatastreamInfo(self, datastreamID, userID: int = "", processinModuleID: int = "",
+                          limitRecords: str = "") -> list:
         """
         :param datastreamID:
         :param userID:
@@ -100,18 +90,16 @@ class LoadMetadata:
         :param limitRecords: range (e.g., 1,10 or 130,200)
         :return: list
         """
-        whereClause = ""
+        whereClause = "id=" + str(datastreamID)
 
-        if (datastreamID != ""):
-            whereClause += "id=" + str(datastreamID)
         if (userID != ""):
             whereClause += " and user_id=" + str(userID)
         if (processinModuleID != ""):
             whereClause += " and processing_module_id=" + str(processinModuleID)
 
         jsonQueryParam = {
-            "columnNames": "metadata",
-            "tableName": Config.MySQL["DATASTREAM_TABLE"],
+            "columnNames": "*",
+            "tableName": self.datastreamTable,
             "whereClause": whereClause,
             "orderedByColumnName": "id",
             "sortingOrder": "ASC",
@@ -119,8 +107,8 @@ class LoadMetadata:
         }
         return self.executeQuery(self.mySQLQueryBuilder(jsonQueryParam))
 
-    def getSpanstreamMetadata(self, spanID: int = "", sourceID: int = "", processinModuleID: int = "",
-                              limitRecords: str = "") -> list:
+    def getSpanstreamInfo(self, spanID, sourceID: int = "", processinModuleID: int = "",
+                          limitRecords: str = "") -> list:
         """
         :param spanID:
         :param sourceID:
@@ -128,18 +116,16 @@ class LoadMetadata:
         :param limitRecords: range (e.g., 1,10 or 130,200)
         :return: list
         """
-        whereClause = ""
+        whereClause = "id=" + str(spanID)
 
-        if (spanID != ""):
-            whereClause += "id=" + str(spanID)
         if (sourceID != ""):
             whereClause += " and source_id=" + str(sourceID)
         if (processinModuleID != ""):
             whereClause += " and processing_module_id=" + str(processinModuleID)
 
         jsonQueryParam = {
-            "columnNames": "metadata",
-            "tableName": Config.MySQL["SPANSTREAM_TABLE"],
+            "columnNames": "*",
+            "tableName": self.spanstreamTable,
             "whereClause": whereClause,
             "orderedByColumnName": "id",
             "sortingOrder": "ASC",
@@ -147,20 +133,17 @@ class LoadMetadata:
         }
         return self.executeQuery(self.mySQLQueryBuilder(jsonQueryParam))
 
-    def getUserMetadata(self, userID: int = "", limitRecords: str = "") -> list:
+    def getUserInfo(self, userID, limitRecords: str = "") -> list:
         """
         :param userID:
         :param limitRecords: range (e.g., 1,10 or 130,200)
         :return: list
         """
-        whereClause = ""
-
-        if (userID != ""):
-            whereClause += "id=" + str(userID)
+        whereClause = "id=" + str(userID)
 
         jsonQueryParam = {
-            "columnNames": "metadata",
-            "tableName": Config.MySQL["USERS_TABLE"],
+            "columnNames": "*",
+            "tableName": self.userTable,
             "whereClause": whereClause,
             "orderedByColumnName": "id",
             "sortingOrder": "ASC",
@@ -168,20 +151,35 @@ class LoadMetadata:
         }
         return self.executeQuery(self.mySQLQueryBuilder(jsonQueryParam))
 
-    def getProcessingModulemetadata(self, processinModuleID: int = "", limitRecords: str = "") -> list:
+    def getStudyInfo(self, studyID, limitRecords: str = "") -> list:
+        """
+        :param studyID:
+        :param limitRecords: range (e.g., 1,10 or 130,200)
+        :return: list
+        """
+        whereClause = "id=" + str(studyID)
+
+        jsonQueryParam = {
+            "columnNames": "*",
+            "tableName": self.studyTable,
+            "whereClause": whereClause,
+            "orderedByColumnName": "id",
+            "sortingOrder": "ASC",
+            "limitBy": limitRecords
+        }
+        return self.executeQuery(self.mySQLQueryBuilder(jsonQueryParam))
+
+    def getProcessingModuleInfo(self, processinModuleID, limitRecords: str = "") -> list:
         """
         :param processinModuleID:
         :param limitRecords: range (e.g., 1,10 or 130,200)
         :return: list
         """
-        whereClause = ""
-
-        if (processinModuleID != ""):
-            whereClause += "id=" + str(processinModuleID)
+        whereClause = "id=" + str(processinModuleID)
 
         jsonQueryParam = {
-            "columnNames": "metadata",
-            "tableName": Config.MySQL["PROCESSING_MODULE_TABLE"],
+            "columnNames": "*",
+            "tableName": self.processingModuleTable,
             "whereClause": whereClause,
             "orderedByColumnName": "id",
             "sortingOrder": "ASC",
@@ -194,8 +192,12 @@ class LoadMetadata:
         :param qry: SQL Query
         :return: results of a query
         """
+
         self.cursor.execute(qry)
         results = self.cursor.fetchall()
         self.cursor.close()
         self.dbConnection.close()
-        return results
+        if len(results) == 0:
+            raise "No record found."
+        else:
+            return results

@@ -21,26 +21,47 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+import os
+import unittest
 
-import yaml
+from cerebralcortex import CerebralCortex
+from cerebralcortex.configuration import Configuration
 
 
-class Configuration:
-    def __init__(self, filepath: str = None):
-        """
-        Initialization for the configuration object
-        :param filepath: path to a yml configuration file for Cerebral Cortex
-        """
-        if filepath is not None:
-            self.load_file(filepath)
-        else:
-            self.config = None
-        pass
+class TestDataStoreEngine(unittest.TestCase):
+    def setUp(self):
+        self.testConfigFile = os.path.join(os.path.dirname(__file__), 'res/test_configuration.yml')
 
-    def load_file(self, filepath: str):
-        """
-        Helper function to load a yaml file
-        :param filepath: path to a yml configuration file for Cerebral Cortex
-        """
-        with open(filepath, 'r') as ymlfile:
-            self.config = yaml.load(ymlfile)
+        self.CC = CerebralCortex(self.testConfigFile, master="local[*]", name="Cerebral Cortex DataStoreEngine Tests")
+
+        self.configuration = Configuration(filepath=self.testConfigFile).config
+
+        # TODO: populate databases with sample information for these tests
+
+    def test_Data_datastreamRead(self):
+        datastream = self.CC.get_datastream(1992)
+        print(datastream)
+
+    def test_Data_datastreamWrite(self, datastream):
+        self.CC.save_datastream(datastream)
+
+
+
+
+
+#
+#     #####################Example to calculate magnitude on the sample column#######
+#     computeMagnitudeUDF = udf(computeMagnitude, StringType())
+#     df = df.withColumn("Magnitude", computeMagnitudeUDF(col("sample")))
+#     df.show()
+
+# def computeMagnitude(sample):
+#     data = json.loads(sample)
+#     for val in data:
+#         val = val + math.pow(val,2)
+#     magni = math.sqrt(val)
+#     return magni
+
+
+if __name__ == '__main__':
+    unittest.main()

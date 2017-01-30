@@ -23,16 +23,17 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import os
+
+from pyspark.sql import SQLContext
 from pyspark.sql import SparkSession
 
 from cerebralcortex.configuration import Configuration
+from cerebralcortex.kernel.DataStoreEngine.Data.Data import Data
 
 
 class CerebralCortex:
-    def __init__(self, configuration_file, master=None, name=None, ):
-
-        self._configuration = Configuration(filepath=configuration_file).config
-
+    def __init__(self, configuration_file, master=None, name=None):
         ss = SparkSession.builder
         if name:
             ss.appName(name)
@@ -42,6 +43,27 @@ class CerebralCortex:
         self.sparkSession = ss.getOrCreate()
 
         self.sc = self.sparkSession.sparkContext
+
+        self.sqlContext = SQLContext(self.sc) # TODO: This may need to become a sparkSession
+
+        self.configuration = Configuration(filepath=configuration_file).config
+
+
+    def get_datastream(self, stream_identifier):
+        return Data(self.sc, self.sqlContext, self.configuration).getDatastream(stream_identifier)
+
+
+    def save_datastream(self, datastream):
+        Data(self.sc, self.sqlContext, self.configuration).storeDatastream(datastream)
+
+
+    def find(self, query):
+        """
+        Find and return all matching datastreams
+        :param query: partial dictionary matching
+        """
+        pass
+
 
     def readfile(self, filename):
         return self.sc.textFile(filename)

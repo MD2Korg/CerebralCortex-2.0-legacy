@@ -22,25 +22,27 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import yaml
+import mysql.connector
+
+from cerebralcortex.kernel.DataStoreEngine.Metadata.LoadMetadata import LoadMetadata
+from cerebralcortex.kernel.DataStoreEngine.Metadata.StoreMetadata import StoreMetadata
 
 
-class Configuration:
-    def __init__(self, filepath: str = None):
+class Metadata(LoadMetadata, StoreMetadata):
+    def __init__(self, configuration):
         """
-        Initialization for the configuration object
-        :param filepath: path to a yml configuration file for Cerebral Cortex
+        Constructor
+        :param configuration:
         """
-        if filepath is not None:
-            self.load_file(filepath)
-        else:
-            self.config = None
-        pass
+        self.configuration = configuration
+        self.database = self.configuration['mysql']['database']
+        self.dbUser = self.configuration['mysql']['db_user']
+        self.dbPassword = self.configuration['mysql']['db_pass']
+        self.datastreamTable = self.configuration['mysql']['datastream_table']
+        self.spanstreamTable = self.configuration['mysql']['spanstream_table']
+        self.processingModuleTable = self.configuration['mysql']['processing_module_table']
+        self.userTable = self.configuration['mysql']['user_table']
+        self.studyTable = self.configuration['mysql']['study_table']
+        self.dbConnection = mysql.connector.connect(user=self.dbUser, password=self.dbPassword, database=self.database)
 
-    def load_file(self, filepath: str):
-        """
-        Helper function to load a yaml file
-        :param filepath: path to a yml configuration file for Cerebral Cortex
-        """
-        with open(filepath, 'r') as ymlfile:
-            self.config = yaml.load(ymlfile)
+        self.cursor = self.dbConnection.cursor()
