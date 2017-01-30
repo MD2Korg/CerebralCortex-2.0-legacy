@@ -81,7 +81,6 @@ class TestVector(unittest.TestCase):
         ds = DataStream(None, None)
         ds.datapoints = self.ecg
 
-        print('ecg size:', len(self.ecg))
         result = interpolate_gaps(ds.datapoints, self.sample_rate)
 
     def test_split_by_gaps(self):
