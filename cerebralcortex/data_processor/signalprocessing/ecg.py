@@ -77,11 +77,11 @@ def filter_bad_ecg(ecg: DataStream,
     ecg_filtered_array = []
 
     # TODO: CODE_REVIEW: Should these thresholds be brought out to the outmost layer?
-    for data in window_data.items():
+    for key, data in window_data.items():
         if classify_ecg_window(data, range_threshold=200, slope_threshold=50, maximum_value=4000):
             ecg_filtered_array.extend(data)
 
-    ecg_filtered.set_datapoints(ecg_filtered_array)
+    ecg_filtered.datapoints = ecg_filtered_array
 
     return ecg_filtered
 
@@ -404,6 +404,6 @@ def detect_rpeak(ecg: DataStream,
 
     # Create resulting datastream to be returned
     result = DataStream.from_datastream([ecg])
-    result.set_datapoints(result_data)
+    result.datapoints = result_data
 
     return result

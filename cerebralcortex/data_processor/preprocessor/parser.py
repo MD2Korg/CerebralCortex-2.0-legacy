@@ -1,4 +1,4 @@
-# Copyright (c) 2016, MD2K Center of Excellence
+# Copyright (c) 2017, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,11 +29,11 @@ import pytz
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 
 
-def data_processor(inputString):
+def data_processor(input_string):
     try:
-        [val, ts] = inputString.split(' ')
+        [val, ts] = input_string.split(' ')
         timestamp = datetime.fromtimestamp(float(ts) / 1000.0, pytz.timezone('US/Central'))
-        return DataPoint.from_tuple(timestamp=timestamp, sample=float(val))
+        return DataPoint.from_tuple(start_time=timestamp, sample=float(val))
     except ValueError:
         # Skip bad values and filter them later
         # print("ValueError: " + str(input))

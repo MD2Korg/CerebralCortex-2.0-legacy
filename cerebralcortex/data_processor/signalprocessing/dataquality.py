@@ -25,7 +25,6 @@ from enum import Enum
 
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.kernel.datatypes.spanstream import SpanStream
-from cerebralcortex.kernel.window import window
 
 
 class DataQuality(Enum):
@@ -53,11 +52,11 @@ def ECGDataQuality(datastream: DataStream,
     :param ecgBandLooseThreshold:
     :return:
     """
-    windows = window(datastream.datapoints, window_size=windowsize)
+    # windows = window(datastream.datapoints, window_size=windowsize)
 
     # TODO: Do something with windows here
 
-    result = SpanStream.from_stream(inputstreams=[datastream])
+    result = DataStream.from_datastream(input_streams=[datastream])
 
     # Do something here for data quality
     # ecgQuality = []
@@ -94,11 +93,11 @@ def RIPDataQuality(datastream: DataStream,
     :param ripBandLooseThreshold:
     :return:
     """
-    windows = window(datastream.datapoints, window_size=windowsize)
+    # windows = window(datastream.datapoints, window_size=windowsize)
 
     # TODO: Do something with windows here
 
-    result = SpanStream.from_stream(inputstreams=[datastream])
+    result = DataStream.from_datastream(input_streams=[datastream])
 
     # # Do something here for data quality
     # ripQuality = []

@@ -21,7 +21,7 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+from cerebralcortex.data_processor.feature.ecg import ecg_feature_computation
 from cerebralcortex.data_processor.signalprocessing.accelerometer import accelerometer_features
 from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_correct, \
     timestamp_correct_and_sequence_align
@@ -94,8 +94,8 @@ def cStress(raw_ecg: DataStream,
     # r-peak datastream computation
     ecg_rr_datastream = compute_rr_intervals(raw_ecg, ecg_sampling_frequency)
 
-    # r-peak datastream computation
-    ecg_rr_datastream = compute_rr_intervals(raw_ecg, ecg_sampling_frequency)
+    ecg_features = ecg_feature_computation(ecg_rr_datastream, window_size=60, window_offset=60)
+    print(len(ecg_features))
 
     # TODO: TWH Fix when feature vector result is available
     return raw_ecg
