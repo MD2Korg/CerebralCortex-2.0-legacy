@@ -400,7 +400,8 @@ def detect_rpeak(ecg: DataStream,
 
     result_data = []
     for k in range(len(rpeak_value)):
-        result_data.append(DataPoint.from_tuple(rpeak_timestamp[k], rpeak_value[k]))
+        result_data.append(
+            DataPoint.from_tuple(rpeak_timestamp[k], rpeak_value[k].seconds + rpeak_value[k].microseconds / 1e6))
 
     # Create resulting datastream to be returned
     result = DataStream.from_datastream([ecg])

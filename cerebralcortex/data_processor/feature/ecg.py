@@ -124,7 +124,7 @@ def ecg_feature_computation(datastream: DataStream,
 
     for key, value in window_data.items():
         starttime, endtime = key
-        reference_data = np.array([i.sample.microseconds / 1e6 for i in value])
+        reference_data = np.array([i.sample for i in value])
 
         rr_variance_data.append(DataPoint.from_tuple(start_time=starttime,
                                                      end_time=endtime,
@@ -134,16 +134,12 @@ def ecg_feature_computation(datastream: DataStream,
 
         rr_VLF_data.append(DataPoint.from_tuple(start_time=starttime,
                                                 end_time=endtime,
-                                                sample=heart_rate_power(power,
-                                                                        frequency,
-                                                                        low_rate_vlf,
-                                                                        high_rate_vlf)))
+                                                sample=heart_rate_power(power, frequency, low_rate_vlf, high_rate_vlf)))
+
         rr_HF_data.append(DataPoint.from_tuple(start_time=starttime,
                                                end_time=endtime,
-                                               sample=heart_rate_power(power,
-                                                                       frequency,
-                                                                       low_rate_hf,
-                                                                       high_rate_hf)))
+                                               sample=heart_rate_power(power, frequency, low_rate_hf, high_rate_hf)))
+
         rr_LF_data.append(DataPoint.from_tuple(start_time=starttime,
                                                end_time=endtime,
                                                sample=heart_rate_power(power,
