@@ -22,19 +22,23 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from datetime import datetime
 
-import pytz
-
-from cerebralcortex.kernel.datatypes.datapoint import DataPoint
+from cerebralcortex.kernel.datatypes.metadata import Metadata
 
 
-def data_processor(inputString):
-    try:
-        [val, ts] = inputString.split(' ')
-        timestamp = datetime.fromtimestamp(float(ts) / 1000.0, pytz.timezone('US/Central'))
-        return DataPoint.from_tuple(timestamp=timestamp, sample=float(val))
-    except ValueError:
-        # Skip bad values and filter them later
-        # print("ValueError: " + str(input))
-        return
+class Study:
+    """A study class"""
+
+    def __init__(self, studyID, userID, metadata=Metadata()):
+        self.studyID = studyID
+        self.userID = userID
+        self.metadata = metadata
+
+    def getStudyID(self):
+        return self.studyID
+
+    def getUserID(self):
+        return self.userID
+
+    def getMetadata(self):
+        return self.metadata

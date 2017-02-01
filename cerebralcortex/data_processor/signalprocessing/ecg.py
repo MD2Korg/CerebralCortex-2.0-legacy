@@ -45,7 +45,7 @@ def classify_ecg_window(data: List[DataPoint],
     :return: True/False decision based on the three parameters
     """
 
-    values = np.array([i.get_sample() for i in data])
+    values = np.array([i.sample for i in data])
     if max(values) - min(values) < range_threshold:
         return False
     if max(values) > maximum_value:
@@ -71,7 +71,7 @@ def filter_bad_ecg(ecg: DataStream,
     """
 
     window_length = int(no_of_secs * fs)
-    window_data = window(ecg.get_datapoints(), window_size=window_length)
+    window_data = window(ecg.datapoints, window_size=window_length)
 
     ecg_filtered = DataStream.from_datastream([ecg])
     ecg_filtered_array = []
@@ -81,7 +81,7 @@ def filter_bad_ecg(ecg: DataStream,
         if classify_ecg_window(data, range_threshold=200, slope_threshold=50, maximum_value=4000):
             ecg_filtered_array.extend(data)
 
-    ecg_filtered.set_datapoints(ecg_filtered_array)
+    ecg_filtered.datapoints = ecg_filtered_array
 
     return ecg_filtered
 
@@ -307,8 +307,8 @@ def remove_close_peaks(rpeak_temp1: List[DataPoint],
 
         # index of the closest peak to discard
         temp_ind = []
-        for i in range(len(temp)):
-            if temp[i] < .5 * fs:  # TODO: CODE_REVIEW: Hard coded constant
+        for i, value in enumerate(temp):
+            if value < .5 * fs:  # TODO: CODE_REVIEW: Hard coded constant
                 if sample[rpeak_temp1[i]] > sample[rpeak_temp1[i + 1]]:
                     temp_ind.append(i)
                 else:
@@ -375,10 +375,10 @@ def detect_rpeak(ecg: DataStream,
     :return: R peak array of tuples (timestamp, Rpeak interval)
     """
 
-    data = ecg.get_datapoints()
+    data = ecg.datapoints
 
-    sample = np.array([i.get_sample() for i in data])
-    timestamp = np.array([i.get_timestamp() for i in data])
+    sample = np.array([i.sample for i in data])
+    timestamp = np.array([i.start_time for i in data])
 
     # computes the moving window integration of the signal
     blackman_win_len = np.ceil(fs / 5)  # TODO: CODE_REVIEW: Hard coded value of 5
@@ -400,10 +400,11 @@ def detect_rpeak(ecg: DataStream,
 
     result_data = []
     for k in range(len(rpeak_value)):
-        result_data.append(DataPoint.from_tuple(rpeak_timestamp[k], rpeak_value[k]))
+        result_data.append(
+            DataPoint.from_tuple(rpeak_timestamp[k], rpeak_value[k].seconds + rpeak_value[k].microseconds / 1e6))
 
     # Create resulting datastream to be returned
     result = DataStream.from_datastream([ecg])
-    result.set_datapoints(result_data)
+    result.datapoints = result_data
 
     return result

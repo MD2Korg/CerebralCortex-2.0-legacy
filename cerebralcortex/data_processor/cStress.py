@@ -21,13 +21,14 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+from cerebralcortex.data_processor.feature.ecg import ecg_feature_computation
+from cerebralcortex.data_processor.signalprocessing.accelerometer import accelerometer_features
+from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_correct, \
+    timestamp_correct_and_sequence_align
+from cerebralcortex.data_processor.signalprocessing.dataquality import ECGDataQuality, RIPDataQuality
+from cerebralcortex.data_processor.signalprocessing.ecg import compute_rr_intervals
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-from memphisdataprocessor.signalprocessing.accelerometer import accelerometer_features
-from memphisdataprocessor.signalprocessing.alignment import timestamp_correct, timestamp_correct_and_sequence_align
-from memphisdataprocessor.signalprocessing.dataquality import ECGDataQuality, RIPDataQuality
-from memphisdataprocessor.signalprocessing.ecg import compute_rr_intervals
-from memphisdataprocessor.signalprocessing import rip
+from cerebralcortex.data_processor.signalprocessing import rip
 
 
 def cStress(raw_ecg: DataStream,
@@ -87,9 +88,9 @@ def cStress(raw_ecg: DataStream,
     # Accelerometer Feature Computation
     accelerometer_magnitude, accelerometer_win_mag_deviations, accel_activity = accelerometer_features(accel)
 
-    print('mag-length:', len(accelerometer_magnitude.get_datapoints()))
-    print('mag-deviations-length:', len(accelerometer_win_mag_deviations.get_datapoints()))
-    print('accel_activity-length:', len(accel_activity.get_datapoints()))
+    print('mag-length:', len(accelerometer_magnitude.datapoints))
+    print('mag-deviations-length:', len(accelerometer_win_mag_deviations.datapoints))
+    print('accel_activity-length:', len(accel_activity.datapoints))
 
     # rip features
     smoothing_factor = 5
@@ -115,6 +116,8 @@ def cStress(raw_ecg: DataStream,
     # r-peak datastream computation
     ecg_rr_datastream = compute_rr_intervals(raw_ecg, ecg_sampling_frequency)
 
+    ecg_features = ecg_feature_computation(ecg_rr_datastream, window_size=60, window_offset=60)
+    print(len(ecg_features))
 
 
     # TODO: TWH Fix when feature vector result is available

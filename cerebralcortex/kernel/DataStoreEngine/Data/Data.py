@@ -1,4 +1,4 @@
-# Copyright (c) 2016, MD2K Center of Excellence
+# Copyright (c) 2017, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,30 +22,25 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import cerebralcortex.kernel.DataStoreEngine.Configuration.DataStoreConfiguration as Config
+from cerebralcortex.kernel.DataStoreEngine.Data.LoadData import LoadData
+from cerebralcortex.kernel.DataStoreEngine.Data.StoreData import StoreData
 
-class StoreData:
-    def __init__(self):
-        pass
 
-    def storeData(self, dfData: object, tableName: str):
+class Data(LoadData, StoreData):
+    def __init__(self, sparkContext, sqlContext, configuration):
         """
-        :param dfData:
-        :param tableName:
+        :param sparkContext:
+        :param sparkContext:
+        :param configuration:
+        :param sqlContext:
         """
-        dfData.write.format("org.apache.spark.sql.cassandra") \
-            .mode('append') \
-            .options(table=tableName, keyspace=Config.Cassandra["KEYSPACE"]) \
-            .save()
 
-    def datapoint(self, df: object):
-        """
-        :param df:
-        """
-        self.storeData(df, Config.Cassandra["DATAPOINT_TABLE"])
+        self.configuration = configuration
+        self.keyspaceName = self.configuration['cassandra']['keyspace']
+        self.dbUser = self.configuration['cassandra']['db_user']
+        self.dbPassword = self.configuration['cassandra']['db_pass']
+        self.datapointTable = self.configuration['cassandra']['datapoint_table']
+        self.spanTable = self.configuration['cassandra']['span_table']
 
-    def span(self, df: object):
-        """
-        :param df:
-        """
-        self.storeData(df, Config.Cassandra["SPAN_TABLE"])
+        self.sqlContext = sqlContext
+        self.sparkContext = sparkContext

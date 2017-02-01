@@ -1,4 +1,4 @@
-# Copyright (c) 2017, MD2K Center of Excellence
+# Copyright (c) 2016, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,52 +22,45 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import numpy as np
-from numpy.linalg import norm
-from sklearn import preprocessing
+import datetime
+import gzip
+import os
+import unittest
 
+import pytz
+
+from cerebralcortex.data_processor.feature.ecg import ecg_feature_computation
+from cerebralcortex.data_processor.signalprocessing.ecg import compute_rr_intervals
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 
 
-def normalize(datastream: DataStream) -> DataStream:
-    """
+class TestECGFeatures(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(TestECGFeatures, cls).setUpClass()
+        tz = pytz.timezone('US/Eastern')
+        ecg = []
+        ecg_sampling_frequency = 64.0
+        with gzip.open(os.path.join(os.path.dirname(__file__), 'res/ecg.csv.gz'), 'rt') as f:
+            for l in f:
+                values = list(map(int, l.split(',')))
+                ecg.append(
+                    DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
 
-    :param datastream:
-    :return:
-    """
-    input_data = np.array([i.get_sample() for i in datastream.get_datapoints()])
+        ecg_ds = DataStream(None, None)
+        ecg_ds.datapoints = ecg
 
-    data = preprocessing.normalize(input_data, axis=0)
+        cls.rr_intervals = compute_rr_intervals(ecg_ds, ecg_sampling_frequency)
 
-    result_data = [DataPoint.from_tuple(timestamp=i.get_timestamp(), sample=None)
-                   for i in datastream.get_datapoints()]
-    for i, dp in enumerate(result_data):
-        dp.set_sample(data[i])
+    def test_ecg_feature_computation(self):
+        rr_variance, rr_vlf, rr_hf, rr_lf, rr_lf_hf, rr_mean, rr_median, rr_quartile, rr_80, rr_20 = ecg_feature_computation(
+            ecg_rr_datastream, window_size=60, window_offset=60)
 
-    result = DataStream.from_datastream(input_streams=[datastream])
-    result.set_datapoints(result_data)
+        self.assertIsInstance(rr_variance, DataStream)
 
-    return result
+        self.assertEqual(rr_variance.datapoints[0].sample, 2.34)  # TODO: Fix this test
 
 
-def magnitude(datastream: DataStream) -> DataStream:
-    """
-
-    :param datastream:
-    :return:
-    """
-    input_data = np.array([i.get_sample() for i in datastream.get_datapoints()])
-
-    data = norm(input_data, axis=1).tolist()  # TODO: Fix function to not compute normalized magnitudes
-
-    result_data = [DataPoint.from_tuple(timestamp=i.get_timestamp(), sample=None)
-                   for i in datastream.get_datapoints()]
-
-    for i, dp in enumerate(result_data):
-        dp.set_sample(data[i])
-
-    result = DataStream.from_datastream(input_streams=[datastream])
-    result.set_datapoints(result_data)
-
-    return result
+if __name__ == '__main__':
+    unittest.main()

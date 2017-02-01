@@ -24,7 +24,7 @@
 
 import unittest
 
-from memphisdataprocessor.signalprocessing.ecg import rr_interval_update, check_peak
+from cerebralcortex.data_processor.signalprocessing.ecg import rr_interval_update, check_peak
 
 
 class TestECG(unittest.TestCase):
@@ -97,6 +97,7 @@ class TestECG(unittest.TestCase):
     def test_emwa(self):
         # TODO: Complete this test
         pass
+
 
 if __name__ == '__main__':
     unittest.main()

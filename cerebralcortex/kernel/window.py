@@ -106,21 +106,21 @@ def window_iter(iterable: List[DataPoint],
     iterator = iter(iterable)
 
     win_size = timedelta(seconds=window_size)
-    start_time = epoch_align(iterable[0].get_timestamp(), window_offset)
+    start_time = epoch_align(iterable[0].start_time, window_offset)
     end_time = start_time + win_size
     key = (start_time, end_time)
 
     data = []
     for element in iterator:
-        timestamp = element.get_timestamp()
+        timestamp = element.start_time
         if timestamp > end_time:
             yield key, data
 
-            start_time = epoch_align(element.get_timestamp(), window_offset)
+            start_time = epoch_align(element.start_time, window_offset)
             end_time = start_time + win_size
             key = (start_time, end_time)
 
-            data = [i for i in data if i.get_timestamp() > start_time]
+            data = [i for i in data if i.start_time > start_time]
 
         data.append(element)
     yield key, data

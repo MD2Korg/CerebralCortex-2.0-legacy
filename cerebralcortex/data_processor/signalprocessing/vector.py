@@ -1,4 +1,4 @@
-# Copyright (c) 2016, MD2K Center of Excellence
+# Copyright (c) 2017, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -21,49 +21,53 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-import datetime
 
 import numpy as np
+from numpy.linalg import norm
+from sklearn import preprocessing
 
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 
 
-def interpolate_gaps(datastream: DataStream,
-                     sampling_frequency: float = None) -> DataStream:
-    sampling_interval = 1.0 / sampling_frequency
+def normalize(datastream: DataStream) -> DataStream:
+    """
 
-    max_interpolation_gap = 1.0 / (sampling_frequency * 0.1)
+    :param datastream:
+    :return:
+    """
+    input_data = np.array([i.sample for i in datastream.datapoints])
 
-    data = datastream.get_datapoints()
-    timedeltas = np.diff([dp.get_timestamp() for dp in data])
+    data = preprocessing.normalize(input_data, axis=0)
 
-    gap_points = []
-    low_limit = datetime.timedelta(seconds=2 * sampling_interval)
-    high_limit = datetime.timedelta(seconds=max_interpolation_gap)
-    for index, value in enumerate(timedeltas):
+    result_data = [DataPoint.from_tuple(start_time=i.start_time, sample=None)
+                   for i in datastream.datapoints]
+    for i, dp in enumerate(result_data):
+        dp.sample = data[i]
 
-        if low_limit <= value <= high_limit:
-            gap_points.append(data[index])
-
-    print('gaps:', len(gap_points))
-
-def timestamp_correct(datastream: DataStream,
-                      sampling_frequency: float = None) -> DataStream:
     result = DataStream.from_datastream(input_streams=[datastream])
-    result.set_datapoints(datastream.get_datapoints())
+    result.datapoints = result_data
+
     return result
 
 
-def timestamp_correct_and_sequence_align(datastream_array: list,
-                                         sampling_frequency: float = None) -> DataStream:
-    result = DataStream.from_datastream(input_streams=datastream_array)
+def magnitude(datastream: DataStream) -> DataStream:
+    """
 
-    data = []
-    for dp in datastream_array[0].get_datapoints():
-        data.append(DataPoint.from_tuple(dp.get_timestamp(), [dp.get_sample(), dp.get_sample(),
-                                                              dp.get_sample()]))  # TODO: Fix with a proper sequence alignment operation later
+    :param datastream:
+    :return:
+    """
+    input_data = np.array([i.sample for i in datastream.datapoints])
 
-    result.set_datapoints(data)
+    data = norm(input_data, axis=1).tolist()  # TODO: Fix function to not compute normalized magnitudes
+
+    result_data = [DataPoint.from_tuple(start_time=i.start_time, sample=None)
+                   for i in datastream.datapoints]
+
+    for i, dp in enumerate(result_data):
+        dp.sample = data[i]
+
+    result = DataStream.from_datastream(input_streams=[datastream])
+    result.datapoints = result_data
 
     return result
