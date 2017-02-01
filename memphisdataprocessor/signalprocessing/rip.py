@@ -27,28 +27,26 @@ from cerebralcortex.kernel.datatypes.datastream import DataStream
 import numpy as np
 
 def compute_peak_valley(rip: DataStream,
-                        fs: float) -> [DataStream, DataStream]:
-    """
-    Compute peak and valley from rip data.
-
-    :return peak_datastream, valley_datastream:
-    :param rip:
-    :param fs:
-    """
-    peak_datastream, valley_datastream = get_peak_valley(rip=rip, fs=fs)
-    return peak_datastream, valley_datastream
-
-def get_peak_valley(rip: DataStream,
                     fs: float = 21.33,
                     smoothing_factor: int = 5,
-                    time_window: int = 8) -> [DataStream, DataStream]:
+                    time_window: int = 8,
+                    expiration_amplitude_threshold_perc: float = 0.10,
+                    threshold_expiration_duration: float = 0.312,
+                    inspiration_amplitude_threshold_perc: float = 0.10,
+                    max_amplitude_change_peak_correction: float = 30,
+                    min_neg_slope_count_peak_correction: int = 4) -> [DataStream, DataStream]:
 
     """
-    Get peak and valley from rip data.
+    Compute peak and valley from rip data and filter peak and valley.
 
     :return peak_datastream, valley_datastream:
     :param rip:
     :param fs:
+    :param time_window:
+    :param expiration_amplitude_threshold_perc:
+    :param threshold_expiration_duration:
+    :param max_amplitude_change_peak_correction:
+    :param min_neg_slope_count_peak_correction:
     """
     data = rip.get_datapoints()
     sample = np.array([i.get_sample() for i in data])
@@ -64,19 +62,19 @@ def get_peak_valley(rip: DataStream,
     peaks, peak_indices, valleys, valley_indices = generate_peak_valley(up_intercept_indices=up_intercept_indices, down_intercept_indices=down_intercept_indices, sample=sample)
 
     valley_indices = correct_valley_position(peak_indices=peak_indices, valley_indices=valley_indices, up_intercept_indices=up_intercept_indices, sample=sample)
-    peak_indices = correct_peak_position(peak_indices=peak_indices, valley_indices=valley_indices, up_intercept_indices=up_intercept_indices, sample=sample)
+    peak_indices = correct_peak_position(peak_indices=peak_indices, valley_indices=valley_indices, up_intercept_indices=up_intercept_indices, sample=sample, max_amplitude_change_peak_correction=max_amplitude_change_peak_correction, min_neg_slope_count_peak_correction=min_neg_slope_count_peak_correction)
 
     # remove too close valley peak pair.
     peak_indices, valley_indices = remove_close_valley_peak_pair(peak_indices=peak_indices, valley_indices=valley_indices)
 
     # Remove small  Expiration duration < 0.31
-    peak_indices, valley_indices = filter_expiration_duration_outlier(peak_indices, valley_indices, timestamp)
+    peak_indices, valley_indices = filter_expiration_duration_outlier(peak_indices=peak_indices, valley_indices=valley_indices, timestamp=timestamp, threshold_expiration_duration=threshold_expiration_duration)
 
     # filter out peak valley pair of inspiration of small amplitude.
-    peak_indices, valley_indices = filter_small_amplitude_inspiration_peak_valley_pair(peak_indices=peak_indices, valley_indices=valley_indices, sample=sample)
+    peak_indices, valley_indices = filter_small_amplitude_inspiration_peak_valley_pair(peak_indices=peak_indices, valley_indices=valley_indices, sample=sample, inspiration_amplitude_threshold_perc=inspiration_amplitude_threshold_perc)
 
     # filter out peak valley pair of expiration of small amplitude.
-    peak_indices, valley_indices = filter_small_amplitude_expiration_peak_valley_pair(peak_indices=peak_indices, valley_indices=valley_indices, sample=sample)
+    peak_indices, valley_indices = filter_small_amplitude_expiration_peak_valley_pair(peak_indices=peak_indices, valley_indices=valley_indices, sample=sample, expiration_amplitude_threshold_perc=expiration_amplitude_threshold_perc)
 
     peak_datapoints, valley_datapoints = [], []
 
@@ -105,7 +103,8 @@ def get_peak_valley(rip: DataStream,
 
 def filter_small_amplitude_expiration_peak_valley_pair(peak_indices: np.ndarray,
                                                        valley_indices: np.ndarray,
-                                                       sample: np.ndarray) -> [np.ndarray, np.ndarray]:
+                                                       sample: np.ndarray,
+                                                       expiration_amplitude_threshold_perc: float = 0.10) -> [np.ndarray, np.ndarray]:
     """
     Filter out peak valley pair if their expiration amplitude is less than or equal to 10% of average expiration amplitude.
 
@@ -113,6 +112,7 @@ def filter_small_amplitude_expiration_peak_valley_pair(peak_indices: np.ndarray,
     :param peak_indices:
     :param valley_indices:
     :param sample:
+    :param expiration_amplitude_threshold_perc:
     """
     peak_indices_updated, valley_indices_updated = [], [valley_indices[0]]
 
@@ -123,7 +123,7 @@ def filter_small_amplitude_expiration_peak_valley_pair(peak_indices: np.ndarray,
     mean_expiration_amplitude = np.mean(expiration_amplitudes)
 
     for i in range(len(expiration_amplitudes)):
-        if expiration_amplitudes[i] > 0.10 * mean_expiration_amplitude: #TODO: remove hard coded .10 (10%) of mean expiration amplitude.
+        if expiration_amplitudes[i] > expiration_amplitude_threshold_perc * mean_expiration_amplitude: #TODO: remove hard coded .10 (10%) of mean expiration amplitude.
             valley_indices_updated.append(valley_indices[i + 1])
             peak_indices_updated.append(peak_indices[i])
 
@@ -132,7 +132,8 @@ def filter_small_amplitude_expiration_peak_valley_pair(peak_indices: np.ndarray,
 
 def filter_small_amplitude_inspiration_peak_valley_pair(peak_indices: np.ndarray,
                                                         valley_indices: np.ndarray,
-                                                        sample: np.ndarray) -> [np.ndarray, np.ndarray]:
+                                                        sample: np.ndarray,
+                                                        inspiration_amplitude_threshold_perc:float=0.10) -> [np.ndarray, np.ndarray]:
     """
     Filter out peak valley pair if their inspiration amplitude is less than or to equal 10% of average inspiration amplitude.
 
@@ -140,6 +141,7 @@ def filter_small_amplitude_inspiration_peak_valley_pair(peak_indices: np.ndarray
     :param peak_indices:
     :param valley_indices:
     :param sample:
+    :param inspiration_amplitude_threshold_perc:
     """
     peak_indices_updated, valley_indices_updated = [], []
 
@@ -147,7 +149,7 @@ def filter_small_amplitude_inspiration_peak_valley_pair(peak_indices: np.ndarray
     mean_inspiration_amplitude = np.mean(inspiration_amplitudes)
 
     for i in range(len(inspiration_amplitudes)):
-        if inspiration_amplitudes[i] > 0.10 * mean_inspiration_amplitude:
+        if inspiration_amplitudes[i] > inspiration_amplitude_threshold_perc * mean_inspiration_amplitude:
             valley_indices_updated.append(valley_indices[i])
             peak_indices_updated.append(peak_indices[i])
 
@@ -156,7 +158,8 @@ def filter_small_amplitude_inspiration_peak_valley_pair(peak_indices: np.ndarray
 
 def filter_expiration_duration_outlier(peak_indices: np.ndarray,
                                        valley_indices: np.ndarray,
-                                       timestamp: np.ndarray) -> [np.ndarray, np.ndarray]:
+                                       timestamp: np.ndarray,
+                                       threshold_expiration_duration: float = 0.312) -> [np.ndarray, np.ndarray]:
     """
     Filter out peak valley pair for which expiration duration is too small.
 
@@ -164,6 +167,7 @@ def filter_expiration_duration_outlier(peak_indices: np.ndarray,
     :param peak_indices:
     :param valley_indices:
     :param timestamp:
+    :param threshold_expiration_duration:
     """
     expiration_durations = []
     for i in range(len(peak_indices) - 1):
@@ -173,7 +177,7 @@ def filter_expiration_duration_outlier(peak_indices: np.ndarray,
     peak_indices_updated, valley_indices_updated = [], [valley_indices[0]]
 
     for i in range(len(expiration_durations)):
-        if expiration_durations[i].total_seconds() > 0.312: #TODO: remove hard coded value for expiration threshhold. # peak valley pair is assumed valid if expiration duration > 0.312 seconds.
+        if expiration_durations[i].total_seconds() > threshold_expiration_duration: # peak valley pair is assumed valid if expiration duration > 0.312 seconds.
             peak_indices_updated.append(peak_indices[i])
             valley_indices_updated.append(valley_indices[i + 1])
 
@@ -203,7 +207,9 @@ def remove_close_valley_peak_pair(peak_indices: np.ndarray,
 def correct_peak_position(peak_indices: np.ndarray,
                           valley_indices: np.ndarray,
                           up_intercept_indices: np.ndarray,
-                          sample: np.ndarray) -> np.ndarray:
+                          sample: np.ndarray,
+                          max_amplitude_change_peak_correction: float = 30,
+                          min_neg_slope_count_peak_correction: int = 4) -> np.ndarray:
     """
     Correct peak position by checking if there is a notch in the inspiration branch at left position.
     If at least 60% inspiration is done at a notch point, assume that notch as an original peak.
@@ -214,6 +220,8 @@ def correct_peak_position(peak_indices: np.ndarray,
     :param valley_indices:
     :param up_intercept_indices:
     :param sample:
+    :param max_amplitude_change_peak_correction:
+    :param min_neg_slope_count_peak_correction:
 
     """
 
@@ -230,7 +238,7 @@ def correct_peak_position(peak_indices: np.ndarray,
                 valley_peak_dist_prev = sample[peak_indices[i]] - sample[valley_indices[i]]
                 amplitude_change = (valley_peak_dist_prev - valley_peak_dist_new) / valley_peak_dist_new * 100 #TODO: throw divide by zero encounter. Handle this situation.
 
-                if len(indices_neg_slope) >= 4 and amplitude_change <= 30: #TODO: remove hard coded value.
+                if len(indices_neg_slope) >= min_neg_slope_count_peak_correction and amplitude_change <= max_amplitude_change_peak_correction:
                     peak_indices[i] = up_intercept_indices[up_indices_valley_to_peak[0]] + indices_neg_slope[0] - 1 # 60% inspiration is done at that point.
 
     return peak_indices
