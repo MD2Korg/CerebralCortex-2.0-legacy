@@ -48,9 +48,9 @@ def compute_peak_valley(rip: DataStream,
     :param max_amplitude_change_peak_correction:
     :param min_neg_slope_count_peak_correction:
     """
-    data = rip.get_datapoints()
-    sample = np.array([i.get_sample() for i in data])
-    timestamp = np.array([i.get_timestamp() for i in data])
+    data = rip.datapoints
+    sample = np.array([i.sample for i in data])
+    timestamp = np.array([i.start_time for i in data])
 
     sample = smooth(sample, smoothing_factor) # Moving average filter with default smoothing factor = 5.
     window_length = round(time_window * fs)
@@ -85,9 +85,9 @@ def compute_peak_valley(rip: DataStream,
         valley_datapoints.append(DataPoint.from_tuple(sample[i], timestamp[i]))
 
     peak_datastream = DataStream.from_datastream([rip])
-    peak_datastream.set_datapoints(peak_datapoints)
+    peak_datastream.datapoints = peak_datapoints
     valley_datastream = DataStream.from_datastream([rip])
-    valley_datastream.set_datapoints(valley_datapoints)
+    valley_datastream.datapoints = valley_datapoints
 
     # TODO: graph plot
     # import matplotlib.pyplot as plt
