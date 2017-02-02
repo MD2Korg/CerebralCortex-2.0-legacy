@@ -55,7 +55,7 @@ class TestECGFeatures(unittest.TestCase):
 
     def test_ecg_feature_computation(self):
         rr_variance, rr_vlf, rr_hf, rr_lf, rr_lf_hf, rr_mean, rr_median, rr_quartile, rr_80, rr_20 = ecg_feature_computation(
-            ecg_rr_datastream, window_size=60, window_offset=60)
+            cls.rr_intervals, window_size=60, window_offset=60)
 
         self.assertIsInstance(rr_variance, DataStream)
 
