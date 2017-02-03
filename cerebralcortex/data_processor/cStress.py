@@ -85,7 +85,7 @@ def cStress(raw_ecg: DataStream,
     # rip_corrected.add_span_stream(rip_data_quality)
 
     # Accelerometer Feature Computation
-    # accelerometer_magnitude, accelerometer_win_mag_deviations, accel_activity = accelerometer_features(accel)
+    accelerometer_magnitude, accelerometer_win_mag_deviations, accel_activity = accelerometer_features(accel)
     #
     print('mag-length:', len(accelerometer_magnitude.datapoints))
     print('mag-deviations-length:', len(accelerometer_win_mag_deviations.datapoints))
