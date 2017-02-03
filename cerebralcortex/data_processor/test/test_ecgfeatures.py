@@ -1,4 +1,4 @@
-# Copyright (c) 2016, MD2K Center of Excellence
+# Copyright (c) 2017, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,6 @@ import datetime
 import gzip
 import os
 import unittest
-
-import numpy as np
 import pytz
 
 from cerebralcortex.data_processor.feature.ecg import ecg_feature_computation, lomb, heart_rate_power
