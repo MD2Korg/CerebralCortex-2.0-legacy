@@ -1,0 +1,98 @@
+{
+  "id": "file:///Users/hnat/IdeaProjects/CerebralCortex/cerebralcortex/kernel/schemas/#",
+  "$schema": "http://json-schema.org/schema#",
+  "title": "Processing Module schema",
+  "description": "",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "",
+      "type": "string"
+    },
+    "metadata": {
+      "description": "",
+      "properties": {
+        "input_parameters": {
+          "description": "",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "input_streams": {
+          "description": "",
+          "type": "array",
+          "items": {
+            "properties": {
+              "name": {
+                "description": "",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        },
+        "output_streams": {
+          "description": "",
+          "type": "array",
+          "items": {
+            "properties": {
+              "name": {
+                "description": "",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        },
+        "algorithm": {
+          "description": "",
+          "properties": {
+            "method": {
+              "description": "",
+              "type": "string"
+            },
+            "authors": {
+              "description": "",
+              "type": "array",
+              "items": {
+                "description": "",
+                "type": "string"
+              }
+            },
+            "version": {
+              "description": "",
+              "type": "string"
+            },
+            "reference": {
+              "description": "",
+              "properties": {
+                "url": {
+                  "description": "",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": [
+            "method",
+            "version"
+          ]
+        }
+      },
+      "required": [
+        "input_streams",
+        "output_streams",
+        "algorithm"
+      ]
+    }
+  },
+  "required": [
+    "name",
+    "metadata"
+  ]
+}

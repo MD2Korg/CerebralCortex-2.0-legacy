@@ -1,0 +1,45 @@
+{
+  "identifier": 8,
+  "user": "a970e186-e960-11e6-bf0e-fe55135034f3",
+  "study_list": [
+    5
+  ],
+  "processing_module": 45,
+  "source_ids": [
+    40
+  ],
+  "metadata": {
+    "name": "80th_percentile_rr_variance",
+    "description": "80th percentile",
+    "data_descriptor": [
+      {
+        "type": "number",
+        "unit": "milliseconds",
+        "descriptive_statistic": "80th_percentile"
+      }
+    ],
+    "processing_module": {
+      "input_parameters": {
+        "window_size": 60.0,
+        "window_offset": 60.0
+      },
+      "input_streams": [
+        {
+          "name": "ecg_rr_interval",
+          "stream_identifier": 40
+        }
+      ],
+      "execution_context": {
+        "device": {
+          "model": "Samsung Galaxy S5",
+          "OS": "6.0.0",
+          "battery_capacity": "8500mah"
+        }
+      }
+    },
+    "privacy": {
+    },
+    "access_control": {
+    }
+  }
+}

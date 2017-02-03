@@ -21,37 +21,29 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from datetime import datetime
-from typing import Any, Tuple
+
+import datetime
+import unittest
+
+from cerebralcortex.kernel.datatypes.annotation import Annotation
 
 
-class Span:
-    def __init__(self,
-                 start_time: datetime = None,
-                 end_time: datetime = None,
-                 label: Any = None):
-        """
+class TestAnnotation(unittest.TestCase):
+    def test_Annotation_None(self):
+        dp = Annotation()
 
-        :param start_time: Python datetime object with timezone information
-        :param end_time: Python datetime object with timezone information
-        :param label:
-        """
+        self.assertIsNone(dp.start_time)
+        self.assertIsNone(dp.end_time)
+        self.assertIsNone(dp.sample)
 
-        self._starttime = start_time
-        self._endtime = end_time
-        self._label = label
+    def test_Annotation(self):
+        ts = datetime.datetime.now()
+        dp = Annotation(start_time=ts, end_time=ts + datetime.timedelta(hours=1), sample='RED')
 
-    def get_time_tuple(self) -> Tuple[datetime, datetime]:
-        """
+        self.assertEqual(ts, dp.start_time)
+        self.assertEqual(ts + datetime.timedelta(hours=1), dp.end_time)
+        self.assertEqual(dp.sample, 'RED')
 
-        :return:
-        """
-        result = (self._starttime, self._endtime)
-        return result
 
-    def get_label(self) -> Any:
-        """
-
-        :return:
-        """
-        return self._label
+if __name__ == '__main__':
+    unittest.main()

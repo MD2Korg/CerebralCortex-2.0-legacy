@@ -1,4 +1,4 @@
-# Copyright (c) 2016, MD2K Center of Excellence
+# Copyright (c) 2017, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -21,22 +21,27 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 from typing import List
 
-from pyspark import RDD
-
 from cerebralcortex import CerebralCortex
-from cerebralcortex.kernel.datatypes.metadata import Metadata
-from cerebralcortex.kernel.datatypes.span import Span
+from cerebralcortex.kernel.datatypes.datapoint import DataPoint
+from cerebralcortex.kernel.datatypes.datastream import DataStream
+from cerebralcortex.kernel.datatypes.enumerations import StreamTypes
 
 
-class SpanStream:
+class AnnotationStream(DataStream):
     def __init__(self,
-                 cerebralcortex: CerebralCortex,
+                 cerebral_cortex: CerebralCortex,
+                 user: User,
+                 study_list: List[Study] = None,  # all the study info related to a datastream
+                 processing_module: Processing = None,
+                 # datastream_type: str = None,
+                 metadata: MetadataStruct = None,
+                 source_ids: dict = None,
                  identifier: int = None,
-                 data: RDD = None,
-                 processing: dict = None,
-                 metadata: Metadata = Metadata()):
+                 data: List[DataPoint] = None
+                 ):
         """
         The primary object in Cerebral Cortex which represents data
         :param cerebralcortex: Reference to the Cerebral Cortex object
@@ -46,29 +51,6 @@ class SpanStream:
         :param metadata:
         """
 
-        self._cc = cerebralcortex
-        self._id = identifier
-        self._processing = processing
-        self._metadata = metadata
-        self._spans = data
+        super().__init__(cerebral_cortex, user, study_list, processing_module, metadata, source_ids, identifier, data)
 
-    def get_cc(self) -> CerebralCortex:
-        """
-
-        :return:
-        """
-        return self._cc
-
-    def set_spans(self, data: List[Span]) -> None:
-        self._spans = data
-
-    def get_id(self) -> int:
-        return self._id
-
-    @classmethod
-    def from_stream(cls, inputstreams: list):
-        result = cls(cerebralcortex=inputstreams[0].get_cc())
-
-        # TODO: Something with provenance tracking from inputstreams list
-
-        return result
+        self._datastream_type = StreamTypes.ATTRIBUTE

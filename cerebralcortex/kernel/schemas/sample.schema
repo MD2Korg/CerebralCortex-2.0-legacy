@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "title": "Sample Schema",
+  "description": "Specific Specification of the sample field",
+  "anyOf": [
+    {
+      "type": "array"
+    },
+    {
+      "type": "number"
+    }
+  ],
+  "additionalProperties": false
+}
+

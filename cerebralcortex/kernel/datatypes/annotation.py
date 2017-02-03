@@ -1,4 +1,4 @@
-# Copyright (c) 2016, MD2K Center of Excellence
+# Copyright (c) 2017, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,32 +22,13 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import datetime
-import unittest
+from datetime import datetime
+from typing import Any
 
-from cerebralcortex.kernel.datatypes.span import Span
-
-
-class TestSpan(unittest.TestCase):
-    def test_Span_None(self):
-        dp = Span()
-
-        (starttime, endtime) = dp.get_time_tuple()
-
-        self.assertIsNone(starttime)
-        self.assertIsNone(endtime)
-        self.assertIsNone(dp.get_label())
-
-    def test_Span(self):
-        ts = datetime.datetime.now()
-        dp = Span(start_time=ts, end_time=ts + datetime.timedelta(hours=1), label='RED')
-
-        (starttime, endtime) = dp.get_time_tuple()
-
-        self.assertEqual(ts, starttime)
-        self.assertEqual(ts + datetime.timedelta(hours=1), endtime)
-        self.assertEqual(dp.get_label(), 'RED')
+from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 
 
-if __name__ == '__main__':
-    unittest.main()
+class Annotation(DataPoint):
+    def __init__(self, datastream_id: int = None, start_time: datetime = None, end_time: datetime = None,
+                 sample: Any = None, metadata: dict = None) -> None:
+        super().__init__(datastream_id, start_time, end_time, sample, metadata)

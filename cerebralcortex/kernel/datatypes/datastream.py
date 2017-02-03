@@ -25,6 +25,7 @@ from typing import List, Dict
 
 from cerebralcortex import CerebralCortex
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
+from cerebralcortex.kernel.datatypes.enumerations import StreamTypes
 from cerebralcortex.kernel.datatypes.metadata import \
     Metadata as MetadataStruct  # TODO: change class name to solve unambiguity between Metadata struct class and DataStoreEngine.Metadata
 from cerebralcortex.kernel.datatypes.processing import Processing
@@ -38,7 +39,7 @@ class DataStream:
                  user: User,
                  study_list: List[Study] = None,  # all the study info related to a datastream
                  processing_module: Processing = None,
-                 datastream_type: str = None,
+                 # datastream_type: str = None,
                  metadata: MetadataStruct = None,
                  source_ids: dict = None,
                  identifier: int = None,
@@ -53,7 +54,7 @@ class DataStream:
         self._user = user
         self._study_list = study_list
         self._processing_module = processing_module
-        self._datastream_type = datastream_type
+        self._datastream_type = StreamTypes.DATASTREAM
         self._metadata = metadata
         self._source_ids = source_ids
         self._data = data

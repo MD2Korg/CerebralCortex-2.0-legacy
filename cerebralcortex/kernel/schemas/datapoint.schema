@@ -1,0 +1,25 @@
+{
+  "id": "file:///Users/hnat/IdeaProjects/CerebralCortex/cerebralcortex/kernel/schemas/#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "DataPoint Schema",
+  "description": "DataPoint Schema Specification",
+  "type": "object",
+  "properties": {
+    "start_time": {
+      "description": "Starting timestamp of the annotation",
+      "type": "string"
+    },
+    "end_time": {
+      "description": "Ending timestamp of the annotation",
+      "type": "string"
+    },
+    "sample": {
+      "description": "JSON object representing the annotation labels and values",
+      "$ref": "sample.schema#"
+    }
+  },
+  "required": [
+    "start_time",
+    "sample"
+  ]
+}
