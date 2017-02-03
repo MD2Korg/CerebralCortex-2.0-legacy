@@ -86,18 +86,18 @@ class TestRPeakDetect(unittest.TestCase):
 
         running_rr_avg = sum(np.diff(peak_location)) / (len(peak_location) - 1)
         rpeak_temp1 = compute_r_peaks(threshold, running_rr_avg, y, peak_location_values)
-        peak_index1_from_data = np.array(np.genfromtxt('peak_index_1.csv')).astype(np.int64)
-        peak_index1_from_data = peak_index1_from_data -1
+        # peak_index1_from_data = np.array(np.genfromtxt('peak_index_1.csv')).astype(np.int64)
+        # peak_index1_from_data = peak_index1_from_data -1
         # self.assertAlmostEqual(np.mean(peak_index1_from_data),np.mean(rpeak_temp1))
 
         rpeak_temp2 = remove_close_peaks(rpeak_temp1, sample, self._fs)
-        peak_index2_from_data = np.array(np.genfromtxt('peak_index_2.csv')).astype(np.int64)
-        peak_index2_from_data = peak_index2_from_data -1
+        # peak_index2_from_data = np.array(np.genfromtxt('peak_index_2.csv')).astype(np.int64)
+        # peak_index2_from_data = peak_index2_from_data -1
         # self.assertAlmostEqual(np.mean(peak_index2_from_data),np.mean(rpeak_temp2))
 
         index = confirm_peaks(rpeak_temp2, sample, self._fs)
-        peak_index3_from_data = np.array(np.genfromtxt('peak_index_3.csv')).astype(np.int64)
-        peak_index3_from_data = peak_index3_from_data -1
+        # peak_index3_from_data = np.array(np.genfromtxt('peak_index_3.csv')).astype(np.int64)
+        # peak_index3_from_data = peak_index3_from_data -1
         # self.assertAlmostEqual(np.mean(peak_index3_from_data),np.mean(index))
 
 
