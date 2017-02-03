@@ -46,8 +46,6 @@ def cStress(raw_ecg: DataStream,
     :param raw_accel_z:
     """
 
-    raw_ecg.metadata.
-
     # TODO: TWH Temporary
     ecg_sampling_frequency = 64.0
     rip_sampling_frequency = 64.0 / 3.0

@@ -25,6 +25,6 @@
 from enum import Enum
 
 
-class DataQvuality(Enum):
+class DataQuality(Enum):
     GOOD = 1
     BAD = 2
