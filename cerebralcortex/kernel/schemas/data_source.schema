@@ -1,0 +1,15 @@
+{
+  "id": "file:///Users/hnat/IdeaProjects/CerebralCortex/cerebralcortex/kernel/schemas/#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Data Source Schema",
+  "description": "Data Source Schema Specification",
+  "type": "object",
+  "properties": {
+    "foobar": {
+      "description": "",
+      "type": "string"
+    }
+  },
+  "required": [
+  ]
+}

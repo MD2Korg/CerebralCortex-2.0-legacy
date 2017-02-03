@@ -8,7 +8,7 @@
   "processing_module": 2,
   "source_ids": [
   ],
-  "Metadata": {
+  "metadata": {
     "name": "ecg",
     "description": "RAW ecg from AutoSense",
     "data_descriptor": [

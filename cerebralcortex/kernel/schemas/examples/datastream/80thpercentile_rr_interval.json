@@ -6,9 +6,9 @@
   ],
   "processing_module": 45,
   "source_ids": [
-    40,
+    40
   ],
-  "Metadata": {
+  "metadata": {
     "name": "80th_percentile_rr_variance",
     "description": "80th percentile",
     "data_descriptor": [
