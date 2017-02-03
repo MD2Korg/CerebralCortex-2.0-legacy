@@ -35,7 +35,6 @@ class Configuration:
             self.load_file(filepath)
         else:
             self.config = None
-        pass
 
     def load_file(self, filepath: str):
         """

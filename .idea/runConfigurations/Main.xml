@@ -8,7 +8,7 @@
       <env name="SPARK_HOME" value="/Users/hnat/Downloads/spark-2.0.2-bin-hadoop2.7/" />
       <env name="PYSPARK_SUBMIT_ARGS" value="--conf spark.cassandra.connection.host=127.0.0.1 --packages com.datastax.spark:spark-cassandra-connector_2.11:2.0.0-M3 pyspark-shell" />
     </envs>
-    <option name="SDK_HOME" value="$USER_HOME$/.virtualenvs/CerebralCortex/bin/python3.5" />
+    <option name="SDK_HOME" value="/usr/bin/python3.5" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <option name="IS_MODULE_SDK" value="true" />
     <option name="ADD_CONTENT_ROOTS" value="true" />

@@ -35,7 +35,7 @@ class TestConfiguration(unittest.TestCase):
         cfg = Configuration()
         self.assertIsNone(cfg.config)
 
-    def test_ConfiguationFile(self):
+    def test_ConfigurationFile(self):
         cfg = Configuration(filepath=self.testConfigFile)
 
         cassandra = cfg.config['cassandra']
@@ -45,15 +45,14 @@ class TestConfiguration(unittest.TestCase):
         self.assertEqual(cassandra['db_user'], '')
         self.assertEqual(cassandra['db_pass'], '')
         self.assertEqual(cassandra['datapoint_table'], 'datapoint')
-        self.assertEqual(cassandra['span_table'], 'span')
 
         self.assertEqual(mysql['database'], 'cortex')
         self.assertEqual(mysql['db_user'], 'root')
         self.assertEqual(mysql['db_pass'], 'pass')
         self.assertEqual(mysql['datastream_table'], 'datastream')
-        self.assertEqual(mysql['spanstream_table'], 'spanstream')
-        self.assertEqual(mysql['processing_module_table'], 'processing')
+        self.assertEqual(mysql['processing_module_table'], 'processing_module')
         self.assertEqual(mysql['user_table'], 'user')
+        self.assertEqual(mysql['study_table'], 'study')
 
 
 if __name__ == '__main__':
