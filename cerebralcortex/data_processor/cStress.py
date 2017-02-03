@@ -87,7 +87,7 @@ def cStress(raw_ecg: DataStream,
     print('accel_activity-length:', len(accel_activity.datapoints))
 
     # r-peak datastream computation
-    ecg_rr_datastream = compute_rr_intervals(raw_ecg, ecg_sampling_frequency)
+    ecg_rr_datastream = compute_rr_intervals(ecg_corrected , ecg_sampling_frequency)
 
     ecg_features = ecg_feature_computation(ecg_rr_datastream, window_size=60, window_offset=60)
     print(len(ecg_features))
