@@ -22,7 +22,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from cerebralcortex.kernel.datatypes.attributestream import AttributeStream
+from cerebralcortex.kernel.datatypes.annotationstream import AnnotationStream
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 
 
@@ -33,7 +33,7 @@ def ECGDataQuality(datastream: DataStream,
                    outlierThresholdHigh: int = 4500,
                    outlierThresholdLow: int = 20,
                    badSegmentThreshod: int = 2,
-                   ecgBandLooseThreshold: int = 47) -> AttributeStream:
+                   ecgBandLooseThreshold: int = 47) -> AnnotationStream:
     """
 
     :param datastream:
@@ -73,7 +73,7 @@ def RIPDataQuality(datastream: DataStream,
                    outlierThresholdLow=20,
                    badSegmentThreshod=2,
                    ripBandOffThreshold=20,
-                   ripBandLooseThreshold=150) -> AttributeStream:
+                   ripBandLooseThreshold=150) -> AnnotationStream:
     """
 
     :param datastream:

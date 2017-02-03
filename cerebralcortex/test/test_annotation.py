@@ -1,4 +1,4 @@
-# Copyright (c) 2017, MD2K Center of Excellence
+# Copyright (c) 2016, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,13 +22,28 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from datetime import datetime
-from typing import Any
+import datetime
+import unittest
 
-from cerebralcortex.kernel.datatypes.datapoint import DataPoint
+from cerebralcortex.kernel.datatypes.annotation import Annotation
 
 
-class Attribute(DataPoint):
-    def __init__(self, datastream_id: int = None, start_time: datetime = None, end_time: datetime = None,
-                 sample: Any = None, metadata: dict = None) -> None:
-        super().__init__(datastream_id, start_time, end_time, sample, metadata)
+class TestAnnotation(unittest.TestCase):
+    def test_Annotation_None(self):
+        dp = Annotation()
+
+        self.assertIsNone(dp.start_time)
+        self.assertIsNone(dp.end_time)
+        self.assertIsNone(dp.sample)
+
+    def test_Annotation(self):
+        ts = datetime.datetime.now()
+        dp = Annotation(start_time=ts, end_time=ts + datetime.timedelta(hours=1), sample='RED')
+
+        self.assertEqual(ts, dp.start_time)
+        self.assertEqual(ts + datetime.timedelta(hours=1), dp.end_time)
+        self.assertEqual(dp.sample, 'RED')
+
+
+if __name__ == '__main__':
+    unittest.main()

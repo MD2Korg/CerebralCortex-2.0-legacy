@@ -30,7 +30,7 @@ from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.kernel.datatypes.enumerations import StreamTypes
 
 
-class AttributeStream(DataStream):
+class AnnotationStream(DataStream):
     def __init__(self,
                  cerebral_cortex: CerebralCortex,
                  user: User,
