@@ -87,15 +87,15 @@ def cStress(raw_ecg: DataStream,
     # Accelerometer Feature Computation
     # accelerometer_magnitude, accelerometer_win_mag_deviations, accel_activity = accelerometer_features(accel)
     #
-    # print('mag-length:', len(accelerometer_magnitude.datapoints))
-    # print('mag-deviations-length:', len(accelerometer_win_mag_deviations.datapoints))
-    # print('accel_activity-length:', len(accel_activity.datapoints))
+    print('mag-length:', len(accelerometer_magnitude.datapoints))
+    print('mag-deviations-length:', len(accelerometer_win_mag_deviations.datapoints))
+    print('accel_activity-length:', len(accel_activity.datapoints))
     # r-peak datastream computation
 
     ecg_rr_datastream = compute_rr_intervals(ecg_corrected, ecg_sampling_frequency)
-    #
-    # ecg_features = ecg_feature_computation(ecg_rr_datastream, window_size=60, window_offset=60)
-    # print(len(ecg_features))
+
+    ecg_features = ecg_feature_computation(ecg_rr_datastream, window_size=60, window_offset=60)
+    print(len(ecg_features))
 
     # TODO: TWH Fix when feature vector result is available
     return raw_ecg
