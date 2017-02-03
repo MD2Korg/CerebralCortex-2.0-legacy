@@ -80,7 +80,7 @@ class TestRPeakDetect(unittest.TestCase):
 
         peak_location_values = [(i,y[i]) for i in range(2, len(y) - 1) if check_peak(y[i - 2:i + 3])]
         peak_location = [i[0] for i in peak_location_values]
-        peak_location_from_data = np.array(np.genfromtxt('/peak_location.csv')).astype(np.int64)
+        peak_location_from_data = np.array(np.genfromtxt('peak_location.csv')).astype(np.int64)
         peak_location_from_data = peak_location_from_data -1
         self.assertAlmostEqual(int(np.mean(peak_location_from_data)), int(np.mean(peak_location)))
 
