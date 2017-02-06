@@ -24,7 +24,7 @@
 
 import unittest
 import numpy as np
-from cerebralcortex.data_processor.signalprocessing.ecg import filter_bad_ecg, rr_interval_update, compute_moving_window_int, check_peak , compute_r_peaks, remove_close_peaks, confirm_peaks
+from cerebralcortex.data_processor.signalprocessing.ecg import rr_interval_update, compute_moving_window_int, check_peak , compute_r_peaks, remove_close_peaks, confirm_peaks
 import os
 
 class TestRPeakDetect(unittest.TestCase):
