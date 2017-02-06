@@ -29,6 +29,7 @@ from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_c
 from cerebralcortex.data_processor.signalprocessing.dataquality import ECGDataQuality, RIPDataQuality
 from cerebralcortex.data_processor.signalprocessing.ecg import compute_rr_intervals
 from cerebralcortex.kernel.datatypes.datastream import DataStream
+from cerebralcortex.data_processor.signalprocessing import rip
 
 
 def cStress(raw_ecg: DataStream,
@@ -86,11 +87,18 @@ def cStress(raw_ecg: DataStream,
     print('mag-deviations-length:', len(accelerometer_win_mag_deviations.datapoints))
     print('accel_activity-length:', len(accel_activity.datapoints))
 
+    # rip features
+    rip_peak_datastream, rip_valley_datastream = rip.compute_peak_valley(rip = raw_rip)
+
+    # r-peak datastream computation
+    ecg_rr_datastream = compute_rr_intervals(raw_ecg, ecg_sampling_frequency)
+
     # r-peak datastream computation
     ecg_rr_datastream = compute_rr_intervals(raw_ecg, ecg_sampling_frequency)
 
     ecg_features = ecg_feature_computation(ecg_rr_datastream, window_size=60, window_offset=60)
     print(len(ecg_features))
+
 
     # TODO: TWH Fix when feature vector result is available
     return raw_ecg
