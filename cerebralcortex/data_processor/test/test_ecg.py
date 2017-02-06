@@ -25,24 +25,12 @@
 import unittest
 import numpy as np
 from cerebralcortex.data_processor.signalprocessing.ecg import filter_bad_ecg, rr_interval_update, compute_moving_window_int, check_peak , compute_r_peaks, remove_close_peaks, confirm_peaks
-from cerebralcortex.kernel.datatypes.datastream import DataStream
-from cerebralcortex.kernel.datatypes.datapoint import DataPoint
-from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_correct
-import pytz
-from datetime import datetime
-
+import os
 
 class TestRPeakDetect(unittest.TestCase):
     def setUp(self):
-        ecg_tuple_array = np.genfromtxt('/home/aungkon/Downloads/ecg.csv',delimiter=',')
-        ecg_array = [DataPoint.from_tuple(start_time=datetime.fromtimestamp(float(x[0]/1000) / 1000.0, pytz.timezone('US/Central')),sample=x[1]) for x in ecg_tuple_array]
+        self._ecg_sample_array = np.genfromtxt(os.getcwd()+'/res/'+'sample_array_ecg.csv',delimiter=',')
         self._fs = 64.0
-        ecg_datastream_temp = DataStream(None,None)
-        ecg_datastream_temp.datapoints = ecg_array
-        ecg_datastream = filter_bad_ecg(timestamp_correct(datastream=ecg_datastream_temp, sampling_frequency=self._fs),self._fs)
-        ecg_filtered_sample_array = [x.sample for x in ecg_datastream.datapoints]
-        self.ecg_array =  ecg_filtered_sample_array
-        np.savetxt('sample_array1.csv',self.ecg_array,delimiter=",")
 
     def test_rr_interval_update(self):
         rpeak_temp1 = [i for i in range(0, 100, 10)]
@@ -83,32 +71,26 @@ class TestRPeakDetect(unittest.TestCase):
         data = [0, 1]
         self.assertFalse(check_peak(data))
 
-    # def test_detect_rpeak(self,threshold:float=.5):
-    #     sample = np.array([i for i in self._ecg_sample_array])
-    #     blackman_win_len = np.ceil(self._fs / 5)  # TODO: CODE_REVIEW: Hard coded value of 5
-    #     y = compute_moving_window_int(sample, self._fs, blackman_win_len)
-    #
-    #     peak_location_values = [(i,y[i]) for i in range(2, len(y) - 1) if check_peak(y[i - 2:i + 3])]
-    #     peak_location = [i[0] for i in peak_location_values]
-    #     peak_location_from_data = np.array(np.genfromtxt('peak_location.csv')).astype(np.int64)
-    #     peak_location_from_data = peak_location_from_data -1
-    #     self.assertAlmostEqual(int(np.mean(peak_location_from_data)), int(np.mean(peak_location)))
-    #
-    #     running_rr_avg = sum(np.diff(peak_location)) / (len(peak_location) - 1)
-    #     rpeak_temp1 = compute_r_peaks(threshold, running_rr_avg, y, peak_location_values)
-    #     # peak_index1_from_data = np.array(np.genfromtxt('peak_index_1.csv')).astype(np.int64)
-    #     # peak_index1_from_data = peak_index1_from_data -1
-    #     # self.assertAlmostEqual(np.mean(peak_index1_from_data),np.mean(rpeak_temp1))
-    #
-    #     rpeak_temp2 = remove_close_peaks(rpeak_temp1, sample, self._fs)
-    #     # peak_index2_from_data = np.array(np.genfromtxt('peak_index_2.csv')).astype(np.int64)
-    #     # peak_index2_from_data = peak_index2_from_data -1
-    #     # self.assertAlmostEqual(np.mean(peak_index2_from_data),np.mean(rpeak_temp2))
-    #
-    #     index = confirm_peaks(rpeak_temp2, sample, self._fs)
-    #     # peak_index3_from_data = np.array(np.genfromtxt('peak_index_3.csv')).astype(np.int64)
-    #     # peak_index3_from_data = peak_index3_from_data -1
-    #     # self.assertAlmostEqual(np.mean(peak_index3_from_data),np.mean(index))
+    def test_detect_rpeak(self,threshold:float=.5):
+        sample = np.array([i for i in self._ecg_sample_array])
+        blackman_win_len = np.ceil(self._fs / 5)
+        y = compute_moving_window_int(sample, self._fs, blackman_win_len)
+
+        peak_location_values = [(i,y[i]) for i in range(2, len(y) - 1) if check_peak(y[i - 2:i + 3])]
+        peak_location = [i[0] for i in peak_location_values]
+
+        running_rr_avg = sum(np.diff(peak_location)) / (len(peak_location) - 1)
+        rpeak_temp1 = compute_r_peaks(threshold, running_rr_avg, y, peak_location_values)
+        peak_index1_from_data = np.genfromtxt(os.getcwd()+'/res/'+'testmatlab_firstindex.csv',delimiter=',')
+        self.assertGreaterEqual((len(list(set(rpeak_temp1) & set(peak_index1_from_data)))*100)/len(rpeak_temp1),99,'Common peaks after adaptive Thresholding does not have a minimum of 99 percent match')
+
+        rpeak_temp2 = remove_close_peaks(rpeak_temp1, sample, self._fs)
+        peak_index2_from_data = np.genfromtxt(os.getcwd()+'/res/'+'testmatlab_secondindex.csv',delimiter=',')
+        self.assertGreaterEqual((len(list(set(rpeak_temp2) & set(peak_index2_from_data)))*100)/len(rpeak_temp2),99,'Common peaks after the second step of removing close peaks does not have a minimum of 99 percent match')
+
+        index = confirm_peaks(rpeak_temp2, sample, self._fs)
+        peak_index3_from_data = np.genfromtxt(os.getcwd()+'/res/'+'testmatlab_finalindex.csv',delimiter=',')
+        self.assertGreaterEqual((len(list(set(index) & set(peak_index3_from_data)))*100)/len(index),99,'Common peaks after the final step of r peak detection does not have a minimum of 99 percent match')
 
 
 if __name__ == '__main__':
