@@ -5,7 +5,7 @@
   "description": "DataPoint Schema Specification",
   "type": "object",
   "properties": {
-    "stream_id": {
+    "identifier": {
       "description": "Associated DataStream identifier",
       "type": "number"
     },
@@ -23,7 +23,7 @@
     }
   },
   "required": [
-    "stream_id",
+    "identifier",
     "start_time",
     "sample"
   ]

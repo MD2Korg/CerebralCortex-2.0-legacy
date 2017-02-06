@@ -19,16 +19,7 @@
     },
     "sample": {
       "description": "JSON object representing the annotation labels and values",
-      "type": "object",
-      "properties": {
-        "name": {
-          "description": "",
-          "type": "string"
-        }
-      },
-      "required": [
-        "name"
-      ]
+      "type": "object"
     }
   },
   "required": [
