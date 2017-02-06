@@ -21,7 +21,6 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from _ast import List
 
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
@@ -74,7 +73,7 @@ def compute_peak_valley(rip: DataStream,
     peaks, valleys = filter_expiration_duration_outlier(peaks=peaks, valleys=valleys, threshold_expiration_duration=threshold_expiration_duration)
 
     # filter out peak valley pair of inspiration of small amplitude.
-    peak_indices, valley_indices = filter_small_amplitude_inspiration_peak_valley_pair(peaks=peaks, valleys=valleys, inspiration_amplitude_threshold_perc=inspiration_amplitude_threshold_perc)
+    peaks, valleys = filter_small_amplitude_inspiration_peak_valley_pair(peaks=peaks, valleys=valleys, inspiration_amplitude_threshold_perc=inspiration_amplitude_threshold_perc)
 
     # filter out peak valley pair of expiration of small amplitude.
     peaks, valleys = filter_small_amplitude_expiration_peak_valley_pair(peaks=peaks, valleys=valleys, expiration_amplitude_threshold_perc=expiration_amplitude_threshold_perc)
@@ -214,7 +213,7 @@ def correct_peak_position(peaks: List[DataPoint],
 
     """
 
-    for i in range(len(peaks)):
+    for i, iteam in enumerate(peaks):
         up_intercepts_valley_to_peak = [up_intercepts[j] for j in range(len(up_intercepts)) if (valleys[i].start_time < up_intercepts[j].start_time) and (up_intercepts[j].start_time < peaks[i].start_time)]
         if len(up_intercepts_valley_to_peak) > 1:
             raise Exception("More than one consecutive up intercepts.")
@@ -334,10 +333,6 @@ def filter_intercept_outlier(up_intercepts: List[DataPoint],
     :param down_intercepts:
     """
 
-    '''
-    #TODO
-    This whole function is difficult to understand. I do not see the need for your up and down symbols
-    '''
     up_intercepts_updated, down_intercepts_updated = [], []
 
     for i in range(len(down_intercepts) - 1):
