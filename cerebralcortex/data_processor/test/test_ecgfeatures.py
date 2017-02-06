@@ -29,10 +29,11 @@ import unittest
 
 import pytz
 
-from cerebralcortex.data_processor.feature.ecg import ecg_feature_computation
+from cerebralcortex.data_processor.feature.ecg import ecg_feature_computation, lomb, heart_rate_power
 from cerebralcortex.data_processor.signalprocessing.ecg import compute_rr_intervals
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
+from cerebralcortex.kernel.window import window_sliding
 
 
 class TestECGFeatures(unittest.TestCase):
@@ -53,14 +54,47 @@ class TestECGFeatures(unittest.TestCase):
 
         cls.rr_intervals = compute_rr_intervals(ecg_ds, ecg_sampling_frequency)
 
+    def test_lomb(self):
+        window_data = window_sliding(self.rr_intervals.datapoints, window_size=120, window_offset=60)
+        test_window = list(window_data.items())[0]
+        result, frequency_range = lomb(test_window[1], low_frequency=0.01, high_frequency=0.7)
+        self.assertAlmostEqual(result[0], 67.713049164823047, delta=0.01)
+        self.assertEqual(frequency_range[-1], 0.7)
+
+    def test_heart_rate_power(self):
+        window_data = window_sliding(self.rr_intervals.datapoints, window_size=120, window_offset=60)
+        test_window = list(window_data.items())[0]
+        power, frequency_range = lomb(test_window[1], low_frequency=0.01, high_frequency=0.7)
+        hr_hf = heart_rate_power(power, frequency_range, 0.15, 0.4)
+        self.assertAlmostEqual(hr_hf, 213.83298173141225, delta=0.01)
+
     def test_ecg_feature_computation(self):
-        rr_variance, rr_vlf, rr_hf, rr_lf, rr_lf_hf, rr_mean, rr_median, rr_quartile, rr_80, rr_20 = ecg_feature_computation(
-            ecg_rr_datastream, window_size=60, window_offset=60)
-
+        rr_variance, rr_vlf, rr_hf, rr_lf, rr_lf_hf, rr_mean, rr_median, rr_quartile, rr_80, rr_20 = \
+            ecg_feature_computation(self.rr_intervals,
+                                    window_size=120,
+                                    window_offset=60)
+        # test all are DataStream
         self.assertIsInstance(rr_variance, DataStream)
+        self.assertIsInstance(rr_vlf, DataStream)
+        self.assertIsInstance(rr_hf, DataStream)
+        self.assertIsInstance(rr_lf, DataStream)
+        self.assertIsInstance(rr_lf_hf, DataStream)
+        self.assertIsInstance(rr_mean, DataStream)
+        self.assertIsInstance(rr_median, DataStream)
+        self.assertIsInstance(rr_quartile, DataStream)
+        self.assertIsInstance(rr_80, DataStream)
+        self.assertIsInstance(rr_20, DataStream)
 
-        self.assertEqual(rr_variance.datapoints[0].sample, 2.34)  # TODO: Fix this test
-
+        self.assertAlmostEqual(rr_variance.datapoints[0].sample, 5.3488233361443731, delta=0.01)
+        self.assertAlmostEqual(rr_vlf.datapoints[0].sample, 226.80270092870299, delta=0.01)
+        self.assertAlmostEqual(rr_hf.datapoints[0].sample, 213.83298173141225, delta=0.01)
+        self.assertAlmostEqual(rr_lf.datapoints[0].sample, 49.080605261852924, delta=0.01)
+        self.assertAlmostEqual(rr_lf_hf.datapoints[0].sample, 0.2295277597704795, delta=0.01)
+        self.assertAlmostEqual(rr_mean.datapoints[0].sample, 1.2280389610389608, delta=0.01)
+        self.assertAlmostEqual(rr_median.datapoints[0].sample, 0.61899999999999999, delta=0.01)
+        self.assertAlmostEqual(rr_quartile.datapoints[0].sample, 0.27899999999999997, delta=0.01)
+        self.assertAlmostEqual(rr_80.datapoints[0].sample, 1.1898, delta=0.01)
+        self.assertAlmostEqual(rr_20.datapoints[0].sample, 0.58499999999999996, delta=0.01)
 
 if __name__ == '__main__':
     unittest.main()
