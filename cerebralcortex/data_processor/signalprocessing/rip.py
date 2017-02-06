@@ -22,10 +22,13 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from typing import List
+
+import numpy as np
+
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-import numpy as np
-from typing import List
+
 
 # TODO: Give info about const value like (expiration_amplitude_threshold_perc) where we assume from literature in documentation.
 def compute_peak_valley(rip: DataStream,
@@ -37,8 +40,7 @@ def compute_peak_valley(rip: DataStream,
                         inspiration_amplitude_threshold_perc: float = 0.10,
                         max_amplitude_change_peak_correction: float = 30,
                         min_neg_slope_count_peak_correction: int = 4,
-                        minimum_peak_to_valley_time_diff = 0.31) -> [DataStream, DataStream]:
-
+                        minimum_peak_to_valley_time_diff=0.31) -> [DataStream, DataStream]:
     """
     Compute peak and valley from rip data and filter peak and valley.
 
@@ -57,26 +59,42 @@ def compute_peak_valley(rip: DataStream,
     window_length = round(time_window * fs)
     data_mac = get_moving_average_curve(data_smooth, window_length=window_length)
 
-    up_intercepts, down_intercepts = get_intercepts(data = data_smooth, data_mac = data_mac)
-    up_intercepts, down_intercepts = filter_intercept_outlier(up_intercepts=up_intercepts, down_intercepts=down_intercepts)
+    up_intercepts, down_intercepts = get_intercepts(data=data_smooth, data_mac=data_mac)
+    up_intercepts, down_intercepts = filter_intercept_outlier(up_intercepts=up_intercepts,
+                                                              down_intercepts=down_intercepts)
 
-    peaks, valleys = generate_peak_valley(up_intercepts=up_intercepts, down_intercepts=down_intercepts, data=data_smooth)
+    peaks, valleys = generate_peak_valley(up_intercepts=up_intercepts,
+                                          down_intercepts=down_intercepts,
+                                          data=data_smooth)
 
     valleys = correct_valley_position(peaks=peaks, valleys=valleys, up_intercepts=up_intercepts, data=data_smooth)
 
-    peaks = correct_peak_position(peaks=peaks, valleys=valleys, up_intercepts=up_intercepts, data=data_smooth, max_amplitude_change_peak_correction=max_amplitude_change_peak_correction, min_neg_slope_count_peak_correction=min_neg_slope_count_peak_correction)
+    peaks = correct_peak_position(peaks=peaks,
+                                  valleys=valleys,
+                                  up_intercepts=up_intercepts,
+                                  data=data_smooth,
+                                  max_amplitude_change_peak_correction=max_amplitude_change_peak_correction,
+                                  min_neg_slope_count_peak_correction=min_neg_slope_count_peak_correction)
 
     # remove too close valley peak pair.
-    peaks, valleys = remove_close_valley_peak_pair(peaks=peaks, valleys=valleys, minimum_peak_to_valley_time_diff=minimum_peak_to_valley_time_diff)
+    peaks, valleys = remove_close_valley_peak_pair(peaks=peaks,
+                                                   valleys=valleys,
+                                                   minimum_peak_to_valley_time_diff=minimum_peak_to_valley_time_diff)
 
     # Remove small  Expiration duration < 0.31
-    peaks, valleys = filter_expiration_duration_outlier(peaks=peaks, valleys=valleys, threshold_expiration_duration=threshold_expiration_duration)
+    peaks, valleys = filter_expiration_duration_outlier(peaks=peaks,
+                                                        valleys=valleys,
+                                                        threshold_expiration_duration=threshold_expiration_duration)
 
     # filter out peak valley pair of inspiration of small amplitude.
-    peaks, valleys = filter_small_amplitude_inspiration_peak_valley_pair(peaks=peaks, valleys=valleys, inspiration_amplitude_threshold_perc=inspiration_amplitude_threshold_perc)
+    peaks, valleys = filter_small_amplitude_inspiration_peak_valley_pair(peaks=peaks,
+                                                                         valleys=valleys,
+                                                                         inspiration_amplitude_threshold_perc=inspiration_amplitude_threshold_perc)
 
     # filter out peak valley pair of expiration of small amplitude.
-    peaks, valleys = filter_small_amplitude_expiration_peak_valley_pair(peaks=peaks, valleys=valleys, expiration_amplitude_threshold_perc=expiration_amplitude_threshold_perc)
+    peaks, valleys = filter_small_amplitude_expiration_peak_valley_pair(peaks=peaks,
+                                                                        valleys=valleys,
+                                                                        expiration_amplitude_threshold_perc=expiration_amplitude_threshold_perc)
 
     peak_datastream = DataStream.from_datastream([rip])
     peak_datastream.datapoints = peaks
@@ -85,9 +103,11 @@ def compute_peak_valley(rip: DataStream,
 
     return peak_datastream, valley_datastream
 
+
 def filter_small_amplitude_expiration_peak_valley_pair(peaks: List[DataPoint],
                                                        valleys: List[DataPoint],
-                                                       expiration_amplitude_threshold_perc: float) -> [List[DataPoint], List[DataPoint]]:
+                                                       expiration_amplitude_threshold_perc: float) -> [List[DataPoint],
+                                                                                                       List[DataPoint]]:
     """
     Filter out peak valley pair if their expiration amplitude is less than or equal to 10% of average expiration amplitude.
 
@@ -116,9 +136,11 @@ def filter_small_amplitude_expiration_peak_valley_pair(peaks: List[DataPoint],
 
     return peaks_updated, valleys_updated
 
+
 def filter_small_amplitude_inspiration_peak_valley_pair(peaks: List[DataPoint],
                                                         valleys: List[DataPoint],
-                                                        inspiration_amplitude_threshold_perc:float) -> [List[DataPoint], List[DataPoint]]:
+                                                        inspiration_amplitude_threshold_perc: float) -> [
+    List[DataPoint], List[DataPoint]]:
     """
     Filter out peak valley pair if their inspiration amplitude is less than or to equal 10% of average inspiration amplitude.
 
@@ -134,12 +156,13 @@ def filter_small_amplitude_inspiration_peak_valley_pair(peaks: List[DataPoint],
     inspiration_amplitudes = [(peaks[i].sample - valleys[i].sample) for i, valley in enumerate(valleys)]
     mean_inspiration_amplitude = np.mean(inspiration_amplitudes)
 
-    for i,inspiration_amplitude in enumerate(inspiration_amplitudes):
+    for i, inspiration_amplitude in enumerate(inspiration_amplitudes):
         if inspiration_amplitude > inspiration_amplitude_threshold_perc * mean_inspiration_amplitude:
             valleys_updated.append(valleys[i])
             peaks_updated.append(peaks[i])
 
     return peaks_updated, valleys_updated
+
 
 def filter_expiration_duration_outlier(peaks: List[DataPoint],
                                        valleys: List[DataPoint],
@@ -185,11 +208,12 @@ def remove_close_valley_peak_pair(peaks: List[DataPoint],
 
     for i, item in enumerate(peaks):
         time_diff_valley_peak = peaks[i].start_time - valleys[i].start_time
-        if time_diff_valley_peak.total_seconds() > minimum_peak_to_valley_time_diff: # Default minimum_peak_to_valley_time_diff is 0.31 seconds.
+        if time_diff_valley_peak.total_seconds() > minimum_peak_to_valley_time_diff:  # Default minimum_peak_to_valley_time_diff is 0.31 seconds.
             peaks_updated.append(peaks[i])
             valleys_updated.append(valleys[i])
 
     return peaks_updated, valleys_updated
+
 
 # push peak towards left
 def correct_peak_position(peaks: List[DataPoint],
@@ -201,7 +225,8 @@ def correct_peak_position(peaks: List[DataPoint],
     """
     Correct peak position by checking if there is a notch in the inspiration branch at left position.
     If at least 60% inspiration is done at a notch point, assume that notch as an original peak.
-    Our hypothesis is most of breathing in done for that cycle. We assume insignificant amount of breath is taken or some new cycle started after the notch.
+    Our hypothesis is most of breathing in done for that cycle. We assume insignificant amount of
+    breath is taken or some new cycle started after the notch.
 
     :return peaks:
     :param peaks:
@@ -214,29 +239,35 @@ def correct_peak_position(peaks: List[DataPoint],
     """
 
     for i, iteam in enumerate(peaks):
-        up_intercepts_valley_to_peak = [up_intercepts[j] for j in range(len(up_intercepts)) if (valleys[i].start_time < up_intercepts[j].start_time) and (up_intercepts[j].start_time < peaks[i].start_time)]
+        up_intercepts_valley_to_peak = [up_intercepts[j] for j in range(len(up_intercepts)) if
+                                        (valleys[i].start_time < up_intercepts[j].start_time) and (
+                                            up_intercepts[j].start_time < peaks[i].start_time)]
         if len(up_intercepts_valley_to_peak) > 1:
             raise Exception("More than one consecutive up intercepts.")
         elif len(up_intercepts_valley_to_peak) == 1:
             up_intercept = up_intercepts_valley_to_peak[0]
-            data_ui_to_peak = [j for j in data if up_intercept.start_time <= j.start_time and j.start_time <= peaks[i].start_time] #points between current valley and UI.
+            data_ui_to_peak = [j for j in data if up_intercept.start_time <= j.start_time <= peaks[
+                i].start_time]  # points between current valley and UI.
             sample_ui_to_peak = [j.sample for j in data_ui_to_peak]
             slope_at_samples = np.diff(sample_ui_to_peak)
 
-            if all(j >= 0 for j in slope_at_samples) == False:
+            if not all(j >= 0 for j in slope_at_samples):
                 indices_neg_slope = [j for j in range(len(slope_at_samples)) if slope_at_samples[j] < 0]
                 peak_new = data_ui_to_peak[indices_neg_slope[0] - 1]
                 valley_peak_dist_new = peak_new.sample - valleys[i].sample
                 valley_peak_dist_prev = peaks[i].sample - valleys[i].sample
                 if valley_peak_dist_new == 0:
-                    raise("New peak to valley distance is equal to zero. This will encounter divide by zero exception.")
+                    raise Exception(
+                        "New peak to valley distance is equal to zero. This will encounter divide by zero exception.")
                 else:
                     amplitude_change = (valley_peak_dist_prev - valley_peak_dist_new) / valley_peak_dist_new * 100
 
-                    if len(indices_neg_slope) >= min_neg_slope_count_peak_correction and amplitude_change <= max_amplitude_change_peak_correction:
-                        peaks[i] = peak_new # 60% inspiration is done at that point.
+                    if len(
+                            indices_neg_slope) >= min_neg_slope_count_peak_correction and amplitude_change <= max_amplitude_change_peak_correction:
+                        peaks[i] = peak_new  # 60% inspiration is done at that point.
 
     return peaks
+
 
 # push valley towards right
 def correct_valley_position(peaks: List[DataPoint],
@@ -260,7 +291,9 @@ def correct_valley_position(peaks: List[DataPoint],
     valley_updated = valleys.copy()
 
     for i in range(len(valleys)):
-        up_intercepts_valley_to_peak = [up_intercepts[j] for j in range(len(up_intercepts)) if (valleys[i].start_time < up_intercepts[j].start_time) and (up_intercepts[j].start_time < peaks[i].start_time)]
+        up_intercepts_valley_to_peak = [up_intercepts[j] for j in range(len(up_intercepts)) if
+                                        (valleys[i].start_time < up_intercepts[j].start_time) and (
+                                            up_intercepts[j].start_time < peaks[i].start_time)]
 
         if len(up_intercepts_valley_to_peak) > 0:
             if len(up_intercepts_valley_to_peak) > 1:
@@ -268,7 +301,8 @@ def correct_valley_position(peaks: List[DataPoint],
             else:
                 up_intercept = up_intercepts_valley_to_peak[0]
 
-                data_valley_to_UI = [j for j in data if valleys[i].start_time <= j.start_time and j.start_time <= up_intercept.start_time] # all points between current valley and UI
+                data_valley_to_UI = [j for j in data if valleys[
+                    i].start_time <= j.start_time <= up_intercept.start_time]  # all points between current valley and UI
                 sample_valley_to_UI = [j.sample for j in data_valley_to_UI]
 
                 slope_at_samples = np.diff(sample_valley_to_UI)
@@ -281,10 +315,12 @@ def correct_valley_position(peaks: List[DataPoint],
 
                 if any(no_con_slope > 0 for no_con_slope in consecutive_positive_slopes):
                     indices_max_pos_slope = [k for k in range(len(consecutive_positive_slopes)) if
-                                          consecutive_positive_slopes[k] == max(consecutive_positive_slopes)] # indices where no of consecutive positive slope is the maximum.
-                    valley_updated[i] = data_valley_to_UI[indices_max_pos_slope[-1]] # Update the valley indices.
+                                             consecutive_positive_slopes[k] == max(
+                                                 consecutive_positive_slopes)]  # indices where no of consecutive positive slope is the maximum.
+                    valley_updated[i] = data_valley_to_UI[indices_max_pos_slope[-1]]  # Update the valley indices.
 
     return valley_updated
+
 
 def generate_peak_valley(up_intercepts: List[DataPoint],
                          down_intercepts: List[DataPoint],
@@ -307,10 +343,10 @@ def generate_peak_valley(up_intercepts: List[DataPoint],
         peak, valley = None, None
 
         for j in range(last_iterated_index, len(data)):
-            if down_intercepts[i].start_time <= data[j].start_time and data[j].start_time <= up_intercepts[i].start_time:
+            if down_intercepts[i].start_time <= data[j].start_time <= up_intercepts[i].start_time:
                 if valley == None or data[j].sample < valley.sample:
                     valley = data[j]
-            elif up_intercepts[i].start_time <= data[j].start_time and data[j].start_time <= down_intercepts[i + 1].start_time:
+            elif up_intercepts[i].start_time <= data[j].start_time <= down_intercepts[i + 1].start_time:
                 if peak == None or data[j].sample > peak.sample:
                     peak = data[j]
             elif data[j].start_time > down_intercepts[i + 1].start_time:
@@ -336,12 +372,16 @@ def filter_intercept_outlier(up_intercepts: List[DataPoint],
     up_intercepts_updated, down_intercepts_updated = [], []
 
     for i in range(len(down_intercepts) - 1):
-        up_intercepts_between_down_intercepts = [j for j in up_intercepts if down_intercepts[i].start_time <= j.start_time and j.start_time <= down_intercepts[i + 1].start_time]
+        up_intercepts_between_down_intercepts = [j for j in up_intercepts if
+                                                 down_intercepts[i].start_time <= j.start_time <= down_intercepts[
+                                                     i + 1].start_time]
         if len(up_intercepts_between_down_intercepts) > 0:
             up_intercepts_updated.append(up_intercepts_between_down_intercepts[-1])
 
     for i in range(len(up_intercepts_updated) - 1):
-        down_intercepts_between_up_intercepts = [j for j in down_intercepts if up_intercepts_updated[i].start_time <= j.start_time and j.start_time <= up_intercepts_updated[i + 1].start_time]
+        down_intercepts_between_up_intercepts = [j for j in down_intercepts if
+                                                 up_intercepts_updated[i].start_time <= j.start_time <=
+                                                 up_intercepts_updated[i + 1].start_time]
         if len(down_intercepts_between_up_intercepts) > 0:
             down_intercepts_updated.append(down_intercepts_between_up_intercepts[-1])
 
@@ -353,6 +393,7 @@ def filter_intercept_outlier(up_intercepts: List[DataPoint],
     down_intercepts_updated = down_intercepts_updated[:min_length]
 
     return up_intercepts_updated, down_intercepts_updated
+
 
 def get_intercepts(data: List[DataPoint],
                    data_mac: List[DataPoint]) -> [List[DataPoint], List[DataPoint]]:
@@ -367,19 +408,20 @@ def get_intercepts(data: List[DataPoint],
 
     up_intercepts, down_intercepts = [], []
 
-    data_subset = [data[i-1] for i in range(len(data)) if (data_mac[0].start_time <= data[i].start_time and data[i].start_time <= data_mac[-1].start_time)]
+    data_subset = [data[i - 1] for i in range(len(data)) if
+                   (data_mac[0].start_time <= data[i].start_time <= data_mac[-1].start_time)]
 
     for i in range(len(data_subset) - 1):
-        if (data_subset[i].sample <= data_mac[i].sample and data_mac[i].sample <= data_subset[i + 1].sample):
+        if data_subset[i].sample <= data_mac[i].sample <= data_subset[i + 1].sample:
             up_intercepts.append(data_mac[i])
-        elif (data_subset[i].sample >= data_mac[i].sample and data_mac[i].sample >= data_subset[i + 1].sample):
+        elif data_subset[i].sample >= data_mac[i].sample >= data_subset[i + 1].sample:
             down_intercepts.append(data_mac[i])
 
     return up_intercepts, down_intercepts
 
+
 def get_moving_average_curve(data: List[DataPoint],
                              window_length: int) -> List[DataPoint]:
-
     """
     Moving average curve from filtered (using moving average) samples.
 
@@ -389,11 +431,13 @@ def get_moving_average_curve(data: List[DataPoint],
     """
     sample = [i.sample for i in data]
     mac = []
-    for i in range(window_length+1, len(sample) - (window_length + 1)): # average over [-window_length, window_length]  = 2 * window_length.
+    for i in range(window_length + 1, len(sample) - (
+        window_length + 1)):  # average over [-window_length, window_length]  = 2 * window_length.
         sample_avg = np.mean(sample[i - window_length:i + window_length])
-        mac.append(DataPoint.from_tuple(sample=sample_avg, start_time= data[i].start_time, end_time=data[i].end_time))
+        mac.append(DataPoint.from_tuple(sample=sample_avg, start_time=data[i].start_time, end_time=data[i].end_time))
 
     return mac
+
 
 def smooth(data: List[DataPoint],
            span: int = 5) -> List[DataPoint]:
@@ -426,6 +470,6 @@ def smooth(data: List[DataPoint],
         for i, item in enumerate(data):
             data_smooth.append(DataPoint.from_tuple(sample=sample_smooth[i], start_time=item.start_time, end_time=item.end_time))
     else:
-        raise Exception("Smoothened data length does not match with original data length.")
+        raise Exception("Smoothed data length does not match with original data length.")
 
     return data_smooth
