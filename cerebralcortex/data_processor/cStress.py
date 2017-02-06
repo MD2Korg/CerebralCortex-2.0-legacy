@@ -93,22 +93,7 @@ def cStress(raw_ecg: DataStream,
     print('accel_activity-length:', len(accel_activity.datapoints))
 
     # rip features
-    smoothing_factor = 5
-    time_window = 8
-    expiration_amplitude_threshold_perc = 0.1
-    threshold_expiration_duration = 0.312
-    inspiration_amplitude_threshold_perc = 0.1
-    max_amplitude_change_peak_correction = 30
-    min_neg_slope_count_peak_correction = 4
-    rip_peak_datastream, rip_valley_datastream = rip.compute_peak_valley(rip = raw_rip,
-                                                                         fs = rip_sampling_frequency,
-                                                                         smoothing_factor = smoothing_factor,
-                                                                         time_window = time_window,
-                                                                         expiration_amplitude_threshold_perc = expiration_amplitude_threshold_perc,
-                                                                         threshold_expiration_duration=threshold_expiration_duration,
-                                                                         inspiration_amplitude_threshold_perc = inspiration_amplitude_threshold_perc,
-                                                                         max_amplitude_change_peak_correction = max_amplitude_change_peak_correction,
-                                                                         min_neg_slope_count_peak_correction = min_neg_slope_count_peak_correction)
+    rip_peak_datastream, rip_valley_datastream = rip.compute_peak_valley(rip = raw_rip)
 
     # r-peak datastream computation
     ecg_rr_datastream = compute_rr_intervals(raw_ecg, ecg_sampling_frequency)
