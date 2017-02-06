@@ -5,6 +5,10 @@
   "description": "DataPoint Schema Specification",
   "type": "object",
   "properties": {
+    "stream_id": {
+      "description": "Associated DataStream identifier",
+      "type": "number"
+    },
     "start_time": {
       "description": "Starting timestamp of the annotation",
       "type": "string"
@@ -19,6 +23,7 @@
     }
   },
   "required": [
+    "stream_id",
     "start_time",
     "sample"
   ]

@@ -14,52 +14,57 @@
       "type": "string",
       "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
     },
-    "study_list": {
+    "name": {
+      "description": "",
+      "type": "string"
+    },
+    "data_descriptor": {
       "description": "",
       "type": "array",
       "items": {
-        "type": "number"
+        "$ref": "data_descriptor_item.schema#"
       }
     },
-    "processing_module": {
+    "execution_context": {
       "description": "",
-      "type": "number"
-    },
-    "source_ids": {
-      "description": "",
-      "type": "array",
-      "items": {
-        "type": "number"
-      }
-    },
-    "metadata": {
-      "description": "",
+      "type": "object",
       "properties": {
-        "name": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "data_descriptor": {
-          "$ref": "data_descriptor.schema#"
-        },
         "processing_module": {
-          "$ref": "processing_module_metadata.schema#"
+          "description": "",
+          "type": "number"
         },
-        "privacy": {
-          "$ref": "privacy.schema#"
+        "input_parameters": {
+          "description": "",
+          "type": "array",
+          "items": {
+            "$ref": "input_parameters_item.schema#"
+          }
         },
-        "data_source": {
-          "$ref": "data_source.schema#"
-        },
-        "access_control": {
-          "$ref": "access_control.schema#"
+        "input_streams": {
+          "description": "",
+          "type": "array",
+          "items": {
+            "$ref": "stream_item.schema#"
+          }
         }
+      },
+      "required": [
+        "processing_module"
+      ]
+    },
+    "annotations": {
+      "description": "",
+      "type": "array",
+      "items": {
+        "$ref": "stream_item.schema#"
       }
     }
   },
   "required": [
-    "identifier"
+    "identifier",
+    "user",
+    "name",
+    "data_descriptor",
+    "execution_context"
   ]
 }

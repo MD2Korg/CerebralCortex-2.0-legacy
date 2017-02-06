@@ -5,6 +5,10 @@
   "description": "Annotation Schema Specification",
   "type": "object",
   "properties": {
+    "stream_id": {
+      "description": "Associated DataStream identifier",
+      "type": "number"
+    },
     "start_time": {
       "description": "Starting timestamp of the annotation",
       "type": "string"
@@ -15,12 +19,21 @@
     },
     "sample": {
       "description": "JSON object representing the annotation labels and values",
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ]
     }
   },
   "required": [
+    "stream_id",
     "start_time",
-    "end_time",
     "sample"
   ]
 }

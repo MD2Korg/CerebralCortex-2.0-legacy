@@ -1,0 +1,25 @@
+{
+  "id": "file:///Users/hnat/IdeaProjects/CerebralCortex/cerebralcortex/kernel/schemas/#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Data Descriptor Schema",
+  "description": "Data Descriptor Schema Specification",
+  "type": "object",
+  "properties": {
+    "type": {
+      "description": "",
+      "type": "string"
+    },
+    "unit": {
+      "description": "",
+      "type": "string"
+    },
+    "descriptive_statistic": {
+      "description": "",
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "unit"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "file:///Users/hnat/IdeaProjects/CerebralCortex/cerebralcortex/kernel/schemas/#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Schema",
+  "description": "Schema Specification",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "",
+      "type": "string"
+    },
+    "stream_identifier": {
+      "description": "",
+      "type": "number"
+    }
+  },
+  "required": [
+    "name",
+    "stream_identifier"
+  ]
+}
