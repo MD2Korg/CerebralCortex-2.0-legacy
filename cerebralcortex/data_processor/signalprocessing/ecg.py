@@ -122,16 +122,18 @@ def rr_interval_update(rpeak_temp1: List[DataPoint],
 def compute_moving_window_int(sample: np.ndarray,
                               fs: float,
                               blackmanWinlen: int,
-                              filter_length:int = 257) -> np.ndarray:
+                              filter_length:int = 257,
+                              delta:float=.02) -> np.ndarray:
     """
     :param sample: ecg sample array
     :param fs: sampling frequency
     :param blackmanWinlen: length of the blackman window on which to compute the moving window integration
     :param filter_length: length of the FIR bandpass filter on which filtering is done on ecg sample array
+    :param delta: to compute the weights of each band in FIR filter
     :return: the Moving window integration of the sample array
     """
     # I believe these constants can be kept in a file
-    delta = .02
+
     # filter edges
     filter_edges = [0, 4.5 * 2 / fs, 5 * 2 / fs, 20 * 2 / fs, 20.5 * 2 / fs, 1]
     # gains at filter band edges
@@ -226,58 +228,44 @@ def compute_r_peaks(threshold_1: float,
     rpeak_array_indices = []
     rpeak_inds_in_peak_array = []
     while ind_rpeak < len(peak_location_in_signal_array):
-        if len(rpeak_array_indices)==0:
+        # if for 166 percent of the present RR interval no peak is detected as R peak then threshold_2 is taken as the
+        # R peak threshold and the maximum of the range is taken as a R peak and RR interval is updated accordingly
+        if len(rpeak_array_indices) >= 1 and peak_location_in_signal_array[ind_rpeak] - peak_location_in_signal_array[rpeak_inds_in_peak_array[-1]] > 1.66 * rr_ave and ind_rpeak - rpeak_inds_in_peak_array[-1] > 1:
+            # values and indexes of previous peaks discarded as not an R peak whose magnitude is above threshold_2
+
+            searchback_array_inrange_values = [amplitude_in_peak_locations[k] for k in range(rpeak_inds_in_peak_array[-1] + 1, ind_rpeak) if
+                                               3 * sig_lev > amplitude_in_peak_locations[k] > threshold_2]
+            searchback_array_inrange_index = [k - rpeak_inds_in_peak_array[-1] for k in range(rpeak_inds_in_peak_array[-1] + 1, ind_rpeak) if
+                                              3 * sig_lev > amplitude_in_peak_locations[k] > threshold_2]
+
+            if len(searchback_array_inrange_values) > 0:
+
+                # maximum inside the range calculated beforehand is taken as R peak
+                searchback_max_index = np.argmax(searchback_array_inrange_values)
+                rpeak_array_indices.append(peak_location_in_signal_array[rpeak_inds_in_peak_array[-1] +searchback_array_inrange_index[searchback_max_index]])
+                rpeak_inds_in_peak_array.append(rpeak_inds_in_peak_array[-1] +searchback_array_inrange_index[searchback_max_index])
+                sig_lev = ewma(sig_lev,mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]],.125)  # update the current signal level
+                threshold_1 = noise_lev + 0.25 * (sig_lev - noise_lev)
+                threshold_2 = 0.5 * threshold_1
+                rr_ave = rr_interval_update(rpeak_array_indices, rr_ave)
+                ind_rpeak = rpeak_inds_in_peak_array[-1] + 1
+            else:
+                threshold_1 = noise_lev + 0.25 * (sig_lev - noise_lev)
+                threshold_2 = 0.5 * threshold_1
+                ind_rpeak += 1
+        else:
+            # R peak checking
             if threshold_1 <= mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]] < 3 * sig_lev:
                 rpeak_array_indices.append(peak_location_in_signal_array[ind_rpeak])
                 rpeak_inds_in_peak_array.append(ind_rpeak)
                 sig_lev = ewma(sig_lev,mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]],.125)  # update the signal level
             # noise peak checking
             elif threshold_1 > mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]] > threshold_2:
-                noise_lev = ewma(noise_lev,mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]],.125)  # update the noise level
+                noise_lev = ewma(noise_lev,mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]],.125) # update the noise level
             threshold_1 = noise_lev + 0.25 * (sig_lev - noise_lev)
             threshold_2 = 0.5 * threshold_1
             ind_rpeak += 1
             rr_ave = rr_interval_update(rpeak_array_indices, rr_ave)
-        else:
-            # if for 166 percent of the present RR interval no peak is detected as R peak then threshold_2 is taken as the
-            # R peak threshold and the maximum of the range is taken as a R peak and RR interval is updated accordingly
-            if len(rpeak_array_indices) >= 1 and peak_location_in_signal_array[ind_rpeak] - peak_location_in_signal_array[rpeak_inds_in_peak_array[-1]] > 1.66 * rr_ave and ind_rpeak - rpeak_inds_in_peak_array[-1] > 1:
-                # values and indexes of previous peaks discarded as not an R peak whose magnitude is above threshold_2
-
-                searchback_array_inrange_values = [amplitude_in_peak_locations[k] for k in range(rpeak_inds_in_peak_array[-1] + 1, ind_rpeak) if
-                                                   3 * sig_lev > amplitude_in_peak_locations[k] > threshold_2]
-                searchback_array_inrange_index = [k - rpeak_inds_in_peak_array[-1] for k in range(rpeak_inds_in_peak_array[-1] + 1, ind_rpeak) if
-                                                  3 * sig_lev > amplitude_in_peak_locations[k] > threshold_2]
-
-                if len(searchback_array_inrange_values) > 0:
-
-                    # maximum inside the range calculated beforehand is taken as R peak
-                    searchback_max_index = np.argmax(searchback_array_inrange_values)
-                    rpeak_array_indices.append(peak_location_in_signal_array[rpeak_inds_in_peak_array[-1] +searchback_array_inrange_index[searchback_max_index]])
-                    rpeak_inds_in_peak_array.append(rpeak_inds_in_peak_array[-1] +searchback_array_inrange_index[searchback_max_index])
-                    sig_lev = ewma(sig_lev,mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]],.125)  # update the current signal level
-                    threshold_1 = noise_lev + 0.25 * (sig_lev - noise_lev)
-                    threshold_2 = 0.5 * threshold_1
-                    rr_ave = rr_interval_update(rpeak_array_indices, rr_ave)
-                    ind_rpeak = rpeak_inds_in_peak_array[-1] + 1
-                else:
-                    threshold_1 = noise_lev + 0.25 * (sig_lev - noise_lev)
-                    threshold_2 = 0.5 * threshold_1
-                    ind_rpeak += 1
-            else:
-                # R peak checking
-                if threshold_1 <= mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]] < 3 * sig_lev:
-                    rpeak_array_indices.append(peak_location_in_signal_array[ind_rpeak])
-                    rpeak_inds_in_peak_array.append(ind_rpeak)
-                    sig_lev = ewma(sig_lev,mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]],.125)  # update the signal level
-                # noise peak checking
-                elif threshold_1 > mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]] > threshold_2:
-                    noise_lev = ewma(noise_lev,mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]],.125) # update the noise level
-                threshold_1 = noise_lev + 0.25 * (sig_lev - noise_lev)
-                threshold_2 = 0.5 * threshold_1
-                ind_rpeak += 1
-                rr_ave = rr_interval_update(rpeak_array_indices, rr_ave)
-
     return rpeak_array_indices
 
 
@@ -296,7 +284,8 @@ def ewma(value: float, new_value: float, alpha: float) -> float:
 # TODO: CODE_REVIEW: Make hard-coded constants default method parameter
 def remove_close_peaks(rpeak_temp1: list,
                         sample: np.ndarray,
-                        fs: float) -> list:
+                        fs: float,
+                        min_range:float=.5) -> list:
     """
     This function removes one of two peaks from two consecutive R peaks
     if difference among them is less than the minimum possible
@@ -308,16 +297,16 @@ def remove_close_peaks(rpeak_temp1: list,
 
     """
     difference=0
-    rpeak_temp2=rpeak_temp1[0:]
+    rpeak_temp2=rpeak_temp1
     while difference !=1:
         length_Rpeak_temp2 =len(rpeak_temp2)
         temp=np.diff(rpeak_temp2)
-        comp_index1=[rpeak_temp2[i] for i in range(len(temp)) if temp[i]<.5*fs]
-        comp_index2=[rpeak_temp2[i+1] for i in range(len(temp)) if temp[i]<.5*fs]
+        comp_index1=[rpeak_temp2[i] for i in range(len(temp)) if temp[i]<  min_range*fs ]
+        comp_index2=[rpeak_temp2[i+1] for i in range(len(temp)) if temp[i]< min_range*fs]
         comp1=sample[comp_index1]
         comp2=sample[comp_index2]
         checkmin=np.matrix([comp1,comp2])
-        temp_ind1=[i for i in range(len(temp)) if temp[i]<.5*fs]
+        temp_ind1=[i for i in range(len(temp)) if temp[i]<min_range*fs]
         temp_ind2=np.argmin(np.array(checkmin),axis=0)
         temp_ind=temp_ind1 + temp_ind2
         temp_ind=np.unique(temp_ind)
@@ -391,7 +380,6 @@ def detect_rpeak(ecg: DataStream,
     y = compute_moving_window_int(sample, fs, blackman_win_len)
 
     peak_location_values = [(i,y[i]) for i in range(2, len(y) - 1) if check_peak(y[i - 2:i + 3])]
-
 
     # initial RR interval average
     peak_location = [i[0] for i in peak_location_values]
