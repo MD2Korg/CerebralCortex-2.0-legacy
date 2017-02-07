@@ -91,7 +91,7 @@ def cStress(raw_ecg: DataStream,
 
     ecg_features = ecg_feature_computation(ecg_rr_datastream, window_size=60, window_offset=60)
     print(len(ecg_features))
-    print(len(rip_peak_datastream), len(ecg_rr_datastream))
+    print(len(rip_peak_datastream.datapoints), len(ecg_rr_datastream.datapoints))
 
 
     # TODO: TWH Fix when feature vector result is available
