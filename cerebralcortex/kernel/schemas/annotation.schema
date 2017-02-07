@@ -1,5 +1,5 @@
 {
-  "id": "file:///Users/hnat/IdeaProjects/CerebralCortex/cerebralcortex/kernel/schemas/#",
+  "id": "https://raw.githubusercontent.com/MD2Korg/CerebralCortex/master/cerebralcortex/kernel/schemas/#",
   "$schema": "http://json-schema.org/schema#",
   "title": "Annotation Schema",
   "description": "Annotation Schema Specification",
