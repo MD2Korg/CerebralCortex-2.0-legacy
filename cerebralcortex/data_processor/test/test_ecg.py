@@ -88,6 +88,7 @@ class TestRPeakDetect(unittest.TestCase):
         peak_index2_from_data = np.genfromtxt(os.path.join(os.path.dirname(__file__), 'res/testmatlab_secondindex.csv'),delimiter=',')
         self.assertGreaterEqual((len(list(set(rpeak_temp2) & set(peak_index2_from_data-1)))*100)/len(rpeak_temp2),99,'Common peaks after the second step of removing close peaks does not have a minimum of 99 percent match')
 
+
         index = confirm_peaks(rpeak_temp2, sample, self._fs)
         peak_index3_from_data = np.genfromtxt(os.path.join(os.path.dirname(__file__), 'res/testmatlab_finalindex.csv'),delimiter=',')
         self.assertGreaterEqual((len(list(set(index) & set(peak_index3_from_data-1)))*100)/len(index),99,'Common peaks after the final step of r peak detection does not have a minimum of 99 percent match')
