@@ -9,6 +9,9 @@
     },
     {
       "type": "number"
+    },
+    {
+      "type": "object"
     }
   ],
   "additionalProperties": false
