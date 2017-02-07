@@ -21,16 +21,30 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-import unittest
-import numpy as np
-from cerebralcortex.data_processor.signalprocessing.ecg import rr_interval_update, compute_moving_window_int, check_peak , compute_r_peaks, remove_close_peaks, confirm_peaks
+import datetime
+import gzip
 import os
+import unittest
+
+import numpy as np
+import pytz
+
+from cerebralcortex.data_processor.signalprocessing.ecg import rr_interval_update, compute_moving_window_int, check_peak , compute_r_peaks, remove_close_peaks, confirm_peaks
+from cerebralcortex.kernel.datatypes.datapoint import DataPoint
+
 
 class TestRPeakDetect(unittest.TestCase):
-    def setUp(self):
-        self._ecg_sample_array = np.genfromtxt(os.path.join(os.path.dirname(__file__), 'res/sample_array_ecg.csv'),delimiter=',')
-        self._fs = 64.0
+    @classmethod
+    def setUpClass(cls):
+        super(TestRPeakDetect, cls).setUpClass()
+        tz = pytz.timezone('US/Eastern')
+        cls.ecg = []
+        cls._fs = 64.0
+        with gzip.open(os.path.join(os.path.dirname(__file__), 'res/ecg.csv.gz'), 'rt') as f:
+            for l in f:
+                values = list(map(int, l.split(',')))
+                cls.ecg.append(
+                    DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
 
     def test_rr_interval_update(self):
         rpeak_temp1 = [i for i in range(0, 100, 10)]
@@ -72,7 +86,7 @@ class TestRPeakDetect(unittest.TestCase):
         self.assertFalse(check_peak(data))
 
     def test_detect_rpeak(self,threshold:float=.5):
-        sample = np.array([i for i in self._ecg_sample_array])
+        sample = np.array([i.sample for i in self.ecg])
         blackman_win_len = np.ceil(self._fs / 5)
         y = compute_moving_window_int(sample, self._fs, blackman_win_len)
 
