@@ -31,7 +31,7 @@ from random import random
 import numpy as np
 import pytz
 
-from cerebralcortex.data_processor.signalprocessing.alignment import interpolate_gaps, split_by_gaps
+from cerebralcortex.data_processor.signalprocessing.alignment import interpolate_gaps, timestamp_correct
 from cerebralcortex.data_processor.signalprocessing.vector import normalize, magnitude
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
@@ -83,12 +83,17 @@ class TestVector(unittest.TestCase):
 
         result = interpolate_gaps(ds.datapoints, self.sample_rate)
 
-    def test_split_by_gaps(self):
-        ds = DataStream(None, None)
-        # ds.datapoints = self.ecg
-        ds.datapoints = self.ecg[:500]
+        self.assertEquals(len(ds.datapoints), 377753)
+        self.assertEquals(len(result), 378446)
 
-        result = split_by_gaps(ds)
+    def test_timestamp_correct(self):
+        ds = DataStream(None, None)
+        ds.datapoints = self.ecg
+
+        result = timestamp_correct(ds, sampling_frequency=self.sample_rate)
+
+        self.assertEquals(len(ds.datapoints), 377753)
+        self.assertEquals(len(result.datapoints), 391686)
 
 
 if __name__ == '__main__':
