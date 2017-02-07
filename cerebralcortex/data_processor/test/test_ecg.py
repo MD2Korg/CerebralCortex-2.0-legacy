@@ -23,25 +23,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import unittest
+import numpy as np
+from cerebralcortex.data_processor.signalprocessing.ecg import rr_interval_update, compute_moving_window_int, check_peak , compute_r_peaks, remove_close_peaks, confirm_peaks
+import os
 
-from cerebralcortex.data_processor.signalprocessing.ecg import rr_interval_update, check_peak
-
-
-class TestECG(unittest.TestCase):
+class TestRPeakDetect(unittest.TestCase):
     def setUp(self):
-        pass
-
-    def test_classify_ecg_window(self):
-        # TODO: Complete this test
-        pass
-
-    def test_filter_bad_ecg(self):
-        # TODO: Complete this test
-        pass
-
-    def test_compute_rr_intervals(self):
-        # TODO: Complete this test
-        pass
+        self._ecg_sample_array = np.genfromtxt(os.path.join(os.path.dirname(__file__), 'res/sample_array_ecg.csv'),delimiter=',')
+        self._fs = 64.0
 
     def test_rr_interval_update(self):
         rpeak_temp1 = [i for i in range(0, 100, 10)]
@@ -62,8 +51,12 @@ class TestECG(unittest.TestCase):
         self.assertEqual(rr_interval_update(rpeak_temp1, rr_ave, min_size=25), 4.5)
 
     def test_compute_moving_window_int(self):
-        # TODO: Complete this test
-        pass
+        sample = np.array([i for i in range(1,40,5)])
+        fs=64
+        blackmanWinLen=np.ceil(fs/5)
+        result = [0.1877978,0.32752854,0.52515934,0.754176,0.94976418,1.03957192,0.9830406,0.79712449]
+        self.assertAlmostEqual(sum(compute_moving_window_int(sample,fs,blackmanWinLen)),sum(result))
+
 
     def test_check_peak(self):
         data = [0, 1, 2, 1, 0]
@@ -76,27 +69,29 @@ class TestECG(unittest.TestCase):
         self.assertTrue(check_peak(data))
 
         data = [0, 1]
-        self.assertRaises(Exception, check_peak, data)
+        self.assertFalse(check_peak(data))
 
-    def test_compute_r_peaks(self):
-        # TODO: Complete this test
-        pass
+    def test_detect_rpeak(self,threshold:float=.5):
+        sample = np.array([i for i in self._ecg_sample_array])
+        blackman_win_len = np.ceil(self._fs / 5)
+        y = compute_moving_window_int(sample, self._fs, blackman_win_len)
 
-    def test_remove_close_peaks(self):
-        # TODO: Complete this test
-        pass
+        peak_location_values = [(i,y[i]) for i in range(2, len(y) - 1) if check_peak(y[i - 2:i + 3])]
+        peak_location = [i[0] for i in peak_location_values]
 
-    def test_confirm_peaks(self):
-        # TODO: Complete this test
-        pass
+        running_rr_avg = sum(np.diff(peak_location)) / (len(peak_location) - 1)
+        rpeak_temp1 = compute_r_peaks(threshold, running_rr_avg, y, peak_location_values)
+        peak_index1_from_data = np.genfromtxt(os.path.join(os.path.dirname(__file__), 'res/testmatlab_firstindex.csv'),delimiter=',')
+        self.assertGreaterEqual((len(list(set(rpeak_temp1) & set(peak_index1_from_data-1)))*100)/len(rpeak_temp1),99,'Common peaks after adaptive Thresholding does not have a minimum of 99 percent match')
 
-    def test_detect_rpeak(self):
-        # TODO: Complete this test
-        pass
+        rpeak_temp2 = remove_close_peaks(rpeak_temp1, sample, self._fs)
+        peak_index2_from_data = np.genfromtxt(os.path.join(os.path.dirname(__file__), 'res/testmatlab_secondindex.csv'),delimiter=',')
+        self.assertGreaterEqual((len(list(set(rpeak_temp2) & set(peak_index2_from_data-1)))*100)/len(rpeak_temp2),99,'Common peaks after the second step of removing close peaks does not have a minimum of 99 percent match')
 
-    def test_emwa(self):
-        # TODO: Complete this test
-        pass
+
+        index = confirm_peaks(rpeak_temp2, sample, self._fs)
+        peak_index3_from_data = np.genfromtxt(os.path.join(os.path.dirname(__file__), 'res/testmatlab_finalindex.csv'),delimiter=',')
+        self.assertGreaterEqual((len(list(set(index) & set(peak_index3_from_data-1)))*100)/len(index),99,'Common peaks after the final step of r peak detection does not have a minimum of 99 percent match')
 
 
 if __name__ == '__main__':

@@ -31,17 +31,20 @@ from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.kernel.window import window
 
 
-# TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
+
 def classify_ecg_window(data: List[DataPoint],
                         range_threshold: int = 200,
                         slope_threshold: int = 50,
                         maximum_value: int = 4000) -> bool:
     """
-
-    :param data: window of raw ecg tuples
-    :param range_threshold: range of the window
-    :param slope_threshold: median slope of the window
-    :param maximum_value: maximum value
+    :param data: window of raw ecg datapoints.
+    :param range_threshold: range of the window ( since ecg sample value can be from 0-4096,
+    the morphology of ECG signal dictates that the range should be greater than 200)
+    :param slope_threshold: median slope of the window (here slope is the consecutive difference
+    among the ECG sample values. The median of the absolute value of consecutive difference is
+    parameterized)
+    :param maximum_value: maximum value of the ecg sample array. An amplitude of greater than 4000 is
+    considered an spurious value. so the window is discarded.
     :return: True/False decision based on the three parameters
     """
 
@@ -55,7 +58,7 @@ def classify_ecg_window(data: List[DataPoint],
     return True
 
 
-# TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
+
 def filter_bad_ecg(ecg: DataStream,
                    fs: float,
                    no_of_secs: int = 2) -> DataStream:
@@ -63,11 +66,11 @@ def filter_bad_ecg(ecg: DataStream,
     This function splits the ecg array into non overlapping windows of specified seconds
     and assigns a binary decision on them returns a filtered ecg array which contains
     only the windows to be kept
-
-    :param ecg: raw ecg array
+    :param ecg: raw ecg datastream
     :param fs: sampling frequency
-    :param no_of_secs : no of seconds each window would be long
-    :return:  filtered ecg array
+    :param no_of_secs : no of seconds is the length of the window by which the ecg datastream is
+     divided and checked.
+    :return:  filtered ecg datastream
     """
 
     window_length = int(no_of_secs * fs)
@@ -76,7 +79,7 @@ def filter_bad_ecg(ecg: DataStream,
     ecg_filtered = DataStream.from_datastream([ecg])
     ecg_filtered_array = []
 
-    # TODO: CODE_REVIEW: Should these thresholds be brought out to the outmost layer?
+
     for key, data in window_data.items():
         if classify_ecg_window(data, range_threshold=200, slope_threshold=50, maximum_value=4000):
             ecg_filtered_array.extend(data)
@@ -89,10 +92,11 @@ def filter_bad_ecg(ecg: DataStream,
 def compute_rr_intervals(ecg: DataStream,
                          fs: float) -> DataStream:
     """
-    filter ecg ...
-    :param ecg:
-    :param fs:
-    :return:
+    filter ecg datastream first and compute rr-interval datastream from the ecg datastream
+    :param ecg:ecg datastream
+    :param fs: sampling frequency
+
+    :return: rr-interval datastream
     """
     ecg_filtered = filter_bad_ecg(ecg, fs)
 
@@ -102,33 +106,34 @@ def compute_rr_intervals(ecg: DataStream,
     return ecg_rpeak
 
 
-# TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
 def rr_interval_update(rpeak_temp1: List[DataPoint],
                        rr_ave: float,
                        min_size: int = 8) -> float:
     """
-    :param min_size:
-    :param rpeak_temp1: R peak locations
-    :param rr_ave: previous rr-interval average
-    :return: the new rr-interval average of the previously detected 8 R peak locations
-    """
+   :param min_size: 8 last R-peaks are checked to compute the running rr interval average
+   :param rpeak_temp1: R peak locations
+   :param rr_ave: previous rr-interval average
+   :return: the new rr-interval average of the previously detected 8 R peak locations
+   """
     peak_interval = np.diff([0] + rpeak_temp1)
     return rr_ave if len(peak_interval) < min_size else np.sum(peak_interval[-min_size:]) / min_size
 
 
 def compute_moving_window_int(sample: np.ndarray,
                               fs: float,
-                              blackman_window_length: float) -> np.ndarray:
+                              blackmanWinlen: int,
+                              filter_length:int = 257,
+                              delta:float=.02) -> np.ndarray:
     """
     :param sample: ecg sample array
     :param fs: sampling frequency
-    :param blackman_window_length: length of the blackman window on which to compute the moving window integration
-
+    :param blackmanWinlen: length of the blackman window on which to compute the moving window integration
+    :param filter_length: length of the FIR bandpass filter on which filtering is done on ecg sample array
+    :param delta: to compute the weights of each band in FIR filter
     :return: the Moving window integration of the sample array
     """
-    # TODO: CODE_REVIEW: Should these constants be moved to a Constants file or kept here?
-    # TODO: CODE_REVIEW: blackman_window_length parameter is not utilized
-    delta = .02
+    # I believe these constants can be kept in a file
+
     # filter edges
     filter_edges = [0, 4.5 * 2 / fs, 5 * 2 / fs, 20 * 2 / fs, 20.5 * 2 / fs, 1]
     # gains at filter band edges
@@ -136,7 +141,7 @@ def compute_moving_window_int(sample: np.ndarray,
     # weights
     weights = [500 / delta, 1 / delta, 500 / delta]
     # length of the FIR filter
-    filter_length = 257  # TODO: CODE_REVIEW: Parameterize? 2^8+1?
+
     # FIR filter coefficients for bandpass filtering
     filter_coeff = signal.firls(filter_length, filter_edges, gains, weights)
 
@@ -155,14 +160,15 @@ def compute_moving_window_int(sample: np.ndarray,
     derivative_squared_signal /= np.percentile(derivative_squared_signal, 90)
 
     # blackman window
-    blackman_window_length = np.ceil(fs / 5)
-    blackman_window = np.blackman(blackman_window_length)
-
+    blackman_window = np.blackman(blackmanWinlen)
     # moving window Integration of squared derivative signal
     mov_win_int_signal = signal.convolve(derivative_squared_signal, blackman_window, 'same')
     mov_win_int_signal /= np.percentile(mov_win_int_signal, 90)
 
     return mov_win_int_signal
+
+
+
 
 
 def check_peak(data: List[DataPoint]) -> bool:
@@ -171,12 +177,9 @@ def check_peak(data: List[DataPoint]) -> bool:
     :param data:
     :return:
     """
-    # TODO: Is this new implementation more general than this hardcoded logic?
-    # (y[i - 2] < y[i - 1] < y[i]) and (y[i] >= y[i + 1] > y[i + 2])
 
-    # TODO: CODE_REVIEW: How to handle exceptions in this code?
     if len(data) < 3:
-        raise Exception("data too small")
+        return False
 
     midpoint = int(len(data) / 2)
     test_value = data[0]
@@ -201,9 +204,7 @@ def check_peak(data: List[DataPoint]) -> bool:
 def compute_r_peaks(threshold_1: float,
                     rr_ave: float,
                     mov_win_int_signal: np.ndarray,
-                    valuepks: List[DataPoint],
-                    # TODO: CODE_REVIEW: valuepks and pkt should be combined to List[DataPoint] and code adjusted
-                    pkt: list) -> list:
+                    peak_tuple_array: List[tuple]) -> list:
     """
     This function does the adaptive thresholding of the signal to get the R-peak locations
 
@@ -211,67 +212,61 @@ def compute_r_peaks(threshold_1: float,
     :param threshold_1: Thr1 is the threshold above which the R peak
     :param rr_ave: running RR-interval average
     :param mov_win_int_signal: signal sample array
-    :param valuepks: simple peaks of the process done before
-    :param pkt: location of the simple peaks in signal array
-    :param rpeak_temp1: The location of the R peaks in the signal sample array once found this is returned
-    :param pkt_loc: location of the R peaks in the simple peak array detected in the process before
+    :param peak_tuple_array: A tuple array containing location and values of the simple peaks detected in the process before
+
+    :param rpeak_array_indices: The location of the R peaks in the signal sample array once found this is returned
+
 
     """
-    # TODO: CODE_REVIEW: Do threshold 1 and 2 have better names/meaning?
-    threshold_2 = 0.5 * threshold_1  # any signal value between thr2 and thr1 is a noise peak
+
+    peak_location_in_signal_array = [i[0] for i in peak_tuple_array] #location of the simple peaks in signal array
+    amplitude_in_peak_locations = [i[1] for i in peak_tuple_array]  # simple peak's amplitude in signal array
+
+    threshold_2 = 0.5 * threshold_1  # any signal value between threshold_2 and threshold_1 is a noise peak
     sig_lev = 4 * threshold_1  # current signal level -any signal above thrice the signal level is discarded as a spurious value
     noise_lev = 0.1 * sig_lev  # current noise level of the signal
+    ind_rpeak = 0
+    rpeak_array_indices = []
+    rpeak_inds_in_peak_array = []
+    while ind_rpeak < len(peak_location_in_signal_array):
 
-    i = 0  # TODO: CODE_REVIEW: Use a better variable name
-    rpeak_temp1 = []
-    pkt_loc = []
-    while i < len(pkt):
-        # if for 166 percent of the present RR interval no peak is detected as R peak then thr2 is taken as the
+        # if for 166 percent of the present RR interval no peak is detected as R peak then threshold_2 is taken as the
         # R peak threshold and the maximum of the range is taken as a R peak and RR interval is updated accordingly
-        # TODO: CODE_REVIEW: Lots of hard-coded values here, they need refactored
-        if len(rpeak_temp1) >= 8 and pkt[i] - pkt[pkt_loc[-1]] > 1.66 * rr_ave and i - pkt_loc[-1] > 1:
+        if len(rpeak_array_indices) >= 1 and peak_location_in_signal_array[ind_rpeak] - peak_location_in_signal_array[rpeak_inds_in_peak_array[-1]] > 1.66 * rr_ave and ind_rpeak - rpeak_inds_in_peak_array[-1] > 1:
 
-            # values and indexes of previous peaks discarded as not an R peak whose magnitude is above thr2
-            searchback_array_inrange_values = [valuepks[k] for k in range(pkt_loc[-1] + 1, i) if
-                                               3 * sig_lev > valuepks[k] > threshold_2]
-            searchback_array_inrange_index = [k - pkt_loc[-1] for k in range(pkt_loc[-1] + 1, i) if
-                                              3 * sig_lev > valuepks[k] > threshold_2]
+            # values and indexes of previous peaks discarded as not an R peak whose magnitude is above threshold_2
+            searchback_array = [(k - rpeak_inds_in_peak_array[-1],amplitude_in_peak_locations[k]) for k in range(rpeak_inds_in_peak_array[-1] + 1, ind_rpeak) if
+                                               3 * sig_lev > amplitude_in_peak_locations[k] > threshold_2]
 
-            if len(searchback_array_inrange_values) > 0:
+            if len(searchback_array) > 0:
                 # maximum inside the range calculated beforehand is taken as R peak
+                searchback_array_inrange_values = [x[1] for x in searchback_array]
                 searchback_max_index = np.argmax(searchback_array_inrange_values)
-
-                rpeak_temp1.append(pkt[pkt_loc[-1] + 1 + searchback_array_inrange_index[searchback_max_index]])
-                pkt_loc.append(pkt_loc[-1] + 1 + searchback_array_inrange_index[searchback_max_index])
-
-                sig_lev = ewma(mov_win_int_signal[pkt[i]], sig_lev, 0.125)  # update the current signal level
-
+                rpeak_array_indices.append(peak_location_in_signal_array[rpeak_inds_in_peak_array[-1] +searchback_array[searchback_max_index][0]])
+                rpeak_inds_in_peak_array.append(rpeak_inds_in_peak_array[-1] +searchback_array[searchback_max_index][0])
+                sig_lev = ewma(sig_lev,mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]],.125)  # update the current signal level
                 threshold_1 = noise_lev + 0.25 * (sig_lev - noise_lev)
                 threshold_2 = 0.5 * threshold_1
-
-                rr_ave = rr_interval_update(rpeak_temp1, rr_ave)
-                i = pkt_loc[-1] + 1
+                rr_ave = rr_interval_update(rpeak_array_indices, rr_ave)
+                ind_rpeak = rpeak_inds_in_peak_array[-1] + 1
             else:
                 threshold_1 = noise_lev + 0.25 * (sig_lev - noise_lev)
                 threshold_2 = 0.5 * threshold_1
-                i += 1
+                ind_rpeak += 1
         else:
             # R peak checking
-            if threshold_1 <= mov_win_int_signal[pkt[i]] < 3 * sig_lev:
-                rpeak_temp1.append(pkt[i])
-                pkt_loc.append(i)
-
-                sig_lev = ewma(mov_win_int_signal[pkt[i]], sig_lev, 0.125)  # update the signal level
-
+            if threshold_1 <= mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]] < 3 * sig_lev:
+                rpeak_array_indices.append(peak_location_in_signal_array[ind_rpeak])
+                rpeak_inds_in_peak_array.append(ind_rpeak)
+                sig_lev = ewma(sig_lev,mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]],.125)  # update the signal level
             # noise peak checking
-            elif threshold_1 > mov_win_int_signal[pkt[i]] > threshold_2:
-                noise_lev = ewma(mov_win_int_signal[pkt[i]], noise_lev, 0.125)  # update the noise level
-
+            elif threshold_1 > mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]] > threshold_2:
+                noise_lev = ewma(noise_lev,mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]],.125) # update the noise level
             threshold_1 = noise_lev + 0.25 * (sig_lev - noise_lev)
             threshold_2 = 0.5 * threshold_1
-            i += 1
-
-    return rpeak_temp1
+            ind_rpeak += 1
+            rr_ave = rr_interval_update(rpeak_array_indices, rr_ave)
+    return rpeak_array_indices
 
 
 def ewma(value: float, new_value: float, alpha: float) -> float:
@@ -287,9 +282,10 @@ def ewma(value: float, new_value: float, alpha: float) -> float:
 
 # TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
 # TODO: CODE_REVIEW: Make hard-coded constants default method parameter
-def remove_close_peaks(rpeak_temp1: List[DataPoint],
-                       sample: List[DataPoint],
-                       fs: float) -> List[DataPoint]:
+def remove_close_peaks(rpeak_temp1: list,
+                        sample: np.ndarray,
+                        fs: float,
+                        min_range:float=.5) -> list:
     """
     This function removes one of two peaks from two consecutive R peaks
     if difference among them is less than the minimum possible
@@ -298,35 +294,35 @@ def remove_close_peaks(rpeak_temp1: List[DataPoint],
     :param sample: sample array
     :param fs: sampling frequency
     :return: R peak array with no close R peaks
+
     """
-
-    # TODO: CODE_REVIEW: What does normal initialization mean?  Why 1 and 2
-    temp_ind = [1, 2]  # just a normal initialization so that it goes to while loop
-    while len(temp_ind) != 0:
-        temp = np.diff(rpeak_temp1)
-
-        # index of the closest peak to discard
-        temp_ind = []
-        for i, value in enumerate(temp):
-            if value < .5 * fs:  # TODO: CODE_REVIEW: Hard coded constant
-                if sample[rpeak_temp1[i]] > sample[rpeak_temp1[i + 1]]:
-                    temp_ind.append(i)
-                else:
-                    temp_ind.append(i + 1)
-
-        # removal procedure
-        count = 0
+    difference=0
+    rpeak_temp2=rpeak_temp1
+    while difference !=1:
+        length_Rpeak_temp2 =len(rpeak_temp2)
+        temp=np.diff(rpeak_temp2)
+        comp_index1=[rpeak_temp2[i] for i in range(len(temp)) if temp[i]<  min_range*fs ]
+        comp_index2=[rpeak_temp2[i+1] for i in range(len(temp)) if temp[i]< min_range*fs]
+        comp1=sample[comp_index1]
+        comp2=sample[comp_index2]
+        checkmin=np.matrix([comp1,comp2])
+        temp_ind1=[i for i in range(len(temp)) if temp[i]<min_range*fs]
+        temp_ind2=np.argmin(np.array(checkmin),axis=0)
+        temp_ind=temp_ind1 + temp_ind2
+        temp_ind=np.unique(temp_ind)
+        count=0
         for i in temp_ind:
-            rpeak_temp1.remove(rpeak_temp1[i - count])
-            count += 1
-    return rpeak_temp1
+            rpeak_temp2.remove(rpeak_temp2[i-count])
+            count=count+1
+        difference=length_Rpeak_temp2-len(rpeak_temp2)+1
+    return rpeak_temp2
 
 
-# TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
-# TODO: CODE_REVIEW: Make hard-coded constants default method parameter
-def confirm_peaks(rpeak_temp1: List[DataPoint],
-                  sample: List[DataPoint],
-                  fs: float) -> List[DataPoint]:
+
+def confirm_peaks(rpeak_temp1: list,
+                  sample: np.ndarray,
+                  fs: float,
+                  range_for_checking:float = 1/10) -> np.ndarray:
     """
 
     This function does the final check on the R peaks detected and
@@ -335,27 +331,27 @@ def confirm_peaks(rpeak_temp1: List[DataPoint],
     :param rpeak_temp1: R peak array containing the index of the R peaks
     :param sample: sample array
     :param fs: sampling frequency
+    :param range_for_checking : The peaks are checked within a range of fs/10 to get the maximum value within that range
+
     :return: final R peak array
 
     """
-    # TODO: CODE_REVIEW: Why is there  fs / 10 coded here? Should this be a parameter?
     for i in range(1, len(rpeak_temp1) - 1):
-        start_index = int(rpeak_temp1[i] - np.ceil(fs / 10))
-        end_index = int(rpeak_temp1[i] + np.ceil(fs / 10) + 1)
+        start_index = int(rpeak_temp1[i] - np.ceil(range_for_checking*fs))
+        end_index = int(rpeak_temp1[i] + np.ceil(range_for_checking*fs) + 1)
 
         index = np.argmax(sample[start_index:end_index])
 
-        rpeak_temp1[i] = rpeak_temp1[i] - np.ceil(fs / 10) + index
+        rpeak_temp1[i] = rpeak_temp1[i] - np.ceil(range_for_checking*fs) + index
 
-    return np.array(rpeak_temp1).astype(
-        np.int64)  # TODO: CODE_REVIEW: This is the first time I am seeing np.int64  Why is this type specified? Result should be list of DataPoints
+    return np.array(rpeak_temp1).astype(np.int64)
 
 
-# TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
 # TODO: CODE_REVIEW: Make hard-coded constants default method parameter
 def detect_rpeak(ecg: DataStream,
                  fs: float = 64,
-                 threshold: float = 0.5) -> DataStream:
+                 threshold: float = 0.5,
+                 blackman_win_len_range:float=1/5) -> DataStream:
     """
     This program implements the Pan Tomkins algorithm on ECG signal to detect the R peaks
 
@@ -372,6 +368,8 @@ def detect_rpeak(ecg: DataStream,
     :param ecg: ecg array of tuples (timestamp,value)
     :param fs: sampling frequency
     :param threshold: initial threshold to detect the R peak in a signal normalized by the 90th percentile. .5 is default.
+    :param blackman_win_len_range : the range to calculate blackman window length
+
     :return: R peak array of tuples (timestamp, Rpeak interval)
     """
 
@@ -381,18 +379,18 @@ def detect_rpeak(ecg: DataStream,
     timestamp = np.array([i.start_time for i in data])
 
     # computes the moving window integration of the signal
-    blackman_win_len = np.ceil(fs / 5)  # TODO: CODE_REVIEW: Hard coded value of 5
+    blackman_win_len = np.ceil(fs *blackman_win_len_range)
     y = compute_moving_window_int(sample, fs, blackman_win_len)
 
-    # TODO: CODE_REVIEW: Hard coded +/- 2.  Is this a function of the blackman_win_len?
-    peak_location = [i for i in range(2, len(y) - 1) if check_peak(y[i - 2:i + 2])]
-    peak_location_values = y[peak_location]
+    peak_location_values = [(i,y[i]) for i in range(2, len(y) - 1) if check_peak(y[i - 2:i + 3])]
 
     # initial RR interval average
+    peak_location = [i[0] for i in peak_location_values]
     running_rr_avg = sum(np.diff(peak_location)) / (len(peak_location) - 1)
-    rpeak_temp1 = compute_r_peaks(threshold, running_rr_avg, y, peak_location_values, peak_location)
-    rpeak_temp1 = remove_close_peaks(rpeak_temp1, sample, fs)
-    index = confirm_peaks(rpeak_temp1, sample, fs)
+
+    rpeak_temp1 = compute_r_peaks(threshold, running_rr_avg, y, peak_location_values)
+    rpeak_temp2 = remove_close_peaks(rpeak_temp1, sample, fs)
+    index = confirm_peaks(rpeak_temp2, sample, fs)
 
     rpeak_timestamp = timestamp[index]
     rpeak_value = np.diff(rpeak_timestamp)
