@@ -1,98 +1,103 @@
 {
-  "id": "file:///Users/hnat/IdeaProjects/CerebralCortex/cerebralcortex/kernel/schemas/#",
-  "$schema": "http://json-schema.org/schema#",
-  "title": "Processing Module schema",
-  "description": "",
+  "id": "https://raw.githubusercontent.com/MD2Korg/CerebralCortex/master/cerebralcortex/kernel/schemas/#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Processing Module Metadata Schema",
+  "description": "Processing Module Metadata Schema Specification",
   "type": "object",
   "properties": {
+    "identifier": {
+      "description": "",
+      "type": "number"
+    },
     "name": {
       "description": "",
       "type": "string"
     },
-    "metadata": {
+    "description": {
       "description": "",
-      "properties": {
-        "input_parameters": {
-          "description": "",
-          "type": "array",
-          "items": {
+      "type": "string"
+    },
+    "input_parameters": {
+      "description": "",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "input_streams": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
             "type": "string"
           }
         },
-        "input_streams": {
+        "required": [
+          "name"
+        ]
+      }
+    },
+    "output_streams": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      }
+    },
+    "algorithm": {
+      "description": "",
+      "type": "object",
+      "properties": {
+        "method": {
+          "description": "",
+          "type": "string"
+        },
+        "description": {
+          "description": "",
+          "type": "string"
+        },
+        "authors": {
           "description": "",
           "type": "array",
           "items": {
-            "properties": {
-              "name": {
-                "description": "",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name"
-            ]
+            "description": "",
+            "type": "string"
           }
         },
-        "output_streams": {
+        "version": {
           "description": "",
-          "type": "array",
-          "items": {
-            "properties": {
-              "name": {
-                "description": "",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name"
-            ]
-          }
+          "type": "string"
         },
-        "algorithm": {
+        "reference": {
           "description": "",
           "properties": {
-            "method": {
+            "url": {
               "description": "",
               "type": "string"
-            },
-            "authors": {
-              "description": "",
-              "type": "array",
-              "items": {
-                "description": "",
-                "type": "string"
-              }
-            },
-            "version": {
-              "description": "",
-              "type": "string"
-            },
-            "reference": {
-              "description": "",
-              "properties": {
-                "url": {
-                  "description": "",
-                  "type": "string"
-                }
-              }
             }
-          },
-          "required": [
-            "method",
-            "version"
-          ]
+          }
         }
       },
       "required": [
-        "input_streams",
-        "output_streams",
-        "algorithm"
+        "method",
+        "version"
       ]
     }
   },
   "required": [
+    "identifier",
     "name",
-    "metadata"
+    "input_parameters",
+    "input_streams",
+    "output_streams",
+    "algorithm"
   ]
 }

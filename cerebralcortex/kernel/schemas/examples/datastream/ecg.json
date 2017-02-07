@@ -1,50 +1,36 @@
 {
   "identifier": 89,
   "user": "a970e186-e960-11e6-bf0e-fe55135034f3",
-  "study_list": [
-    54,
-    57
-  ],
-  "processing_module": 2,
-  "source_ids": [
-  ],
-  "metadata": {
-    "name": "ecg",
-    "description": "RAW ecg from AutoSense",
-    "data_descriptor": [
-      {
-        "type": "number",
-        "unit": "none"
-      }
-    ],
-    "processing_module": {
-      "input_parameters": {
-      },
-      "input_streams": [
-      ],
-      "execution_context": {
-        "device": {
-          "model": "Samsung Galaxy S5",
-          "OS": "6.0.0",
-          "battery_capacity": "8500mah"
-        }
-      }
-    },
-    "privacy": {
-    },
-    "data_source": {
-      "device": {
-        "manufacturer": "EETech",
-        "model": "AutoSense_v3",
-        "firmware": "3.2.0",
-        "url": "http://web0.cs.memphis.edu/~santosh/Papers/AutoSense.pdf",
-        "hardware_address": "2456"
-      },
-      "communication": {
-        "interface": "ANT+"
-      }
-    },
-    "access_control": {
+  "name": "ecg",
+  "description": "RAW ecg from AutoSense",
+  "data_descriptor": [
+    {
+      "type": "number",
+      "unit": "none"
     }
-  }
+  ],
+  "execution_context": {
+    "processing_module": 7,
+    "platform": {
+      "device": {
+        "model": "Samsung Galaxy S5",
+        "OS": "6.0.0",
+        "battery_capacity": "8500mah"
+      }
+    }
+  },
+  "annotations": [
+    {
+      "name": "study",
+      "stream_identifier": 5
+    },
+    {
+      "name": "privacy",
+      "stream_identifier": 6
+    },
+    {
+      "name": "access control",
+      "stream_identifier": 7
+    }
+  ]
 }

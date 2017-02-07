@@ -1,0 +1,21 @@
+{
+  "id": "https://raw.githubusercontent.com/MD2Korg/CerebralCortex/master/cerebralcortex/kernel/schemas/#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Schema",
+  "description": "Schema Specification",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "",
+      "type": "string"
+    },
+    "stream_identifier": {
+      "description": "",
+      "type": "number"
+    }
+  },
+  "required": [
+    "name",
+    "stream_identifier"
+  ]
+}

@@ -1,10 +1,14 @@
 {
-  "id": "file:///Users/hnat/IdeaProjects/CerebralCortex/cerebralcortex/kernel/schemas/#",
+  "id": "https://raw.githubusercontent.com/MD2Korg/CerebralCortex/master/cerebralcortex/kernel/schemas/#",
   "$schema": "http://json-schema.org/schema#",
   "title": "Annotation Schema",
   "description": "Annotation Schema Specification",
   "type": "object",
   "properties": {
+    "stream_id": {
+      "description": "Associated DataStream identifier",
+      "type": "number"
+    },
     "start_time": {
       "description": "Starting timestamp of the annotation",
       "type": "string"
@@ -19,8 +23,8 @@
     }
   },
   "required": [
+    "stream_id",
     "start_time",
-    "end_time",
     "sample"
   ]
 }
