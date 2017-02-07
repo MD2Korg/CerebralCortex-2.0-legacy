@@ -82,15 +82,15 @@ class TestRPeakDetect(unittest.TestCase):
         running_rr_avg = sum(np.diff(peak_location)) / (len(peak_location) - 1)
         rpeak_temp1 = compute_r_peaks(threshold, running_rr_avg, y, peak_location_values)
         peak_index1_from_data = np.genfromtxt(os.getcwd()+'/res/'+'testmatlab_firstindex.csv',delimiter=',')
-        self.assertGreaterEqual((len(list(set(rpeak_temp1) & set(peak_index1_from_data)))*100)/len(rpeak_temp1),99,'Common peaks after adaptive Thresholding does not have a minimum of 99 percent match')
+        self.assertGreaterEqual((len(list(set(rpeak_temp1) & set(peak_index1_from_data-1)))*100)/len(rpeak_temp1),99,'Common peaks after adaptive Thresholding does not have a minimum of 99 percent match')
 
         rpeak_temp2 = remove_close_peaks(rpeak_temp1, sample, self._fs)
         peak_index2_from_data = np.genfromtxt(os.getcwd()+'/res/'+'testmatlab_secondindex.csv',delimiter=',')
-        self.assertGreaterEqual((len(list(set(rpeak_temp2) & set(peak_index2_from_data)))*100)/len(rpeak_temp2),99,'Common peaks after the second step of removing close peaks does not have a minimum of 99 percent match')
+        self.assertGreaterEqual((len(list(set(rpeak_temp2) & set(peak_index2_from_data-1)))*100)/len(rpeak_temp2),99,'Common peaks after the second step of removing close peaks does not have a minimum of 99 percent match')
 
         index = confirm_peaks(rpeak_temp2, sample, self._fs)
         peak_index3_from_data = np.genfromtxt(os.getcwd()+'/res/'+'testmatlab_finalindex.csv',delimiter=',')
-        self.assertGreaterEqual((len(list(set(index) & set(peak_index3_from_data)))*100)/len(index),99,'Common peaks after the final step of r peak detection does not have a minimum of 99 percent match')
+        self.assertGreaterEqual((len(list(set(index) & set(peak_index3_from_data-1)))*100)/len(index),99,'Common peaks after the final step of r peak detection does not have a minimum of 99 percent match')
 
 
 if __name__ == '__main__':
