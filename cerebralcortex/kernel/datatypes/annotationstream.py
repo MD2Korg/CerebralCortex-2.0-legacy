@@ -28,11 +28,11 @@ from cerebralcortex import CerebralCortex
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.kernel.datatypes.enumerations import StreamTypes
-from cerebralcortex.kernel.datatypes.metadata import \
-    Metadata as MetadataStruct
+from cerebralcortex.kernel.datatypes.metadata import Metadata as MetadataStruct
 from cerebralcortex.kernel.datatypes.study import Study
 from cerebralcortex.kernel.datatypes.user import User
 from cerebralcortex.kernel.datatypes.processing import Processing
+
 
 class AnnotationStream(DataStream):
     def __init__(self,
