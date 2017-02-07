@@ -25,7 +25,6 @@ import datetime
 from typing import List
 
 import numpy as np
-import pytz
 from fastdtw import fastdtw
 from scipy.interpolate import pchip
 
@@ -49,6 +48,10 @@ def interpolate_gaps(data: List[DataPoint],
     for index, value in enumerate(time_deltas):
         if low_limit <= value <= high_limit:
             gap_points.append((data[index], value))
+
+    if len(gap_points) == 0:
+        return data
+
 
     gap_index = 0
     in_gap = False
@@ -158,8 +161,7 @@ def timestamp_correct(datastream: DataStream,
 
         dtw_corrected_data = []
         for index, dp in enumerate(s):
-            timezone = pytz.timezone(dp.start_time.tzname())
-            ts = datetime.datetime.fromtimestamp(xx[index], tz=timezone)
+            ts = datetime.datetime.fromtimestamp(xx[index], tz=dp.start_time.tzinfo)
             dtw_corrected_data.append(DataPoint.from_tuple(ts, dp.sample))
 
         result.datapoints.extend(dtw_corrected_data)
