@@ -1,5 +1,5 @@
 {
-  "id": "file:///Users/hnat/IdeaProjects/CerebralCortex/cerebralcortex/kernel/schemas/#",
+  "id": "https://raw.githubusercontent.com/MD2Korg/CerebralCortex/master/cerebralcortex/kernel/schemas/#",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "DataPoint Schema",
   "description": "DataPoint Schema Specification",
@@ -10,11 +10,11 @@
       "type": "number"
     },
     "start_time": {
-      "description": "Starting timestamp of the annotation",
+      "description": "Starting timestamp of the data point",
       "type": "string"
     },
     "end_time": {
-      "description": "Ending timestamp of the annotation",
+      "description": "Ending timestamp of the data point",
       "type": "string"
     },
     "sample": {
