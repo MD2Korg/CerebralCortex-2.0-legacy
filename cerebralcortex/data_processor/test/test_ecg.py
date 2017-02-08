@@ -21,6 +21,7 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 import datetime
 import gzip
 import os
@@ -29,9 +30,10 @@ import unittest
 import numpy as np
 import pytz
 
-from cerebralcortex.data_processor.signalprocessing.ecg import rr_interval_update, compute_moving_window_int, check_peak , compute_r_peaks, remove_close_peaks, confirm_peaks
+from cerebralcortex.data_processor.signalprocessing.ecg import rr_interval_update, compute_moving_window_int, check_peak , compute_r_peaks, remove_close_peaks, confirm_peaks, compute_rr_intervals
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
-
+from cerebralcortex.kernel.datatypes.datastream import DataStream
+from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_correct
 
 class TestRPeakDetect(unittest.TestCase):
     @classmethod
@@ -45,6 +47,9 @@ class TestRPeakDetect(unittest.TestCase):
                 values = list(map(int, l.split(',')))
                 cls.ecg.append(
                     DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
+        cls.ecg_datastream = DataStream(None,None)
+        cls.ecg_datastream.datapoints = cls.ecg
+
 
     def test_rr_interval_update(self):
         rpeak_temp1 = [i for i in range(0, 100, 10)]
@@ -85,6 +90,7 @@ class TestRPeakDetect(unittest.TestCase):
         data = [0, 1]
         self.assertFalse(check_peak(data))
 
+
     def test_detect_rpeak(self,threshold:float=.5):
         sample = np.array([i.sample for i in self.ecg])
         blackman_win_len = np.ceil(self._fs / 5)
@@ -107,6 +113,11 @@ class TestRPeakDetect(unittest.TestCase):
         peak_index3_from_data = np.genfromtxt(os.path.join(os.path.dirname(__file__), 'res/testmatlab_finalindex.csv'),delimiter=',')
         self.assertGreaterEqual((len(list(set(index) & set(peak_index3_from_data-1)))*100)/len(index),99,'Common peaks after the final step of r peak detection does not have a minimum of 99 percent match')
 
+    def test_ecgprocessing_timestamp_correction(self):
+        ecg_corrected = timestamp_correct(self.ecg_datastream,self._fs)
+        rr_datastream_from_raw = compute_rr_intervals(self.ecg_datastream,self._fs)
+        rr_datastream_from_corrected = compute_rr_intervals(ecg_corrected,self._fs)
+        self.assertGreaterEqual((len(rr_datastream_from_corrected.datapoints)*100)/len(rr_datastream_from_raw.datapoints),99,'The number of R peaks in both timestamp corrected version and uncorrected version match suffieciently')
 
 if __name__ == '__main__':
     unittest.main()
