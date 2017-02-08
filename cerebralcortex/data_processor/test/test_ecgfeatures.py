@@ -31,9 +31,9 @@ import pytz
 
 from cerebralcortex.data_processor.feature.ecg import ecg_feature_computation, lomb, heart_rate_power
 from cerebralcortex.data_processor.signalprocessing.ecg import compute_rr_intervals
+from cerebralcortex.data_processor.signalprocessing.window import window_sliding
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-from cerebralcortex.kernel.window import window_sliding
 
 
 class TestECGFeatures(unittest.TestCase):

@@ -30,8 +30,8 @@ from time import sleep
 
 import pytz
 
+from cerebralcortex.data_processor.signalprocessing.window import window_sliding, epoch_align
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
-from cerebralcortex.kernel.window import window_sliding, epoch_align
 
 
 class TestWindowing(unittest.TestCase):

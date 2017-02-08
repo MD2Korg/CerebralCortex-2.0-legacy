@@ -26,9 +26,9 @@ from typing import List
 import numpy as np
 from scipy import signal
 
+from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-from cerebralcortex.kernel.window import window
 
 
 

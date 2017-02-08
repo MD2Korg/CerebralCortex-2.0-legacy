@@ -26,9 +26,9 @@ from typing import List
 import numpy as np
 import scipy.signal as signal
 
+from cerebralcortex.data_processor.signalprocessing.window import window_sliding
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-from cerebralcortex.kernel.window import window_sliding
 
 
 def lomb(data: List[DataPoint],
