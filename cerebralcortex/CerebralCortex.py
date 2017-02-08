@@ -64,4 +64,8 @@ class CerebralCortex:
 
 
     def readfile(self, filename):
-        return self.sc.textFile(filename)
+        data = []
+        with open(filename, 'rt') as f:
+            for l in f:
+                print(l)
+        return
