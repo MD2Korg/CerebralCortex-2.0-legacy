@@ -23,12 +23,18 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from datetime import datetime
-from typing import Any
+from typing import Dict
 
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 
 
 class Annotation(DataPoint):
-    def __init__(self, datastream_id: int = None, start_time: datetime = None, end_time: datetime = None,
-                 sample: Any = None, metadata: dict = None) -> None:
-        super().__init__(datastream_id, start_time, end_time, sample, metadata)
+    def __init__(self,
+                 annotationstream_id: int = None,
+                 start_time: datetime = None,
+                 end_time: datetime = None,
+                 sample: Dict = None):
+        super().__init__(datastream_id=annotationstream_id,
+                         start_time=start_time,
+                         end_time=end_time,
+                         sample=sample)

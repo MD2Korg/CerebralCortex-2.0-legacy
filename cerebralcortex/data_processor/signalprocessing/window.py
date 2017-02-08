@@ -98,7 +98,7 @@ def window_iter(iterable: List[DataPoint],
                 window_size: float,
                 window_offset: float):
     """
-    Window interation function that support various common implementations
+    Window iteration function that support various common implementations
     :param iterable:
     :param window_size:
     :param window_offset:

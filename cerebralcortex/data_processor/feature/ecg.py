@@ -26,9 +26,9 @@ from typing import List
 import numpy as np
 import scipy.signal as signal
 
+from cerebralcortex.data_processor.signalprocessing.window import window_sliding
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-from cerebralcortex.kernel.window import window_sliding
 
 
 def lomb(data: List[DataPoint],
@@ -100,12 +100,12 @@ def ecg_feature_computation(datastream: DataStream,
     if datastream is None:
         return None
 
-    if len(datastream.datapoints) == 0:
+    if len(datastream.data) == 0:
         return None
 
     # perform windowing of datastream
 
-    window_data = window_sliding(datastream.datapoints, window_size, window_offset)
+    window_data = window_sliding(datastream.data, window_size, window_offset)
 
     # initialize each ecg feature array
 
@@ -174,25 +174,26 @@ def ecg_feature_computation(datastream: DataStream,
             DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=np.median(60 / reference_data)))
 
     rr_variance = DataStream.from_datastream([datastream])
-    rr_variance.datapoints = rr_variance_data
+    rr_variance.data = rr_variance_data
     rr_vlf = DataStream.from_datastream([datastream])
-    rr_vlf.datapoints = rr_VLF_data
+    rr_vlf.data = rr_VLF_data
     rr_hf = DataStream.from_datastream([datastream])
-    rr_hf.datapoints = rr_HF_data
+    rr_hf.data = rr_HF_data
     rr_lf = DataStream.from_datastream([datastream])
-    rr_lf.datapoints = rr_LF_data
+    rr_lf.data = rr_LF_data
     rr_lf_hf = DataStream.from_datastream([datastream])
-    rr_lf_hf.datapoints = rr_LF_HF_data
+    rr_lf_hf.data = rr_LF_HF_data
     rr_mean = DataStream.from_datastream([datastream])
-    rr_mean.datapoints = rr_mean_data
+    rr_mean.data = rr_mean_data
     rr_median = DataStream.from_datastream([datastream])
-    rr_median.datapoints = rr_median_data
+    rr_median.data = rr_median_data
     rr_quartile = DataStream.from_datastream([datastream])
-    rr_quartile.datapoints = rr_quartile_deviation_data
+    rr_quartile.data = rr_quartile_deviation_data
     rr_80 = DataStream.from_datastream([datastream])
-    rr_80.datapoints = rr_80percentile_data
+    rr_80.data = rr_80percentile_data
     rr_20 = DataStream.from_datastream([datastream])
-    rr_20.datapoints = rr_20percentile_data
+    rr_20.data = rr_20percentile_data
     rr_heart_rate = DataStream.from_datastream([datastream])
-    rr_heart_rate.datapoints = rr_heart_rate_data
+    rr_heart_rate.data = rr_heart_rate_data
     return rr_variance, rr_vlf, rr_hf, rr_lf, rr_lf_hf, rr_mean, rr_median, rr_quartile, rr_80, rr_20, rr_heart_rate
+

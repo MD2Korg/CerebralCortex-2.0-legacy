@@ -26,4 +26,4 @@ from enum import Enum
 
 class StreamTypes(Enum):
     DATASTREAM = 1,
-    ATTRIBUTE = 2
+    ANNOTATION = 2

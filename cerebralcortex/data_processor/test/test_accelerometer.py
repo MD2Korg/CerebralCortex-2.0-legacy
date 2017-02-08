@@ -30,7 +30,8 @@ from random import random
 
 import pytz
 
-from cerebralcortex.data_processor.signalprocessing.accelerometer import window_std_dev, accelerometer_features
+from cerebralcortex.data_processor.signalprocessing.accelerometer import accelerometer_features
+from cerebralcortex.data_processor.signalprocessing.vector import window_std_dev
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 
@@ -65,11 +66,11 @@ class TestAccelerometer(unittest.TestCase):
         self.size = 100000
         self.ds = DataStream(None, None)
         data = [DataPoint.from_tuple(datetime.datetime.now(), [random()]) for i in range(0, self.size)]
-        self.ds.datapoints = data
+        self.ds.data = data
 
     def test_window_std_dev(self):
         ts = datetime.datetime.now(tz=pytz.timezone('US/Central'))
-        dev = window_std_dev(self.ds.datapoints, ts)
+        dev = window_std_dev(self.ds.data, ts)
         self.assertEqual(dev.start_time, ts)
         self.assertAlmostEqual(dev.sample, 0.2886751346, delta=0.01)
 
@@ -102,15 +103,15 @@ class TestAccelerometer(unittest.TestCase):
                                                                          self.accely[i].sample,
                                                                          self.accelz[i].sample]))
 
-        ds.datapoints = data
+        ds.data = data
 
         accelerometer_magnitude, accelerometer_win_mag_deviations, accel_activity = accelerometer_features(ds)
 
-        self.assertEqual(len(accelerometer_magnitude.datapoints), 62870)
-        self.assertEqual(len(accelerometer_win_mag_deviations.datapoints), 687)
-        self.assertEqual(len(accel_activity.datapoints), 687)
+        self.assertEqual(len(accelerometer_magnitude.data), 62870)
+        self.assertEqual(len(accelerometer_win_mag_deviations.data), 687)
+        self.assertEqual(len(accel_activity.data), 687)
 
-        self.assertEqual(len([dp for dp in accel_activity.datapoints if dp.sample]),
+        self.assertEqual(len([dp for dp in accel_activity.data if dp.sample]),
                          0)  # TODO: Is this correct
 
 

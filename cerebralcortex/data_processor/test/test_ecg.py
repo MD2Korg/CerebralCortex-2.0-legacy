@@ -30,10 +30,12 @@ import unittest
 import numpy as np
 import pytz
 
-from cerebralcortex.data_processor.signalprocessing.ecg import rr_interval_update, compute_moving_window_int, check_peak , compute_r_peaks, remove_close_peaks, confirm_peaks, compute_rr_intervals
+from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_correct
+from cerebralcortex.data_processor.signalprocessing.ecg import rr_interval_update, compute_moving_window_int, \
+    check_peak, compute_r_peaks, remove_close_peaks, confirm_peaks, compute_rr_intervals
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_correct
+
 
 class TestRPeakDetect(unittest.TestCase):
     @classmethod
@@ -47,9 +49,8 @@ class TestRPeakDetect(unittest.TestCase):
                 values = list(map(int, l.split(',')))
                 cls.ecg.append(
                     DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
-        cls.ecg_datastream = DataStream(None,None)
-        cls.ecg_datastream.datapoints = cls.ecg
-
+        cls.ecg_datastream = DataStream(None, None)
+        cls.ecg_datastream.data = cls.ecg
 
     def test_rr_interval_update(self):
         rpeak_temp1 = [i for i in range(0, 100, 10)]
@@ -70,54 +71,60 @@ class TestRPeakDetect(unittest.TestCase):
         self.assertEqual(rr_interval_update(rpeak_temp1, rr_ave, min_size=25), 4.5)
 
     def test_compute_moving_window_int(self):
-        sample = np.array([i for i in range(1,40,5)])
-        fs=64
-        blackmanWinLen=np.ceil(fs/5)
-        result = [0.1877978,0.32752854,0.52515934,0.754176,0.94976418,1.03957192,0.9830406,0.79712449]
-        self.assertAlmostEqual(sum(compute_moving_window_int(sample,fs,blackmanWinLen)),sum(result))
-
+        sample = np.array([i for i in range(1, 40, 5)])
+        fs = 64
+        blackman_win_len = np.ceil(fs / 5)
+        result = [0.1877978, 0.32752854, 0.52515934, 0.754176, 0.94976418, 1.03957192, 0.9830406, 0.79712449]
+        self.assertAlmostEqual(sum(compute_moving_window_int(sample, fs, blackman_win_len)), sum(result))
 
     def test_check_peak(self):
         data = [0, 1, 2, 1, 0]
-        self.assertTrue(check_peak(data))
+        self.assertTrue(check_peak(data))  # TODO: Change these to datapoints
 
         data = [0, 1, 0, 1, 0]
-        self.assertFalse(check_peak(data))
+        self.assertFalse(check_peak(data))  # TODO: Change these to datapoints
 
         data = [0, 1, 2, 3, 4, 3, 2, 1]
-        self.assertTrue(check_peak(data))
+        self.assertTrue(check_peak(data))  # TODO: Change these to datapoints
 
         data = [0, 1]
-        self.assertFalse(check_peak(data))
+        self.assertFalse(check_peak(data))  # TODO: Change these to datapoints
 
-
-    def test_detect_rpeak(self,threshold:float=.5):
+    def test_detect_rpeak(self, threshold: float = .5):
         sample = np.array([i.sample for i in self.ecg])
         blackman_win_len = np.ceil(self._fs / 5)
         y = compute_moving_window_int(sample, self._fs, blackman_win_len)
 
-        peak_location_values = [(i,y[i]) for i in range(2, len(y) - 1) if check_peak(y[i - 2:i + 3])]
+        peak_location_values = [(i, y[i]) for i in range(2, len(y) - 1) if check_peak(y[i - 2:i + 3])]
         peak_location = [i[0] for i in peak_location_values]
 
         running_rr_avg = sum(np.diff(peak_location)) / (len(peak_location) - 1)
         rpeak_temp1 = compute_r_peaks(threshold, running_rr_avg, y, peak_location_values)
-        peak_index1_from_data = np.genfromtxt(os.path.join(os.path.dirname(__file__), 'res/testmatlab_firstindex.csv'),delimiter=',')
-        self.assertGreaterEqual((len(list(set(rpeak_temp1) & set(peak_index1_from_data-1)))*100)/len(rpeak_temp1),99,'Common peaks after adaptive Thresholding does not have a minimum of 99 percent match')
+
+        first_index_file = os.path.join(os.path.dirname(__file__), 'res/testmatlab_firstindex.csv')
+        peak_index1_from_data = np.genfromtxt(first_index_file, delimiter=',')
+        test_result = (len(list(set(rpeak_temp1) & set(peak_index1_from_data - 1))) * 100) / len(rpeak_temp1)
+        self.assertGreaterEqual(test_result, 99, 'Peaks after adaptive threshold is less than a 99 percent match')
 
         rpeak_temp2 = remove_close_peaks(rpeak_temp1, sample, self._fs)
-        peak_index2_from_data = np.genfromtxt(os.path.join(os.path.dirname(__file__), 'res/testmatlab_secondindex.csv'),delimiter=',')
-        self.assertGreaterEqual((len(list(set(rpeak_temp2) & set(peak_index2_from_data-1)))*100)/len(rpeak_temp2),99,'Common peaks after the second step of removing close peaks does not have a minimum of 99 percent match')
-
+        second_index_file = os.path.join(os.path.dirname(__file__), 'res/testmatlab_secondindex.csv')
+        peak_index2_from_data = np.genfromtxt(second_index_file, delimiter=',')
+        test_result = (len(list(set(rpeak_temp2) & set(peak_index2_from_data - 1))) * 100) / len(rpeak_temp2)
+        self.assertGreaterEqual(test_result, 99, 'Peaks after removing close peaks is less than a 99 percent match')
 
         index = confirm_peaks(rpeak_temp2, sample, self._fs)
-        peak_index3_from_data = np.genfromtxt(os.path.join(os.path.dirname(__file__), 'res/testmatlab_finalindex.csv'),delimiter=',')
-        self.assertGreaterEqual((len(list(set(index) & set(peak_index3_from_data-1)))*100)/len(index),99,'Common peaks after the final step of r peak detection does not have a minimum of 99 percent match')
+        final_index_file = os.path.join(os.path.dirname(__file__), 'res/testmatlab_finalindex.csv')
+        peak_index3_from_data = np.genfromtxt(final_index_file, delimiter=',')
+        test_result = (len(list(set(index) & set(peak_index3_from_data - 1))) * 100) / len(index)
+        self.assertGreaterEqual(test_result, 99, 'Peaks after confirmation is less than a 99 percent match')
 
     def test_ecgprocessing_timestamp_correction(self):
-        ecg_corrected = timestamp_correct(self.ecg_datastream,self._fs)
-        rr_datastream_from_raw = compute_rr_intervals(self.ecg_datastream,self._fs)
-        rr_datastream_from_corrected = compute_rr_intervals(ecg_corrected,self._fs)
-        self.assertGreaterEqual((len(rr_datastream_from_corrected.datapoints)*100)/len(rr_datastream_from_raw.datapoints),99,'The number of R peaks in both timestamp corrected version and uncorrected version match suffieciently')
+        ecg_corrected = timestamp_correct(self.ecg_datastream, self._fs)
+        rr_datastream_from_raw = compute_rr_intervals(self.ecg_datastream, self._fs)
+        rr_datastream_from_corrected = compute_rr_intervals(ecg_corrected, self._fs)
+        test_result = (len(rr_datastream_from_corrected.data) * 100) / len(rr_datastream_from_raw.data)
+        self.assertGreaterEqual(test_result, 99)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -34,25 +34,21 @@ class TestDataPoint(unittest.TestCase):
         self.assertIsNone(dp.start_time)
         self.assertIsNone(dp.end_time)
         self.assertIsNone(dp.sample)
-        self.assertIsNone(dp.metadata)
 
     def test_DataPoint(self):
         ts = datetime.datetime.now()
-        dp = DataPoint(start_time=ts, end_time=ts, sample={'Foo': 123}, metadata={'label': 'good'})
+        dp = DataPoint(start_time=ts, end_time=ts, sample={'Foo': 123})
         self.assertDictEqual(dp.sample, {'Foo': 123})
         self.assertEqual(dp.start_time, ts)
         self.assertEqual(dp.end_time, ts)
-        self.assertEqual(dp.metadata, {'label': 'good'})
 
     def test_classmethod_from_tuple(self):
         ts = datetime.datetime.now()
-        dp = DataPoint.from_tuple(start_time=ts, end_time=ts, sample=[1, 2, 3], metadata={'label': 'good'})
+        dp = DataPoint.from_tuple(start_time=ts, end_time=ts, sample=[1, 2, 3])
         self.assertIsInstance(dp, DataPoint)
         self.assertEqual(dp.start_time, ts)
         self.assertEqual(dp.end_time, ts)
         self.assertEqual(dp.sample, [1, 2, 3])
-        self.assertEqual(dp.metadata, {'label': 'good'})
-
 
 if __name__ == '__main__':
     unittest.main()
