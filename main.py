@@ -26,6 +26,7 @@ import argparse
 import gzip
 import os
 import sys
+import time
 import traceback
 import uuid
 from pprint import pprint
@@ -94,7 +95,10 @@ def process_participant(identifier: int):
         traceback.print_exc(file=sys.stderr)
 
 
-ids = CC.sparkSession.sparkContext.parallelize([i for i in range(1, 3)])
+start_time = time.time()
+ids = CC.sparkSession.sparkContext.parallelize([i for i in range(1, 25)])
 
 results = ids.map(process_participant)
 pprint(results.collect())
+end_time = time.time()
+print(end_time - start_time)
