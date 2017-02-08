@@ -41,15 +41,6 @@ class AnnotationStream(DataStream):
                  execution_context: ExecutionContext = None,
                  annotations: List[StreamReference] = None,
                  data: List[DataPoint] = None):
-        """
-        The primary object in Cerebral Cortex which represents data
-        :param cerebralcortex: Reference to the Cerebral Cortex object
-        :param identifier:
-        :param data:
-        :param processing:
-        :param metadata:
-        """
-
         super().__init__(identifier, user, name, description, data_descriptor, execution_context, annotations,
                          data)
 

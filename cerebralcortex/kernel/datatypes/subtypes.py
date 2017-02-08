@@ -31,6 +31,14 @@ class StreamReference:
         self._name = name
         self._stream_identifier = stream_identifier
 
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def stream_identifier(self):
+        return self._stream_identifier
+
 
 class KeyValue:
     def __init__(self, name: int, value: Any):

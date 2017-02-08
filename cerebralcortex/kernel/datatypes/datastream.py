@@ -50,6 +50,31 @@ class DataStream:
         self._annotations = annotations
         self._data = data
 
+    def find_annotation_references(self, identifier: int = None, name: str = None):
+        result = self._annotations
+        found = False
+
+        if identifier:
+            found = True
+            result = [a for a in result if a.stream_identifier == identifier]
+
+        if name:
+            found = True
+            result = [a for a in result if a.name == name]
+
+        if not found:
+            return []
+
+        return result
+
+    @property
+    def annotations(self):
+        return self._annotations
+
+    @annotations.setter
+    def annotations(self, value):
+        self._annotations = value
+
     @property
     def identifier(self):
         return self._identifier
@@ -89,14 +114,6 @@ class DataStream:
     @execution_context.setter
     def execution_context(self, value):
         self._execution_context = value
-
-    @property
-    def annotations(self):
-        return self._annotations
-
-    @annotations.setter
-    def annotations(self, value):
-        self._annotations = value
 
     @property
     def datastream_type(self):
