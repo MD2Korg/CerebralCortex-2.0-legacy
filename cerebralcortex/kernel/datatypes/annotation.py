@@ -23,8 +23,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from datetime import datetime
-
-from addict import Dict
+from typing import Dict
 
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 

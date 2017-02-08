@@ -24,9 +24,6 @@
 
 from typing import Any, List, Dict
 
-from addict import Dict
-
-
 class StreamReference:
     def __init__(self,
                  name: str = None,

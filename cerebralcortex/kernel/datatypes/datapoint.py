@@ -23,7 +23,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 
 class DataPoint:
@@ -31,7 +31,7 @@ class DataPoint:
                  datastream_id: int = None,
                  start_time: datetime = None,
                  end_time: datetime = None,
-                 sample: Any = None) -> None:
+                 sample: Any = None):
         self._start_time = start_time
         self._end_time = end_time
         self._sample = sample
@@ -39,7 +39,6 @@ class DataPoint:
 
     @property
     def sample(self):
-        """Getter of sample"""
         return self._sample
 
     @sample.setter
@@ -63,20 +62,12 @@ class DataPoint:
         self._end_time = ts
 
     @property
-    def metadata(self):
-        return self._metadata
-
-    @metadata.setter
-    def metadata(self, meta: Dict):
-        self._end_time = meta
-
-    @property
     def datastream_id(self):
         return self._datastream_id
 
     @classmethod
-    def from_tuple(cls, start_time: datetime, sample: Any, end_time: datetime = None, metadata: Any = None):
-        return cls(None, start_time, end_time, sample, metadata)
+    def from_tuple(cls, start_time: datetime, sample: Any, end_time: datetime = None):
+        return cls(None, start_time, end_time, sample)
 
     def __str__(self):
         return str(self.datastream_id) + " - " + str(self.start_time) + " - " + str(self.sample)

@@ -25,7 +25,8 @@ from uuid import UUID
 
 
 class User:
-    def __init__(self, identifier: UUID):
+    def __init__(self,
+                 identifier: UUID):
         self._identifier = identifier
 
     @property

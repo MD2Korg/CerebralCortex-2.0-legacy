@@ -40,10 +40,6 @@ class DataStream:
                  annotations: List[StreamReference] = None,
                  datapoints: List[DataPoint] = None
                  ):
-        """
-        The primary object in Cerebral Cortex which represents data
-        """
-
         self._identifier = identifier
         self._user = user
         self._name = name
@@ -116,10 +112,6 @@ class DataStream:
 
     @classmethod
     def from_datastream(cls, input_streams: List):
-        """
-        :param input_streams:
-        :return:
-        """
         result = cls(user=input_streams[0].user)
 
         # TODO: Something with provenance tracking from datastream list
@@ -127,4 +119,4 @@ class DataStream:
         return result
 
     def __str__(self):
-        return str(self.identifier) + " - " + str(self.user.getMetadata()) + " - " + str(self.datapoints)
+        return str(self.identifier) + " - " + str(self.user.identifier) + " - " + str(self.datapoints)

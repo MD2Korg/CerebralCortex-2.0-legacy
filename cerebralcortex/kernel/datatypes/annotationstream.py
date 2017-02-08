@@ -27,6 +27,7 @@ from typing import List
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.kernel.datatypes.enumerations import StreamTypes
+from cerebralcortex.kernel.datatypes.subtypes import DataDescriptor, ExecutionContext, StreamReference
 from cerebralcortex.kernel.datatypes.user import User
 
 
