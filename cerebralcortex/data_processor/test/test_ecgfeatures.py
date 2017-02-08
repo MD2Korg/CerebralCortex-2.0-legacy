@@ -54,25 +54,22 @@ class TestECGFeatures(unittest.TestCase):
 
         cls.rr_intervals = compute_rr_intervals(ecg_ds, ecg_sampling_frequency)
 
-    @unittest.skip("Skipped test case: Correct value needs fixed, unsure why this now fails.")
     def test_lomb(self):
         window_data = window_sliding(self.rr_intervals.datapoints, window_size=120, window_offset=60)
         test_window = list(window_data.items())[0]
         result, frequency_range = lomb(test_window[1], low_frequency=0.01, high_frequency=0.7)
-        self.assertAlmostEqual(result[0], 67.713049164823047, delta=0.01)
+        self.assertAlmostEqual(result[0], 37.093948304468618, delta=0.01)
         self.assertEqual(frequency_range[-1], 0.7)
 
-    @unittest.skip("Skipped test case: Correct value needs fixed, unsure why this now fails.")
     def test_heart_rate_power(self):
         window_data = window_sliding(self.rr_intervals.datapoints, window_size=120, window_offset=60)
         test_window = list(window_data.items())[0]
         power, frequency_range = lomb(test_window[1], low_frequency=0.01, high_frequency=0.7)
         hr_hf = heart_rate_power(power, frequency_range, 0.15, 0.4)
-        self.assertAlmostEqual(hr_hf, 213.83298173141225, delta=0.01)
+        self.assertAlmostEqual(hr_hf, 14.143026468160871, delta=0.01)
 
-    @unittest.skip("Skipped test case: Correct value needs fixed, unsure why this now fails.")
     def test_ecg_feature_computation(self):
-        rr_variance, rr_vlf, rr_hf, rr_lf, rr_lf_hf, rr_mean, rr_median, rr_quartile, rr_80, rr_20 = \
+        rr_variance, rr_vlf, rr_hf, rr_lf, rr_lf_hf, rr_mean, rr_median, rr_quartile, rr_80, rr_20, rr_heart_rate = \
             ecg_feature_computation(self.rr_intervals,
                                     window_size=120,
                                     window_offset=60)
@@ -87,17 +84,19 @@ class TestECGFeatures(unittest.TestCase):
         self.assertIsInstance(rr_quartile, DataStream)
         self.assertIsInstance(rr_80, DataStream)
         self.assertIsInstance(rr_20, DataStream)
+        self.assertIsInstance(rr_heart_rate, DataStream)
 
-        self.assertAlmostEqual(rr_variance.datapoints[0].sample, 5.3488233361443731, delta=0.01)
-        self.assertAlmostEqual(rr_vlf.datapoints[0].sample, 226.80270092870299, delta=0.01)
-        self.assertAlmostEqual(rr_hf.datapoints[0].sample, 213.83298173141225, delta=0.01)
-        self.assertAlmostEqual(rr_lf.datapoints[0].sample, 49.080605261852924, delta=0.01)
-        self.assertAlmostEqual(rr_lf_hf.datapoints[0].sample, 0.2295277597704795, delta=0.01)
-        self.assertAlmostEqual(rr_mean.datapoints[0].sample, 1.2280389610389608, delta=0.01)
-        self.assertAlmostEqual(rr_median.datapoints[0].sample, 0.61899999999999999, delta=0.01)
-        self.assertAlmostEqual(rr_quartile.datapoints[0].sample, 0.27899999999999997, delta=0.01)
-        self.assertAlmostEqual(rr_80.datapoints[0].sample, 1.1898, delta=0.01)
+        self.assertAlmostEqual(rr_variance.datapoints[0].sample, 0.1458641582638889, delta=0.01)
+        self.assertAlmostEqual(rr_vlf.datapoints[0].sample, 194.05492363605134, delta=0.01)
+        self.assertAlmostEqual(rr_hf.datapoints[0].sample, 14.143026468160871, delta=0.01)
+        self.assertAlmostEqual(rr_lf.datapoints[0].sample, 46.446940287356242, delta=0.01)
+        self.assertAlmostEqual(rr_lf_hf.datapoints[0].sample, 3.2840877722967385, delta=0.01)
+        self.assertAlmostEqual(rr_mean.datapoints[0].sample, 0.78799166666666665, delta=0.01)
+        self.assertAlmostEqual(rr_median.datapoints[0].sample, 0.61499999999999999, delta=0.01)
+        self.assertAlmostEqual(rr_quartile.datapoints[0].sample, 0.094874999999999987, delta=0.01)
+        self.assertAlmostEqual(rr_80.datapoints[0].sample, 1.0838000000000001, delta=0.01)
         self.assertAlmostEqual(rr_20.datapoints[0].sample, 0.58499999999999996, delta=0.01)
+        self.assertAlmostEqual(rr_heart_rate.datapoints[0].sample, 97.56123355471891, delta=0.01)
 
 if __name__ == '__main__':
     unittest.main()

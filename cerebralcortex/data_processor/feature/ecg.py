@@ -119,6 +119,7 @@ def ecg_feature_computation(datastream: DataStream,
     rr_LF_data = []
     rr_VLF_data = []
     rr_LF_HF_data = []
+    rr_heart_rate_data = []
 
     # iterate over each window and calculate features
 
@@ -169,6 +170,8 @@ def ecg_feature_computation(datastream: DataStream,
             DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=np.percentile(reference_data, 80)))
         rr_20percentile_data.append(
             DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=np.percentile(reference_data, 20)))
+        rr_heart_rate_data.append(
+            DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=np.median(60 / reference_data)))
 
     rr_variance = DataStream.from_datastream([datastream])
     rr_variance.datapoints = rr_variance_data
@@ -190,4 +193,6 @@ def ecg_feature_computation(datastream: DataStream,
     rr_80.datapoints = rr_80percentile_data
     rr_20 = DataStream.from_datastream([datastream])
     rr_20.datapoints = rr_20percentile_data
-    return rr_variance, rr_vlf, rr_hf, rr_lf, rr_lf_hf, rr_mean, rr_median, rr_quartile, rr_80, rr_20
+    rr_heart_rate = DataStream.from_datastream([datastream])
+    rr_heart_rate.datapoints = rr_heart_rate_data
+    return rr_variance, rr_vlf, rr_hf, rr_lf, rr_lf_hf, rr_mean, rr_median, rr_quartile, rr_80, rr_20, rr_heart_rate
