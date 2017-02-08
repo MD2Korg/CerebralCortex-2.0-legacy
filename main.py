@@ -84,7 +84,7 @@ def process_participant(identifier: int):
 
         cStressFeatures = cStress(ecg, rip, accelx, accely, accelz)
 
-        result = (len(ecg.datapoints), len(rip.datapoints), len(accelx.datapoints), len(accely.datapoints),
+        result = (participant, len(ecg.datapoints), len(rip.datapoints), len(accelx.datapoints), len(accely.datapoints),
                   len(accelz.datapoints))
 
         print(participant_uuid, result)
