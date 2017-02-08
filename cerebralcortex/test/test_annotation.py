@@ -38,11 +38,12 @@ class TestAnnotation(unittest.TestCase):
 
     def test_Annotation(self):
         ts = datetime.datetime.now()
-        dp = Annotation(start_time=ts, end_time=ts + datetime.timedelta(hours=1), sample='RED')
+        datum = {'name': 'RED'}
+        dp = Annotation(start_time=ts, end_time=ts + datetime.timedelta(hours=1), sample=datum)
 
         self.assertEqual(ts, dp.start_time)
         self.assertEqual(ts + datetime.timedelta(hours=1), dp.end_time)
-        self.assertEqual(dp.sample, 'RED')
+        self.assertEqual(dp.sample, datum)
 
 
 if __name__ == '__main__':

@@ -38,7 +38,7 @@ class DataStream:
                  data_descriptor: List[DataDescriptor] = None,
                  execution_context: ExecutionContext = None,
                  annotations: List[StreamReference] = None,
-                 datapoints: List[DataPoint] = None
+                 data: List[DataPoint] = None
                  ):
         self._identifier = identifier
         self._user = user
@@ -48,7 +48,7 @@ class DataStream:
         self._datastream_type = StreamTypes.DATASTREAM
         self._execution_context = execution_context
         self._annotations = annotations
-        self._data = datapoints
+        self._data = data
 
     @property
     def identifier(self):
@@ -103,11 +103,11 @@ class DataStream:
         return self._datastream_type
 
     @property
-    def datapoints(self):
+    def data(self):
         return self._data
 
-    @datapoints.setter
-    def datapoints(self, value):
+    @data.setter
+    def data(self, value):
         self._data = value
 
     @classmethod
@@ -119,4 +119,4 @@ class DataStream:
         return result
 
     def __str__(self):
-        return str(self.identifier) + " - " + str(self.user.identifier) + " - " + str(self.datapoints)
+        return str(self.identifier) + " - " + str(self.user.identifier) + " - " + str(self.data)

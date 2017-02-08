@@ -40,7 +40,7 @@ class AnnotationStream(DataStream):
                  data_descriptor: List[DataDescriptor] = None,
                  execution_context: ExecutionContext = None,
                  annotations: List[StreamReference] = None,
-                 datapoints: List[DataPoint] = None):
+                 data: List[DataPoint] = None):
         """
         The primary object in Cerebral Cortex which represents data
         :param cerebralcortex: Reference to the Cerebral Cortex object
@@ -51,6 +51,6 @@ class AnnotationStream(DataStream):
         """
 
         super().__init__(identifier, user, name, description, data_descriptor, execution_context, annotations,
-                         datapoints)
+                         data)
 
         self._datastream_type = StreamTypes.ANNOTATION

@@ -68,24 +68,24 @@ def process_participant(identifier: int):
     print(participant, participant_uuid)
     try:
         ecg = DataStream(None, participant_uuid)
-        ecg.datapoints = readfile(find(basedir, {"participant": participant, "datasource": "ecg"}))
+        ecg.data = readfile(find(basedir, {"participant": participant, "datasource": "ecg"}))
 
         rip = DataStream(None, participant_uuid)
-        rip.datapoints = readfile(find(basedir, {"participant": participant, "datasource": "rip"}))
+        rip.data = readfile(find(basedir, {"participant": participant, "datasource": "rip"}))
 
         accelx = DataStream(None, participant_uuid)
-        accelx.datapoints = readfile(find(basedir, {"participant": participant, "datasource": "accelx"}))
+        accelx.data = readfile(find(basedir, {"participant": participant, "datasource": "accelx"}))
 
         accely = DataStream(None, participant_uuid)
-        accely.datapoints = readfile(find(basedir, {"participant": participant, "datasource": "accely"}))
+        accely.data = readfile(find(basedir, {"participant": participant, "datasource": "accely"}))
 
         accelz = DataStream(None, participant_uuid)
-        accelz.datapoints = readfile(find(basedir, {"participant": participant, "datasource": "accelz"}))
+        accelz.data = readfile(find(basedir, {"participant": participant, "datasource": "accelz"}))
 
         cStressFeatures = cStress(ecg, rip, accelx, accely, accelz)
 
-        result = (participant, len(ecg.datapoints), len(rip.datapoints), len(accelx.datapoints), len(accely.datapoints),
-                  len(accelz.datapoints))
+        result = (participant, len(ecg.data), len(rip.data), len(accelx.data), len(accely.data),
+                  len(accelz.data))
 
         print(participant_uuid, result)
         return result

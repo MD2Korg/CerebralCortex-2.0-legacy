@@ -21,6 +21,7 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+import datetime
 from typing import List
 
 import numpy as np
@@ -37,17 +38,17 @@ def normalize(datastream: DataStream) -> DataStream:
     :param datastream:
     :return:
     """
-    input_data = np.array([i.sample for i in datastream.datapoints])
+    input_data = np.array([i.sample for i in datastream.data])
 
     data = preprocessing.normalize(input_data, axis=0)
 
     result_data = [DataPoint.from_tuple(start_time=i.start_time, sample=None)
-                   for i in datastream.datapoints]
+                   for i in datastream.data]
     for i, dp in enumerate(result_data):
         dp.sample = data[i]
 
     result = DataStream.from_datastream(input_streams=[datastream])
-    result.datapoints = result_data
+    result.data = result_data
 
     return result
 
@@ -58,18 +59,18 @@ def magnitude(datastream: DataStream) -> DataStream:
     :param datastream:
     :return:
     """
-    input_data = np.array([i.sample for i in datastream.datapoints])
+    input_data = np.array([i.sample for i in datastream.data])
 
     data = norm(input_data, axis=1).tolist()  # TODO: Fix function to not compute normalized magnitudes
 
     result_data = [DataPoint.from_tuple(start_time=i.start_time, sample=None)
-                   for i in datastream.datapoints]
+                   for i in datastream.data]
 
     for i, dp in enumerate(result_data):
         dp.sample = data[i]
 
     result = DataStream.from_datastream(input_streams=[datastream])
-    result.datapoints = result_data
+    result.data = result_data
 
     return result
 
@@ -127,3 +128,15 @@ def moving_average_curve(data: List[DataPoint],
         mac.append(DataPoint.from_tuple(sample=sample_avg, start_time=data[i].start_time, end_time=data[i].end_time))
 
     return mac
+
+
+def window_std_dev(data: List[DataPoint],
+                   window_start: datetime) -> DataPoint:
+    """
+
+    :param data:
+    :param window_start:
+    :return:
+    """
+    data_points = np.array([dp.sample for dp in data])
+    return DataPoint.from_tuple(window_start, np.std(data_points))
