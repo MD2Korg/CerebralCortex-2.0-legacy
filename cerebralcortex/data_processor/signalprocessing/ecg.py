@@ -26,9 +26,9 @@ from typing import List
 import numpy as np
 from scipy import signal
 
+from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-from cerebralcortex.kernel.window import window
 
 
 
@@ -74,7 +74,7 @@ def filter_bad_ecg(ecg: DataStream,
     """
 
     window_length = int(no_of_secs * fs)
-    window_data = window(ecg.datapoints, window_size=window_length)
+    window_data = window(ecg.data, window_size=window_length)
 
     ecg_filtered = DataStream.from_datastream([ecg])
     ecg_filtered_array = []
@@ -84,7 +84,7 @@ def filter_bad_ecg(ecg: DataStream,
         if classify_ecg_window(data, range_threshold=200, slope_threshold=50, maximum_value=4000):
             ecg_filtered_array.extend(data)
 
-    ecg_filtered.datapoints = ecg_filtered_array
+    ecg_filtered.data = ecg_filtered_array
 
     return ecg_filtered
 
@@ -373,7 +373,7 @@ def detect_rpeak(ecg: DataStream,
     :return: R peak array of tuples (timestamp, Rpeak interval)
     """
 
-    data = ecg.datapoints
+    data = ecg.data
 
     sample = np.array([i.sample for i in data])
     timestamp = np.array([i.start_time for i in data])
@@ -403,6 +403,6 @@ def detect_rpeak(ecg: DataStream,
 
     # Create resulting datastream to be returned
     result = DataStream.from_datastream([ecg])
-    result.datapoints = result_data
+    result.data = result_data
 
     return result

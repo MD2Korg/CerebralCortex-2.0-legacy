@@ -57,7 +57,7 @@ def compute_peak_valley(rip: DataStream,
     :param min_neg_slope_count_peak_correction:
     """
 
-    data_smooth = smooth(data=rip.datapoints, span=smoothing_factor)
+    data_smooth = smooth(data=rip.data, span=smoothing_factor)
     window_length = int(round(time_window * fs))
     data_mac = moving_average_curve(data_smooth, window_length=window_length)
 
@@ -99,9 +99,9 @@ def compute_peak_valley(rip: DataStream,
                                                              expiration_amplitude_threshold=expiration_amplitude_threshold_perc)
 
     peak_datastream = DataStream.from_datastream([rip])
-    peak_datastream.datapoints = peaks
+    peak_datastream.data = peaks
     valley_datastream = DataStream.from_datastream([rip])
-    valley_datastream.datapoints = valleys
+    valley_datastream.data = valleys
 
     return peak_datastream, valley_datastream
 

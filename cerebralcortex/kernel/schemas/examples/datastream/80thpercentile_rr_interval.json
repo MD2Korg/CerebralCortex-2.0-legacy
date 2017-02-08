@@ -12,13 +12,6 @@
   ],
   "execution_context": {
     "processing_module": 5,
-    "platform": {
-      "device": {
-        "model": "Samsung Galaxy S5",
-        "OS": "6.0.0",
-        "battery_capacity": "8500mah"
-      }
-    },
     "input_parameters": [
       {
         "name": "window_size",
@@ -34,7 +27,16 @@
         "name": "ecg_rr_interval",
         "stream_identifier": 40
       }
-    ]
+    ],
+    "metadata": {
+      "platform": {
+        "device": {
+          "model": "Samsung Galaxy S5",
+          "OS": "6.0.0",
+          "battery_capacity": "8500mah"
+        }
+      }
+    }
   },
   "annotations": [
     {

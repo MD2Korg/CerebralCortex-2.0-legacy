@@ -114,7 +114,7 @@ def timestamp_correct(datastream: DataStream,
                       min_available_gaps: int = 3600,  # TODO: Does this matter anymore?
                       min_split_gap: datetime.timedelta = datetime.timedelta(seconds=30),
                       max_data_points_per_segment: int = 100000000) -> DataStream:
-    data = datastream.datapoints
+    data = datastream.data
     time_deltas = np.diff([dp.start_time for dp in data])
 
     gap_points = [data[0]]
@@ -145,7 +145,7 @@ def timestamp_correct(datastream: DataStream,
     segments.append(interpolate_gaps(segment_data, sampling_frequency))
 
     result = DataStream.from_datastream([datastream])
-    result.datapoints = []
+    result.data = []
     for s in segments:
         begin_time = s[0].start_time.timestamp()
         end_time = s[-1].start_time.timestamp()
@@ -164,7 +164,7 @@ def timestamp_correct(datastream: DataStream,
             ts = datetime.datetime.fromtimestamp(xx[index], tz=dp.start_time.tzinfo)
             dtw_corrected_data.append(DataPoint.from_tuple(ts, dp.sample))
 
-        result.datapoints.extend(dtw_corrected_data)
+        result.data.extend(dtw_corrected_data)
 
     return result
 
@@ -174,10 +174,10 @@ def timestamp_correct_and_sequence_align(datastream_array: list,
     result = DataStream.from_datastream(input_streams=datastream_array)
 
     data = []
-    for dp in datastream_array[0].datapoints:
+    for dp in datastream_array[0].data:
         data.append(DataPoint.from_tuple(dp.start_time, [dp.sample, dp.sample,
                                                          dp.sample]))  # TODO: Fix with a proper sequence alignment operation later
 
-    result.datapoints = data
+    result.data = data
 
     return result

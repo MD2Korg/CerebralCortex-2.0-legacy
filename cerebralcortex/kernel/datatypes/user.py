@@ -1,4 +1,4 @@
-# Copyright (c) 2016, MD2K Center of Excellence
+# Copyright (c) 2017, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -21,20 +21,14 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
-from cerebralcortex.kernel.datatypes.metadata import Metadata
+from uuid import UUID
 
 
 class User:
-    """A user class"""
+    def __init__(self,
+                 identifier: UUID):
+        self._identifier = identifier
 
-    def __init__(self, userID, metadata=Metadata()):
-        self.userID = userID
-        self.metadata = metadata
-
-    def getID(self):
-        return self.userID
-
-    def getMetadata(self):
-        return self.metadata
+    @property
+    def identifier(self):
+        return self._identifier

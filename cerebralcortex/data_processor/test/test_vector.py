@@ -53,47 +53,48 @@ class TestVector(unittest.TestCase):
     def setUp(self):
         self.size = 100
         self.ds = DataStream(None, None)
-        data = [DataPoint.from_tuple(datetime.datetime.now(), None, [random() * 100, random() * 10, random()]) for i
-                in range(0, self.size)]
-        self.ds.datapoints = data
+        data = []
+        for i in range(0, self.size):
+            data.append(DataPoint.from_tuple(datetime.datetime.now(), [random() * 100, random() * 10, random()]))
+        self.ds.data = data
 
     @unittest.skip("Skipped test case: Correct value needs fixed")
     def test_normalize(self):
         self.assertIsInstance(self.ds, DataStream)
-        self.assertEqual(len(self.ds.datapoints), self.size)
+        self.assertEqual(len(self.ds.data), self.size)
 
         n = normalize(self.ds)
         self.assertIsInstance(n, DataStream)
-        for dp in n.datapoints:
+        for dp in n.data:
             self.assertAlmostEqual(np.linalg.norm(dp.sample), 0.1713970501312247, delta=1e-6)
 
     @unittest.skip("Skipped test case: Correct value needs fixed")
     def test_magnitude(self):
         self.assertIsInstance(self.ds, DataStream)
-        self.assertEqual(len(self.ds.datapoints), self.size)
+        self.assertEqual(len(self.ds.data), self.size)
 
         m = magnitude(normalize(self.ds))
         self.assertIsInstance(m, DataStream)
-        for sample in m.datapoints:
+        for sample in m.data:
             self.assertAlmostEqual(sample.sample, 0.12295653034492039, delta=1e-6)
 
     def test_interpolate_gaps(self):
         ds = DataStream(None, None)
-        ds.datapoints = self.ecg
+        ds.data = self.ecg
 
-        result = interpolate_gaps(ds.datapoints, self.sample_rate)
+        result = interpolate_gaps(ds.data, self.sample_rate)
 
-        self.assertEquals(len(ds.datapoints), 377753)
+        self.assertEquals(len(ds.data), 377753)
         self.assertEquals(len(result), 378446)
 
     def test_timestamp_correct(self):
         ds = DataStream(None, None)
-        ds.datapoints = self.ecg
+        ds.data = self.ecg
 
         result = timestamp_correct(ds, sampling_frequency=self.sample_rate)
 
-        self.assertEquals(len(ds.datapoints), 377753)
-        self.assertEquals(len(result.datapoints), 391686)
+        self.assertEquals(len(ds.data), 377753)
+        self.assertEquals(len(result.data), 391686)
 
 
 if __name__ == '__main__':

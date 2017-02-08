@@ -72,7 +72,7 @@ class StoreData:
         datastream_type = datastream.get_datastream_type()
         metadata = datastream.getMetadata().getMetadata()
         source_ids = datastream.get_source_ids()
-        data = datastream.datapoints
+        data = datastream.data
 
         # if datastream_identifier is empty then create a new datastream_identifier in MySQL database and return the newly added datastream_identifier
         lastAddedRecordID = Metadata(self.configuration).storeDatastrem(datastream_identifier, study_ids, user_id,

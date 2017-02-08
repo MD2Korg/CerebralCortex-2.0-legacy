@@ -1,4 +1,4 @@
-# Copyright (c) 2016, MD2K Center of Excellence
+# Copyright (c) 2017, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -21,113 +21,119 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from typing import List, Dict
+from typing import List
 
-from cerebralcortex import CerebralCortex
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.enumerations import StreamTypes
-from cerebralcortex.kernel.datatypes.metadata import \
-    Metadata as MetadataStruct  # TODO: change class name to solve unambiguity between Metadata struct class and DataStoreEngine.Metadata
-from cerebralcortex.kernel.datatypes.processing import Processing
-from cerebralcortex.kernel.datatypes.study import Study
+from cerebralcortex.kernel.datatypes.subtypes import StreamReference, DataDescriptor, ExecutionContext
 from cerebralcortex.kernel.datatypes.user import User
 
 
 class DataStream:
     def __init__(self,
-                 cerebral_cortex: CerebralCortex,
-                 user: User,
-                 study_list: List[Study] = None,  # all the study info related to a datastream
-                 processing_module: Processing = None,
-                 # datastream_type: str = None,
-                 metadata: MetadataStruct = None,
-                 source_ids: dict = None,
                  identifier: int = None,
+                 user: User = None,
+                 name: str = None,
+                 description: str = None,
+                 data_descriptor: List[DataDescriptor] = None,
+                 execution_context: ExecutionContext = None,
+                 annotations: List[StreamReference] = None,
                  data: List[DataPoint] = None
-                 ) -> None:
-        """
-        The primary object in Cerebral Cortex which represents data
-        """
-
-        self._cc = cerebral_cortex
-        self._id = identifier
+                 ):
+        self._identifier = identifier
         self._user = user
-        self._study_list = study_list
-        self._processing_module = processing_module
+        self._name = name
+        self._description = description
+        self._data_descriptor = data_descriptor
         self._datastream_type = StreamTypes.DATASTREAM
-        self._metadata = metadata
-        self._source_ids = source_ids
+        self._execution_context = execution_context
+        self._annotations = annotations
         self._data = data
 
-    @property
-    def cerebral_cortex(self) -> CerebralCortex:
-        return self._cc
+    def find_annotation_references(self, identifier: int = None, name: str = None):
+        result = self._annotations
+        found = False
 
-    @cerebral_cortex.setter
-    def cerebral_cortex(self, cc: CerebralCortex):
-        self._cc = cc
+        if identifier:
+            found = True
+            result = [a for a in result if a.stream_identifier == identifier]
+
+        if name:
+            found = True
+            result = [a for a in result if a.name == name]
+
+        if not found:
+            return []
+
+        return result
+
+    @property
+    def annotations(self):
+        return self._annotations
+
+    @annotations.setter
+    def annotations(self, value):
+        self._annotations = value
 
     @property
     def identifier(self):
-        return self._id
-
-    @property
-    def datapoints(self) -> List[DataPoint]:
-        return self._data
-
-    @datapoints.setter
-    def datapoints(self, value: List[DataPoint]):
-        self._data = value
-
-    @property
-    def datastream_type(self):
-        return self._datastream_type
-
-    @property
-    def source_ids(self):
-        return self._source_ids
+        return self._identifier
 
     @property
     def user(self):
         return self._user
 
     @property
-    def processing_module(self):
-        return self._processing_module
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
 
     @property
-    def metadata(self):
-        return self._metadata
+    def description(self):
+        return self._description
 
-    @metadata.setter
-    def metadata(self, value: Dict):
-        self._metadata = value
-
-    @property
-    def study_ids(self):
-        study_ids = []
-        for studyObj in self.study_list:
-            study_id = studyObj.getStudyID()
-            study_ids.append(study_id)
-        return study_ids
+    @description.setter
+    def description(self, value):
+        self._description = value
 
     @property
-    def study_list(self):
-        return self._study_list
+    def data_descriptor(self):
+        return self._data_descriptor
+
+    @data_descriptor.setter
+    def data_descriptor(self, value):
+        self._data_descriptor = value
+
+    @property
+    def execution_context(self):
+        return self._execution_context
+
+    @execution_context.setter
+    def execution_context(self, value):
+        self._execution_context = value
+
+    @property
+    def datastream_type(self):
+        return self._datastream_type
+
+    @property
+    def data(self):
+        return self._data
+
+    @data.setter
+    def data(self, value):
+        self._data = value
 
     @classmethod
     def from_datastream(cls, input_streams: List):
-        """
-        :param input_streams:
-        :return:
-        """
-        result = cls(cerebral_cortex=input_streams[0].cerebral_cortex,
-                     user=input_streams[0].user)
+        result = cls(user=input_streams[0].user)
 
         # TODO: Something with provenance tracking from datastream list
 
         return result
 
     def __str__(self):
-        return str(self.identifier) + " - " + str(self.user.getMetadata()) + " - " + str(
-            self.processing_module.getMetadata()) + " - " + str(self.metadata) + " - " + str(self.datapoints)
+        return str(self.identifier) + " - " + str(self.user.identifier) + " - " + str(self.data)

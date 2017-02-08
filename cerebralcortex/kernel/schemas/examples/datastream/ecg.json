@@ -11,11 +11,13 @@
   ],
   "execution_context": {
     "processing_module": 7,
-    "platform": {
-      "device": {
-        "model": "Samsung Galaxy S5",
-        "OS": "6.0.0",
-        "battery_capacity": "8500mah"
+    "metadata": {
+      "platform": {
+        "device": {
+          "model": "Samsung Galaxy S5",
+          "OS": "6.0.0",
+          "battery_capacity": "8500mah"
+        }
       }
     }
   },
