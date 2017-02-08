@@ -24,28 +24,22 @@
 
 from typing import List
 
-from cerebralcortex import CerebralCortex
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.kernel.datatypes.enumerations import StreamTypes
-from cerebralcortex.kernel.datatypes.metadata import Metadata as MetadataStruct
-from cerebralcortex.kernel.datatypes.study import Study
 from cerebralcortex.kernel.datatypes.user import User
-from cerebralcortex.kernel.datatypes.processing import Processing
 
 
 class AnnotationStream(DataStream):
     def __init__(self,
-                 cerebral_cortex: CerebralCortex,
-                 user: User,
-                 study_list: List[Study] = None,  # all the study info related to a datastream
-                 processing_module: Processing = None,
-                 # datastream_type: str = None,
-                 metadata: MetadataStruct = None,
-                 source_ids: dict = None,
                  identifier: int = None,
-                 data: List[DataPoint] = None
-                 ):
+                 user: User = None,
+                 name: str = None,
+                 description: str = None,
+                 data_descriptor: List[DataDescriptor] = None,
+                 execution_context: ExecutionContext = None,
+                 annotations: List[StreamReference] = None,
+                 datapoints: List[DataPoint] = None):
         """
         The primary object in Cerebral Cortex which represents data
         :param cerebralcortex: Reference to the Cerebral Cortex object
@@ -55,6 +49,7 @@ class AnnotationStream(DataStream):
         :param metadata:
         """
 
-        super().__init__(cerebral_cortex, user, study_list, processing_module, metadata, source_ids, identifier, data)
+        super().__init__(identifier, user, name, description, data_descriptor, execution_context, annotations,
+                         datapoints)
 
-        self._datastream_type = StreamTypes.ATTRIBUTE
+        self._datastream_type = StreamTypes.ANNOTATION

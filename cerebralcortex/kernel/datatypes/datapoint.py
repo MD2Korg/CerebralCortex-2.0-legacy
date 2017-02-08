@@ -31,12 +31,10 @@ class DataPoint:
                  datastream_id: int = None,
                  start_time: datetime = None,
                  end_time: datetime = None,
-                 sample: Any = None,
-                 metadata: dict = None) -> None:
+                 sample: Any = None) -> None:
         self._start_time = start_time
         self._end_time = end_time
         self._sample = sample
-        self._metadata = metadata
         self._datastream_id = datastream_id
 
     @property
