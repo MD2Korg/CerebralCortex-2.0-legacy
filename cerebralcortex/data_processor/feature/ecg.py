@@ -170,8 +170,6 @@ def ecg_feature_computation(datastream: DataStream,
             DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=np.percentile(reference_data, 80)))
         rr_20percentile_data.append(
             DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=np.percentile(reference_data, 20)))
-        if (len(reference_data)) > 500:
-            continue
         rr_heart_rate_data.append(
             DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=np.median(60 / reference_data)))
 
