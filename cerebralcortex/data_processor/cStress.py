@@ -52,15 +52,12 @@ def cStress(raw_ecg: DataStream,
     accel_sampling_frequency = 64.0 / 6.0
 
     # Timestamp correct datastreams
-    # ecg_corrected = timestamp_correct(datastream=raw_ecg, sampling_frequency=ecg_sampling_frequency)
-    # rip_corrected = timestamp_correct(datastream=raw_rip, sampling_frequency=rip_sampling_frequency)
+    ecg_corrected = timestamp_correct(datastream=raw_ecg, sampling_frequency=ecg_sampling_frequency)
+    rip_corrected = timestamp_correct(datastream=raw_rip, sampling_frequency=rip_sampling_frequency)
     accel = sequence_align(datastreams=[timestamp_correct(raw_accel_x, accel_sampling_frequency),
                                         timestamp_correct(raw_accel_y, accel_sampling_frequency),
                                         timestamp_correct(raw_accel_z, accel_sampling_frequency)],
                            sampling_frequency=accel_sampling_frequency)
-
-    ecg_corrected = raw_ecg
-    rip_corrected = raw_rip
 
     # ECG and RIP signal morphology data quality
     ecg_data_quality = ECGDataQuality(ecg_corrected,
