@@ -169,7 +169,9 @@ def timestamp_correct(datastream: DataStream,
     return result
 
 
-def sequence_align(datastreams: List[DataStream]) -> DataStream:
+def sequence_align(datastreams: List[DataStream],
+                   sampling_frequency: float) -> DataStream:
+
     result = DataStream.from_datastream(input_streams=datastreams)
 
     # TODO: Fix with a proper sequence alignment operation later
@@ -181,10 +183,23 @@ def sequence_align(datastreams: List[DataStream]) -> DataStream:
         elif start_time < ts:
             start_time = ts
 
+    start_time -= datetime.timedelta(seconds=1.0 / sampling_frequency)
+
+    data_block = []
+    max_index = np.Inf
+    for ds in datastreams:
+        d = [i for i in ds.data if i.start_time > start_time]
+        if len(d) < max_index:
+            max_index = len(d)
+        data_block.append(d)
+
+    data_array = np.array(data_block)
+
     data = []
-    for dp in datastreams[0].data:
-        data.append(DataPoint.from_tuple(dp.start_time, [dp.sample, dp.sample,
-                                                         dp.sample]))
+    dimensions = data_array.shape[0]
+    for i in range(0, max_index):
+        sample = [data_array[d][i].sample for d in range(0, dimensions)]
+        data.append(DataPoint.from_tuple(data_array[0][i].start_time, sample))
 
     result.data = data
 

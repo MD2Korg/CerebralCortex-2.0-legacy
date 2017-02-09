@@ -56,7 +56,8 @@ def cStress(raw_ecg: DataStream,
     # rip_corrected = timestamp_correct(datastream=raw_rip, sampling_frequency=rip_sampling_frequency)
     accel = sequence_align(datastreams=[timestamp_correct(raw_accel_x, accel_sampling_frequency),
                                         timestamp_correct(raw_accel_y, accel_sampling_frequency),
-                                        timestamp_correct(raw_accel_z, accel_sampling_frequency)])
+                                        timestamp_correct(raw_accel_z, accel_sampling_frequency)],
+                           sampling_frequency=accel_sampling_frequency)
 
     ecg_corrected = raw_ecg
     rip_corrected = raw_rip
