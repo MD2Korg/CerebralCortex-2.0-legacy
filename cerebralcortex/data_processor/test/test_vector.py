@@ -26,12 +26,11 @@ import datetime
 import gzip
 import os
 import unittest
-from random import random
 
 import numpy as np
 import pytz
 
-from cerebralcortex.data_processor.signalprocessing.alignment import interpolate_gaps, timestamp_correct
+from cerebralcortex.data_processor.signalprocessing.alignment import sequence_align
 from cerebralcortex.data_processor.signalprocessing.vector import normalize, magnitude
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
@@ -49,52 +48,53 @@ class TestVector(unittest.TestCase):
                 values = list(map(int, l.split(',')))
                 cls.ecg.append(
                     DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
+        cls.ds = DataStream(None, None, data=cls.ecg)
 
-    def setUp(self):
-        self.size = 100
-        self.ds = DataStream(None, None)
-        data = []
-        for i in range(0, self.size):
-            data.append(DataPoint.from_tuple(datetime.datetime.now(), [random() * 100, random() * 10, random()]))
-        self.ds.data = data
+        accelx = []
+        accel_sample_rate = 64.0
+        with gzip.open(os.path.join(os.path.dirname(__file__), 'res/accelx.csv.gz'), 'rt') as f:
+            for l in f:
+                values = list(map(int, l.split(',')))
+                accelx.append(
+                    DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
+        accelx = DataStream(None, None, data=accelx)
 
-    @unittest.skip("Skipped test case: Correct value needs fixed")
+        accely = []
+        with gzip.open(os.path.join(os.path.dirname(__file__), 'res/accely.csv.gz'), 'rt') as f:
+            for l in f:
+                values = list(map(int, l.split(',')))
+                accely.append(
+                    DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
+        accely = DataStream(None, None, data=accely)
+
+        accelz = []
+        with gzip.open(os.path.join(os.path.dirname(__file__), 'res/accelz.csv.gz'), 'rt') as f:
+            for l in f:
+                values = list(map(int, l.split(',')))
+                accelz.append(
+                    DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
+        accelz = DataStream(None, None, data=accelz)
+
+        cls.accel = sequence_align([accelx, accely, accelz])
+
     def test_normalize(self):
-        self.assertIsInstance(self.ds, DataStream)
-        self.assertEqual(len(self.ds.data), self.size)
+        self.assertIsInstance(self.accel, DataStream)
+        self.assertEqual(len(self.accel.data), 63598)
 
-        n = normalize(self.ds)
+        n = normalize(self.accel)
         self.assertIsInstance(n, DataStream)
-        for dp in n.data:
-            self.assertAlmostEqual(np.linalg.norm(dp.sample), 0.1713970501312247, delta=1e-6)
 
-    @unittest.skip("Skipped test case: Correct value needs fixed")
+        for dp in n.data:
+            self.assertAlmostEqual(np.linalg.norm(dp.sample), 0.14815058577882137, delta=1e-6)
+
     def test_magnitude(self):
         self.assertIsInstance(self.ds, DataStream)
-        self.assertEqual(len(self.ds.data), self.size)
+        self.assertEqual(len(self.ds.data), 63598)
 
         m = magnitude(normalize(self.ds))
         self.assertIsInstance(m, DataStream)
         for sample in m.data:
-            self.assertAlmostEqual(sample.sample, 0.12295653034492039, delta=1e-6)
-
-    def test_interpolate_gaps(self):
-        ds = DataStream(None, None)
-        ds.data = self.ecg
-
-        result = interpolate_gaps(ds.data, self.sample_rate)
-
-        self.assertEquals(len(ds.data), 377753)
-        self.assertEquals(len(result), 378446)
-
-    def test_timestamp_correct(self):
-        ds = DataStream(None, None)
-        ds.data = self.ecg
-
-        result = timestamp_correct(ds, sampling_frequency=self.sample_rate)
-
-        self.assertEquals(len(ds.data), 377753)
-        self.assertEquals(len(result.data), 391686)
+            self.assertAlmostEqual(sample.sample, 0.1857005338535236, delta=1e-6)
 
 
 if __name__ == '__main__':

@@ -42,10 +42,8 @@ def normalize(datastream: DataStream) -> DataStream:
 
     data = preprocessing.normalize(input_data, axis=0)
 
-    result_data = [DataPoint.from_tuple(start_time=i.start_time, sample=None)
-                   for i in datastream.data]
-    for i, dp in enumerate(result_data):
-        dp.sample = data[i]
+    result_data = [DataPoint.from_tuple(start_time=v.start_time, sample=data[i])
+                   for i, v in enumerate(datastream.data)]
 
     result = DataStream.from_datastream(input_streams=[datastream])
     result.data = result_data
@@ -63,11 +61,8 @@ def magnitude(datastream: DataStream) -> DataStream:
 
     data = norm(input_data, axis=1).tolist()  # TODO: Fix function to not compute normalized magnitudes
 
-    result_data = [DataPoint.from_tuple(start_time=i.start_time, sample=None)
-                   for i in datastream.data]
-
-    for i, dp in enumerate(result_data):
-        dp.sample = data[i]
+    result_data = [DataPoint.from_tuple(start_time=v.start_time, sample=data[i])
+                   for i, v in enumerate(datastream.data)]
 
     result = DataStream.from_datastream(input_streams=[datastream])
     result.data = result_data
