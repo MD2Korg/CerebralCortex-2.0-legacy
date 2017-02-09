@@ -27,6 +27,7 @@ from uuid import uuid4
 
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
+from cerebralcortex.kernel.datatypes.enumerations import StreamTypes
 from cerebralcortex.kernel.datatypes.subtypes import DataDescriptor, ExecutionContext, StreamReference
 from cerebralcortex.kernel.datatypes.user import User
 
@@ -57,6 +58,8 @@ class TestDataStream(unittest.TestCase):
         self.assertEqual(len(ds.find_annotation_references(identifier=56)), 1)
         self.assertEqual(len(ds.find_annotation_references(identifier=5)), 0)
         self.assertEqual(len(ds.annotations), 2)
+
+        self.assertEqual(ds.datastream_type, StreamTypes.DATASTREAM)
 
 
 if __name__ == '__main__':

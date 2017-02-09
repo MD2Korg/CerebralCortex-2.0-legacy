@@ -31,7 +31,7 @@ import traceback
 import uuid
 from pprint import pprint
 
-import cerebralcortex
+from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.data_processor.cStress import cStress
 from cerebralcortex.data_processor.preprocessor import parser
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
@@ -48,8 +48,7 @@ basedir = args.base_directory
 
 configuration_file = os.path.join(os.path.dirname(__file__), 'cerebralcortex.yml')
 
-CC = cerebralcortex.CerebralCortex(configuration_file, master="local[*]", name="Memphis cStress Development App")
-
+CC = CerebralCortex(configuration_file, master="local[*]", name="Memphis cStress Development App")
 
 def readfile(filename):
     data = []

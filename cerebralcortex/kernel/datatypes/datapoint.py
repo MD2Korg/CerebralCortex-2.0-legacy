@@ -41,25 +41,13 @@ class DataPoint:
     def sample(self):
         return self._sample
 
-    @sample.setter
-    def sample(self, value: Any):
-        self._sample = value
-
     @property
     def start_time(self):
         return self._start_time
 
-    @start_time.setter
-    def start_time(self, ts: datetime):
-        self._start_time = ts
-
     @property
     def end_time(self):
         return self._end_time
-
-    @end_time.setter
-    def end_time(self, ts: datetime):
-        self._end_time = ts
 
     @property
     def datastream_id(self):

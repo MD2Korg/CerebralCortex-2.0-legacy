@@ -125,7 +125,10 @@ class DataStream:
 
     @data.setter
     def data(self, value):
-        self._data = value
+        result = []
+        for dp in value:
+            result.append(DataPoint(self._identifier, dp.start_time, dp.end_time, dp.sample))
+        self._data = result
 
     @classmethod
     def from_datastream(cls, input_streams: List):

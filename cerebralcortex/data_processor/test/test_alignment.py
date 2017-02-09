@@ -29,73 +29,54 @@ import unittest
 
 import pytz
 
-from cerebralcortex.data_processor.signalprocessing.alignment import autosense_sequence_align
-from cerebralcortex.data_processor.signalprocessing.vector import normalize, magnitude
+from cerebralcortex.data_processor.signalprocessing.alignment import interpolate_gaps, timestamp_correct
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 
 
-class TestVector(unittest.TestCase):
+class TestAlignment(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        super(TestVector, cls).setUpClass()
+        super(TestAlignment, cls).setUpClass()
         tz = pytz.timezone('US/Eastern')
-        cls.ecg = []
-        cls.sample_rate = 64.0
-        with gzip.open(os.path.join(os.path.dirname(__file__), 'res/ecg.csv.gz'), 'rt') as f:
-            for l in f:
-                values = list(map(int, l.split(',')))
-                cls.ecg.append(
-                    DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
-        cls.ds = DataStream(None, None, data=cls.ecg)
 
-        accelx = []
-        accel_sample_rate = 64.0 / 6
+        cls.sample_rate = 64.0 / 6.0
+
+        cls.accelx = []
         with gzip.open(os.path.join(os.path.dirname(__file__), 'res/accelx.csv.gz'), 'rt') as f:
             for l in f:
                 values = list(map(int, l.split(',')))
-                accelx.append(
+                cls.accelx.append(
                     DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
-        accelx = DataStream(None, None, data=accelx)
+        cls.accelx = DataStream(None, None, data=cls.accelx)
 
-        accely = []
+        cls.accely = []
         with gzip.open(os.path.join(os.path.dirname(__file__), 'res/accely.csv.gz'), 'rt') as f:
             for l in f:
                 values = list(map(int, l.split(',')))
-                accely.append(
+                cls.accely.append(
                     DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
-        accely = DataStream(None, None, data=accely)
+        cls.accely = DataStream(None, None, data=cls.accely)
 
-        accelz = []
+        cls.accelz = []
         with gzip.open(os.path.join(os.path.dirname(__file__), 'res/accelz.csv.gz'), 'rt') as f:
             for l in f:
                 values = list(map(int, l.split(',')))
-                accelz.append(
+                cls.accelz.append(
                     DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
-        accelz = DataStream(None, None, data=accelz)
+        cls.accelz = DataStream(None, None, data=cls.accelz)
 
-        cls.accel = autosense_sequence_align([accelx, accely, accelz], accel_sample_rate)
+    def test_interpolate_gaps(self):
+        result = interpolate_gaps(self.accelx.data, self.sample_rate)
 
-    def test_autosense_sequence_align(self):
-        self.assertIsInstance(self.accel, DataStream)
-        self.assertEqual(len(self.accel.data), 62870)
+        self.assertEquals(len(self.accelx.data), 63598)
+        self.assertEquals(len(result), 65964)
 
-    def test_normalize(self):
-        self.assertIsInstance(self.accel, DataStream)
+    def test_timestamp_correct(self):
+        result = timestamp_correct(self.accelx, sampling_frequency=self.sample_rate)
 
-        n = normalize(self.accel)
-        self.assertIsInstance(n, DataStream)
-
-        # for dp in n.data:
-        #     self.assertAlmostEqual(np.linalg.norm(dp.sample), 0.14815058577882137, delta=1e-6)
-
-    def test_magnitude(self):
-        self.assertIsInstance(self.accel, DataStream)
-
-        m = magnitude(normalize(self.accel))
-        self.assertIsInstance(m, DataStream)
-        # for sample in m.data:
-        #     self.assertAlmostEqual(sample.sample, 0.1857005338535236, delta=1e-6)
+        self.assertEquals(len(self.accelx.data), 63598)
+        self.assertEquals(len(result.data), 70010)
 
 
 if __name__ == '__main__':

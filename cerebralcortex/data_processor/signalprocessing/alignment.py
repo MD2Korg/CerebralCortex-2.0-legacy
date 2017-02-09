@@ -169,14 +169,36 @@ def timestamp_correct(datastream: DataStream,
     return result
 
 
-def timestamp_correct_and_sequence_align(datastream_array: list,
-                                         sampling_frequency: float = None) -> DataStream:
-    result = DataStream.from_datastream(input_streams=datastream_array)
+def autosense_sequence_align(datastreams: List[DataStream],
+                             sampling_frequency: float) -> DataStream:
+
+    result = DataStream.from_datastream(input_streams=datastreams)
+
+    start_time = None
+    for ds in datastreams:
+        ts = ds.data[0].start_time
+        if not start_time:
+            start_time = ts
+        elif start_time < ts:
+            start_time = ts
+
+    start_time -= datetime.timedelta(seconds=1.0 / sampling_frequency)
+
+    data_block = []
+    max_index = np.Inf
+    for ds in datastreams:
+        d = [i for i in ds.data if i.start_time > start_time]
+        if len(d) < max_index:
+            max_index = len(d)
+        data_block.append(d)
+
+    data_array = np.array(data_block)
 
     data = []
-    for dp in datastream_array[0].data:
-        data.append(DataPoint.from_tuple(dp.start_time, [dp.sample, dp.sample,
-                                                         dp.sample]))  # TODO: Fix with a proper sequence alignment operation later
+    dimensions = data_array.shape[0]
+    for i in range(0, max_index):
+        sample = [data_array[d][i].sample for d in range(0, dimensions)]
+        data.append(DataPoint.from_tuple(data_array[0][i].start_time, sample))
 
     result.data = data
 
