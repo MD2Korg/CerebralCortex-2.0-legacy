@@ -22,6 +22,6 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .datatypes import datapoint, datastream
+from .datatypes import datapoint, datastream, annotation, annotationstream, user
 
-__all__ = ['datapoint', 'datastream']
+__all__ = ['datapoint', 'datastream', 'annotation', 'annotationstream', 'user']
