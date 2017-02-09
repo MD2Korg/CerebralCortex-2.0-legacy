@@ -50,7 +50,7 @@ class TestVector(unittest.TestCase):
         cls.ds = DataStream(None, None, data=cls.ecg)
 
         accelx = []
-        accel_sample_rate = 64.0
+        accel_sample_rate = 64.0 / 6
         with gzip.open(os.path.join(os.path.dirname(__file__), 'res/accelx.csv.gz'), 'rt') as f:
             for l in f:
                 values = list(map(int, l.split(',')))
@@ -74,7 +74,7 @@ class TestVector(unittest.TestCase):
                     DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
         accelz = DataStream(None, None, data=accelz)
 
-        cls.accel = autosense_sequence_align([accelx, accely, accelz], cls.sample_rate)
+        cls.accel = autosense_sequence_align([accelx, accely, accelz], accel_sample_rate)
 
     def test_autosense_sequence_align(self):
         self.assertIsInstance(self.accel, DataStream)
