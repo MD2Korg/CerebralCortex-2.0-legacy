@@ -29,7 +29,7 @@ import unittest
 
 import pytz
 
-from cerebralcortex.data_processor.signalprocessing.alignment import interpolate_gaps, timestamp_correct, sequence_align
+from cerebralcortex.data_processor.signalprocessing.alignment import interpolate_gaps, timestamp_correct
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 
@@ -78,13 +78,6 @@ class TestAlignment(unittest.TestCase):
         self.assertEquals(len(self.accelx.data), 63598)
         self.assertEquals(len(result.data), 70010)
 
-    def test_sequence_align(self):
-
-        result = sequence_align([timestamp_correct(self.accelx, self.sample_rate),
-                                 timestamp_correct(self.accely, self.sample_rate),
-                                 timestamp_correct(self.accelz, self.sample_rate)],
-                                self.sample_rate)
-        print(len(result.data))
 
 if __name__ == '__main__':
     unittest.main()

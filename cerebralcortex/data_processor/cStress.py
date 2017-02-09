@@ -25,7 +25,7 @@
 from cerebralcortex.data_processor.feature.ecg import ecg_feature_computation
 from cerebralcortex.data_processor.signalprocessing.accelerometer import accelerometer_features
 from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_correct, \
-    sequence_align
+    autosense_sequence_align
 from cerebralcortex.data_processor.signalprocessing.dataquality import ECGDataQuality, RIPDataQuality
 from cerebralcortex.data_processor.signalprocessing.ecg import compute_rr_intervals
 from cerebralcortex.kernel.datatypes.datastream import DataStream
@@ -54,10 +54,10 @@ def cStress(raw_ecg: DataStream,
     # Timestamp correct datastreams
     ecg_corrected = timestamp_correct(datastream=raw_ecg, sampling_frequency=ecg_sampling_frequency)
     rip_corrected = timestamp_correct(datastream=raw_rip, sampling_frequency=rip_sampling_frequency)
-    accel = sequence_align(datastreams=[timestamp_correct(raw_accel_x, accel_sampling_frequency),
-                                        timestamp_correct(raw_accel_y, accel_sampling_frequency),
-                                        timestamp_correct(raw_accel_z, accel_sampling_frequency)],
-                           sampling_frequency=accel_sampling_frequency)
+    accel = autosense_sequence_align(datastreams=[timestamp_correct(raw_accel_x, accel_sampling_frequency),
+                                                  timestamp_correct(raw_accel_y, accel_sampling_frequency),
+                                                  timestamp_correct(raw_accel_z, accel_sampling_frequency)],
+                                     sampling_frequency=accel_sampling_frequency)
 
     # ECG and RIP signal morphology data quality
     ecg_data_quality = ECGDataQuality(ecg_corrected,

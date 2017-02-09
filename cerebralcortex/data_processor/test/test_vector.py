@@ -29,7 +29,7 @@ import unittest
 
 import pytz
 
-from cerebralcortex.data_processor.signalprocessing.alignment import sequence_align
+from cerebralcortex.data_processor.signalprocessing.alignment import autosense_sequence_align
 from cerebralcortex.data_processor.signalprocessing.vector import normalize, magnitude
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
@@ -74,11 +74,14 @@ class TestVector(unittest.TestCase):
                     DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
         accelz = DataStream(None, None, data=accelz)
 
-        cls.accel = sequence_align([accelx, accely, accelz], cls.sample_rate)
+        cls.accel = autosense_sequence_align([accelx, accely, accelz], cls.sample_rate)
+
+    def test_autosense_sequence_align(self):
+        self.assertIsInstance(self.accel, DataStream)
+        self.assertEqual(len(self.accel.data), 62870)
 
     def test_normalize(self):
         self.assertIsInstance(self.accel, DataStream)
-        self.assertEqual(len(self.accel.data), 62870)
 
         n = normalize(self.accel)
         self.assertIsInstance(n, DataStream)
@@ -88,7 +91,6 @@ class TestVector(unittest.TestCase):
 
     def test_magnitude(self):
         self.assertIsInstance(self.accel, DataStream)
-        self.assertEqual(len(self.accel.data), 62870)
 
         m = magnitude(normalize(self.accel))
         self.assertIsInstance(m, DataStream)

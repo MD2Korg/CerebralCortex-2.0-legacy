@@ -169,12 +169,11 @@ def timestamp_correct(datastream: DataStream,
     return result
 
 
-def sequence_align(datastreams: List[DataStream],
-                   sampling_frequency: float) -> DataStream:
+def autosense_sequence_align(datastreams: List[DataStream],
+                             sampling_frequency: float) -> DataStream:
 
     result = DataStream.from_datastream(input_streams=datastreams)
 
-    # TODO: Fix with a proper sequence alignment operation later
     start_time = None
     for ds in datastreams:
         ts = ds.data[0].start_time
