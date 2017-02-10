@@ -29,14 +29,10 @@ import unittest
 
 import pytz
 
-from cerebralcortex.data_processor.feature.ecg import ecg_feature_computation, lomb, heart_rate_power
 from cerebralcortex.data_processor.feature.rip import rip_feature_computation
-from cerebralcortex.data_processor.signalprocessing.ecg import compute_rr_intervals
 from cerebralcortex.data_processor.signalprocessing.rip import compute_peak_valley
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-from cerebralcortex.kernel.window import window_sliding
-
 
 class TestRIPFeatures(unittest.TestCase):
     @classmethod
@@ -56,7 +52,7 @@ class TestRIPFeatures(unittest.TestCase):
 
         cls.peak, cls.valley = compute_peak_valley(rip_ds,fs=rip_sampling_frequency)
 
-    def test_ecg_feature_computation(self):
+    def test_rip_feature_computation(self):
         print("peak size = ",len(self.peak.datapoints))
         print("valley size = ", len(self.valley.datapoints))
 
