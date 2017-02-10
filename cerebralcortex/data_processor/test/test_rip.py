@@ -25,14 +25,20 @@
 import datetime
 import gzip
 import os
+import unittest
+from typing import List
+
+import numpy as np
 import pytz
-from cerebralcortex.data_processor.signalprocessing.rip import up_down_intercepts, filter_intercept_outlier, generate_peak_valley, correct_valley_position, correct_peak_position, remove_close_valley_peak_pair, filter_expiration_duration_outlier, filter_small_amp_expiration_peak_valley, filter_small_amp_inspiration_peak_valley, compute_peak_valley
+
+from cerebralcortex.data_processor.signalprocessing.rip import up_down_intercepts, filter_intercept_outlier, \
+    generate_peak_valley, \
+    remove_close_valley_peak_pair, filter_expiration_duration_outlier, filter_small_amp_expiration_peak_valley, \
+    filter_small_amp_inspiration_peak_valley
+from cerebralcortex.data_processor.signalprocessing.vector import smooth, moving_average_curve
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-import unittest
-from cerebralcortex.data_processor.signalprocessing.vector import smooth, moving_average_curve
-import numpy as np
-from typing import List
+
 
 class TestPeakValleyComputation(unittest.TestCase):
     @classmethod
@@ -145,8 +151,8 @@ class TestPeakValleyComputation(unittest.TestCase):
             up_intercepts_output, down_intercepts_output = filter_intercept_outlier(up_intercepts, down_intercepts)
 
             # test all are List[Datapoints]
-            self.assertIsInstance(up_intercepts_output, List[DataPoint])
-            self.assertIsInstance(down_intercepts_output, List[DataPoint])
+            self.assertIsInstance(up_intercepts_output, list)
+            self.assertIsInstance(down_intercepts_output, list)
 
             # test output match for first case
             up_intercepts_output_start_time = [i.start_time for i in up_intercepts_output]
