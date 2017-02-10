@@ -23,6 +23,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from cerebralcortex.data_processor.feature.ecg import ecg_feature_computation
+from cerebralcortex.data_processor.feature.rip import rip_feature_computation
 from cerebralcortex.data_processor.signalprocessing.accelerometer import accelerometer_features
 from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_correct, \
     autosense_sequence_align
@@ -85,15 +86,14 @@ def cStress(raw_ecg: DataStream,
     accelerometer_magnitude, accelerometer_win_mag_deviations, accel_activity = accelerometer_features(accel)
 
     # rip features
-    # rip_peak_datastream, rip_valley_datastream = rip.compute_peak_valley(rip=rip_corrected)
+    rip_peak_datastream, rip_valley_datastream = rip.compute_peak_valley(rip=rip_corrected)
 
     # r-peak datastream computation
     ecg_rr_datastream = compute_rr_intervals(ecg_corrected, ecg_sampling_frequency)
 
     ecg_features = ecg_feature_computation(ecg_rr_datastream, window_size=60, window_offset=60)
-    print(len(ecg_features))
-    # print(len(rip_peak_datastream.datapoints), len(ecg_rr_datastream.datapoints))
+    rip_features = rip_feature_computation(rip_peak_datastream, rip_valley_datastream)
 
-
+    print(len(ecg_features), len(rip_features))
     # TODO: TWH Fix when feature vector result is available
     return raw_ecg
