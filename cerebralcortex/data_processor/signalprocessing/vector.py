@@ -118,8 +118,8 @@ def moving_average_curve(data: List[DataPoint],
     """
     sample = [i.sample for i in data]
     mac = []
-    for i in range(window_length + 1, len(sample) - (window_length + 1)):
-        sample_avg = np.mean(sample[i - window_length:i + window_length])
+    for i in range(window_length, len(sample) - (window_length + 1)):
+        sample_avg = np.mean(sample[i - window_length:i + window_length + 1])
         mac.append(DataPoint.from_tuple(sample=sample_avg, start_time=data[i].start_time, end_time=data[i].end_time))
 
     return mac
