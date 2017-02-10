@@ -21,9 +21,9 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 from cerebralcortex.data_processor.feature.ecg import ecg_feature_computation
 from cerebralcortex.data_processor.feature.rip import rip_feature_computation
+from cerebralcortex.data_processor.signalprocessing import rip
 from cerebralcortex.data_processor.signalprocessing.accelerometer import accelerometer_features
 from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_correct, \
     autosense_sequence_align
