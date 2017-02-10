@@ -69,14 +69,14 @@ class TestAlignment(unittest.TestCase):
     def test_interpolate_gaps(self):
         result = interpolate_gaps(self.accelx.data, self.sample_rate)
 
-        self.assertEquals(len(self.accelx.data), 63598)
-        self.assertEquals(len(result), 65964)
+        self.assertEqual(len(self.accelx.data), 63598)
+        self.assertEqual(len(result), 65964)
 
     def test_timestamp_correct(self):
         result = timestamp_correct(self.accelx, sampling_frequency=self.sample_rate)
 
-        self.assertEquals(len(self.accelx.data), 63598)
-        self.assertEquals(len(result.data), 70010)
+        self.assertEqual(len(self.accelx.data), 63598)
+        self.assertEqual(len(result.data), 70010)
 
 
 if __name__ == '__main__':
