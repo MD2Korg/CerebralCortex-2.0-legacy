@@ -32,7 +32,9 @@ def rip_feature_computation(peaks_datastream: DataStream,
     Respiration Feature Implementation. The respiration feature values are
     derived from the following paper:
     'puffMarker: a multi-sensor approach for pinpointing the timing of first lapse in smoking cessation'
-    :return: ECG Feature DataStreams
+    :param peaks_datastream: DataStream
+    :param valleys_datastream: DataStream
+    :return: RIP Feature DataStreams
     """
 
     if peaks_datastream is None or valleys_datastream is None:
