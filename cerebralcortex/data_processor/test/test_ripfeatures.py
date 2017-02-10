@@ -34,13 +34,14 @@ from cerebralcortex.data_processor.signalprocessing.rip import compute_peak_vall
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 
+
 class TestRIPFeatures(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super(TestRIPFeatures, cls).setUpClass()
         tz = pytz.timezone('US/Eastern')
         rip = []
-        rip_sampling_frequency = 64.0/3
+        rip_sampling_frequency = 64.0 / 3
         with gzip.open(os.path.join(os.path.dirname(__file__), 'res/rip.csv.gz'), 'rt') as f:
             for l in f:
                 values = list(map(int, l.split(',')))
@@ -48,17 +49,18 @@ class TestRIPFeatures(unittest.TestCase):
                     DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
 
         rip_ds = DataStream(None, None)
-        rip_ds.datapoints = rip
+        rip_ds.data = rip
 
-        cls.peak, cls.valley = compute_peak_valley(rip_ds,fs=rip_sampling_frequency)
+        cls.peak, cls.valley = compute_peak_valley(rip_ds, fs=rip_sampling_frequency)
 
     def test_rip_feature_computation(self):
-        print("peak size = ",len(self.peak.datapoints))
-        print("valley size = ", len(self.valley.datapoints))
+        print("peak size = ", len(self.peak.data))
+        print("valley size = ", len(self.valley.data))
 
         insp_datastream, expr_datastream, resp_datastream, ieRatio_datastream, stretch_datastream, uStretch_datastream, lStretch_datastream, \
         bd_insp_datastream, bd_expr_datastream, bd_resp_datastream, bd_stretch_datastream, fd_insp_datastream, fd_expr_datastream, \
-        fd_resp_datastream, fd_stretch_datastream, d5_expr_datastream, d5_stretch_datastream = rip_feature_computation(self.peak, self.valley)
+        fd_resp_datastream, fd_stretch_datastream, d5_expr_datastream, d5_stretch_datastream = rip_feature_computation(
+            self.peak, self.valley)
 
         # test all are DataStream
         self.assertIsInstance(insp_datastream, DataStream)
@@ -78,6 +80,7 @@ class TestRIPFeatures(unittest.TestCase):
         self.assertIsInstance(fd_stretch_datastream, DataStream)
         self.assertIsInstance(d5_expr_datastream, DataStream)
         self.assertIsInstance(d5_stretch_datastream, DataStream)
+
 
 if __name__ == '__main__':
     unittest.main()
