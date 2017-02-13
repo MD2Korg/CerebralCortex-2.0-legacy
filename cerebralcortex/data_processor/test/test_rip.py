@@ -22,11 +22,10 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import datetime
+from datetime import datetime, timedelta
 import gzip
 import os
 import unittest
-from typing import List
 
 import numpy as np
 import pytz
@@ -34,10 +33,11 @@ import pytz
 from cerebralcortex.data_processor.signalprocessing.rip import up_down_intercepts, filter_intercept_outlier, \
     generate_peak_valley, \
     remove_close_valley_peak_pair, filter_expiration_duration_outlier, filter_small_amp_expiration_peak_valley, \
-    filter_small_amp_inspiration_peak_valley
+    filter_small_amp_inspiration_peak_valley, correct_peak_position, correct_valley_position
 from cerebralcortex.data_processor.signalprocessing.vector import smooth, moving_average_curve
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
+from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_correct
 
 
 class TestPeakValleyComputation(unittest.TestCase):
@@ -45,8 +45,8 @@ class TestPeakValleyComputation(unittest.TestCase):
     def setUpClass(cls):
         super(TestPeakValleyComputation, cls).setUpClass()
         tz = pytz.timezone('US/Eastern')
-        cls.rip = []
-        cls._fs = 21.33
+        data = []
+        cls._sample_frequency = 21.33
         cls._smoothing_factor = 5
         cls._time_window = 8
         cls._expiration_amplitude_threshold_perc = 0.10
@@ -56,18 +56,18 @@ class TestPeakValleyComputation(unittest.TestCase):
         cls._min_neg_slope_count_peak_correction = 4
         cls._minimum_peak_to_valley_time_diff = 0.31
 
-        cls._window_length = int(round(cls._time_window * cls._fs))
+        cls._window_length = int(round(cls._time_window * cls._sample_frequency))
         with gzip.open(os.path.join(os.path.dirname(__file__), 'res/rip.csv.gz'), 'rt') as f:
             for l in f:
                 values = list(map(int, l.split(',')))
-                cls.rip.append(
-                    DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
+                data.append(
+                    DataPoint.from_tuple(datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
         cls.rip_datastream = DataStream(None,None)
-        cls.rip_datastream.datapoints = cls.rip
+        cls.rip_datastream.data = data
 
     def test_smooth(self):
         ds = DataStream(None, None)
-        ds.datapoints = self.rip
+        ds.datapoints = self.rip_datastream.data
 
         result_smooth = smooth(ds.datapoints, self._smoothing_factor)
         sample_smooth_python = [i.sample for i in result_smooth[:5000]]
@@ -77,7 +77,7 @@ class TestPeakValleyComputation(unittest.TestCase):
 
     def test_moving_average_curve(self):
         ds = DataStream(None, None)
-        ds.datapoints = self.rip
+        ds.datapoints = self.rip_datastream.data
 
         data_smooth = smooth(ds.datapoints, self._smoothing_factor)
         result = moving_average_curve(data_smooth, self._window_length)
@@ -182,12 +182,187 @@ class TestPeakValleyComputation(unittest.TestCase):
         self.assertTrue(np.array_equal(output_valleys_sample, expected_valley_samples))
 
     def test_correct_valley_position(self):
-        # TODO: test case for correct valley position
-        pass
+        valleys_start_time = [1, 21]
+        up_intercepts_start_time = [10, 30]
+        peaks_start_time = [20, 40]
+
+
+        valleys_samples = [100, 100]
+        up_intercepts_samples = [500, 500]
+        peaks_samples = [1000, 1000]
+
+        data_start_time = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] + [21, 22, 23, 24,25, 26, 27, 28, 29,30]
+        data_samples = [100, 110, 120, 130, 140, 100, 200, 300, 400, 500] + [100, 110, 120, 130, 140, 150, 160, 170, 180, 500]
+
+        expected_valleys_start_time = [6, 21] # data is not monotoneously increasing from 1 to 10 start time, so new valley move towards right at 6 where it is monotonoeously increasing. but the second valley is alright. as data is monotonoeusly increasing from start time 21 to 30.
+        expected_valleys_samples = [100, 100]
+
+        peaks_input = form_data_point_list_from_start_time_sample(start_time_list=peaks_start_time, sample_list=peaks_samples)
+        valleys_input = form_data_point_list_from_start_time_sample(start_time_list=valleys_start_time, sample_list=valleys_samples)
+        up_intercepts_input = form_data_point_list_from_start_time_sample(start_time_list=up_intercepts_start_time, sample_list=up_intercepts_samples)
+        data_input = form_data_point_list_from_start_time_sample(start_time_list=data_start_time, sample_list=data_samples)
+
+
+        valleys_corrected_ouput = correct_valley_position(peaks=peaks_input, valleys=valleys_input, up_intercepts=up_intercepts_input, data=data_input)
+        valleys_corrected_ouput_start_time = [i.start_time for i in valleys_corrected_ouput]
+        valleys_corrected_ouput_samples = [i.sample for i in valleys_corrected_ouput]
+
+        self.assertTrue(np.array_equal(valleys_corrected_ouput_start_time, expected_valleys_start_time))
+        self.assertTrue(np.array_equal(valleys_corrected_ouput_samples, expected_valleys_samples))
 
     def test_correct_peak_position(self):
-        # TODO: test case for correct_peak_position
-        pass
+        test_cases = []
+
+        # test case - 0: monotoneously decreasing from peak to up intercept. so peak position will not be changed.
+        data_start_time = [1,2,3,4,5,6,7,8,9,10]
+        data_samples = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+
+        valleys_start_time = [1]
+        up_intercepts_start_time = [5]
+        peaks_start_time = [10]
+
+        valleys_samples = [10]
+        up_intercepts_samples = [50]
+        peaks_samples = [100]
+
+        expected_peaks_start_time = [10]
+        expected_peaks_samples = [100]
+
+        test_cases.append({
+            'data_start_time': data_start_time,
+            'data_samples': data_samples,
+            'valleys_start_time': valleys_start_time,
+            'valleys_samples': valleys_samples,
+            'up_intercepts_start_time': up_intercepts_start_time,
+            'up_intercepts_samples': up_intercepts_samples,
+            'peaks_start_time': peaks_start_time,
+            'peaks_samples': peaks_samples,
+            'expected_peaks_start_time': expected_peaks_start_time,
+            'expected_peaks_samples': expected_peaks_samples
+        })
+
+        # test case - 1: from up_intercepts to peak, increases from 50 to 90, then decreases from 90 to 60 by 3 point count.
+        # which is less than  4 (self._min_neg_slope_count_peak_correction = 4). so peak position will not be updated.
+        data_start_time = [1,2,3,4,5,6,7,8,9,10]
+        data_samples = [10, 20, 30, 40, 50, 90, 80, 70, 60, 100]
+
+        valleys_start_time = [1]
+        up_intercepts_start_time = [5]
+        peaks_start_time = [10]
+
+        valleys_samples = [10]
+        up_intercepts_samples = [50]
+        peaks_samples = [100]
+
+        expected_peaks_start_time = [10]
+        expected_peaks_samples = [100]
+
+        test_cases.append({
+            'data_start_time': data_start_time,
+            'data_samples': data_samples,
+            'valleys_start_time': valleys_start_time,
+            'valleys_samples': valleys_samples,
+            'up_intercepts_start_time': up_intercepts_start_time,
+            'up_intercepts_samples': up_intercepts_samples,
+            'peaks_start_time': peaks_start_time,
+            'peaks_samples': peaks_samples,
+            'expected_peaks_start_time': expected_peaks_start_time,
+            'expected_peaks_samples': expected_peaks_samples
+        })
+
+        # test case - 2: from up_intercepts to peak, increases from 30 to 60, then decreases from 60 to 10 by 5 point count.
+        # which is greater than  4 (self._min_neg_slope_count_peak_correction = 4).
+        # new peak sample value is 60. previous peak is at sample 100. so, amplitude change from new peak to prev peak is = 80%.
+        # 80% is not less than 30% (self._max_amplitude_change_peak_correction = 30).
+        # so peak position will not be updated.
+
+        data_start_time = [1,2,3,4,5,6,7,8,9,10]
+        data_samples = [10, 20, 30, 60, 50, 40, 30, 20, 10, 100]
+
+        valleys_start_time = [1]
+        up_intercepts_start_time = [3]
+        peaks_start_time = [10]
+
+        valleys_samples = [10]
+        up_intercepts_samples = [30]
+        peaks_samples = [100]
+
+        expected_peaks_start_time = [10]
+        expected_peaks_samples = [100]
+
+        test_cases.append({
+            'data_start_time': data_start_time,
+            'data_samples': data_samples,
+            'valleys_start_time': valleys_start_time,
+            'valleys_samples': valleys_samples,
+            'up_intercepts_start_time': up_intercepts_start_time,
+            'up_intercepts_samples': up_intercepts_samples,
+            'peaks_start_time': peaks_start_time,
+            'peaks_samples': peaks_samples,
+            'expected_peaks_start_time': expected_peaks_start_time,
+            'expected_peaks_samples': expected_peaks_samples
+        })
+
+        # test case - 3: from up_intercepts to peak, increases from 30 to 90, then decreases from 90 to 10 by 5 point count.
+        # which is greater than  4 (self._min_neg_slope_count_peak_correction = 4).
+        # new peak sample value is 90. previous peak is at sample 100. so, amplitude change from new peak to prev peak is = 12.5%.
+        # 12.5% is less than 30% (self._max_amplitude_change_peak_correction = 30).
+        # so peak position will be updated to new peak (sample = 90, start_time = 4)
+
+        data_start_time = [1,2,3,4,5,6,7,8,9,10]
+        data_samples = [10, 20, 30, 90, 50, 40, 30, 20, 10, 100]
+
+        valleys_start_time = [1]
+        up_intercepts_start_time = [3]
+        peaks_start_time = [10]
+
+        valleys_samples = [10]
+        up_intercepts_samples = [30]
+        peaks_samples = [100]
+
+        expected_peaks_start_time = [4]
+        expected_peaks_samples = [90]
+
+        test_cases.append({
+            'data_start_time': data_start_time,
+            'data_samples': data_samples,
+            'valleys_start_time': valleys_start_time,
+            'valleys_samples': valleys_samples,
+            'up_intercepts_start_time': up_intercepts_start_time,
+            'up_intercepts_samples': up_intercepts_samples,
+            'peaks_start_time': peaks_start_time,
+            'peaks_samples': peaks_samples,
+            'expected_peaks_start_time': expected_peaks_start_time,
+            'expected_peaks_samples': expected_peaks_samples
+        })
+
+
+        for i, item in enumerate(test_cases):
+            data_start_time = item['data_start_time']
+            data_samples = item['data_samples']
+
+            valleys_start_time = item['valleys_start_time']
+            up_intercepts_start_time = item['up_intercepts_start_time']
+            peaks_start_time = item['peaks_start_time']
+
+            valleys_samples = item['valleys_samples']
+            up_intercepts_samples = item['up_intercepts_samples']
+            peaks_samples = item['peaks_samples']
+
+            expected_peaks_start_time = item['expected_peaks_start_time']
+            expected_peaks_samples = item['expected_peaks_samples']
+
+            valleys_input = form_data_point_list_from_start_time_sample(start_time_list=valleys_start_time, sample_list=valleys_samples)
+            up_intercepts_input = form_data_point_list_from_start_time_sample(start_time_list=up_intercepts_start_time, sample_list=up_intercepts_samples)
+            peaks_input = form_data_point_list_from_start_time_sample(start_time_list=peaks_start_time, sample_list=peaks_samples)
+            data_input = form_data_point_list_from_start_time_sample(start_time_list=data_start_time, sample_list=data_samples)
+
+            peaks_output = correct_peak_position(peaks=peaks_input, valleys=valleys_input, up_intercepts=up_intercepts_input, data=data_input, max_amplitude_change_peak_correction=self._max_amplitude_change_peak_correction, min_neg_slope_count_peak_correction=self._min_neg_slope_count_peak_correction)
+            peaks_output_samples = [i.sample for i in peaks_output]
+            peaks_output_start_time = [i.start_time for i in peaks_output]
+
+            self.assertTrue(np.array_equal(expected_peaks_start_time, peaks_output_start_time), msg='Test failed for test case ' + str(i))
+            self.assertTrue(np.array_equal(expected_peaks_samples, peaks_output_samples), msg='Test failed for test case ' + str(i))
 
     def test_remove_close_valley_peak_pair(self):
         valleys_start_time = form_time_delta_list_from_start_time_in_seconds([1, 2]) # time in seconds
@@ -265,6 +440,19 @@ class TestPeakValleyComputation(unittest.TestCase):
         self.assertTrue(np.array_equal(expected_peaks_sample, output_peaks_sample))
         self.assertTrue(np.array_equal(expected_valleys_sample, output_valleys_sample))
 
+    def test_timestamp_correct(self):
+        rip_corrected = timestamp_correct(datastream=self.rip_datastream, sampling_frequency= self._sample_frequency)
+
+        timestamp_corrected_rip_data_unique_start_time_count = len(set([i.start_time for i in rip_corrected.data]))
+        raw_rip_data_unique_start_time_count = len(set([i.start_time for i in self.rip_datastream.data]))
+
+        self.assertGreaterEqual(timestamp_corrected_rip_data_unique_start_time_count, raw_rip_data_unique_start_time_count,
+                                msg='Timestamp corrected rip data has duplicate start times. '
+                                    'Check if rip raw data sample frequency missmatch with provided default rip sample frequency.')
+
+
+
+
 def form_data_point_from_start_time_array(start_time_list):
     datapoints = []
     for i in start_time_list:
@@ -272,8 +460,8 @@ def form_data_point_from_start_time_array(start_time_list):
 
     return datapoints
 
-def form_data_point_list_from_start_time_sample(start_time_list: np.ndarray,
-                                                sample_list: np.ndarray) -> List[DataPoint]:
+def form_data_point_list_from_start_time_sample(start_time_list,
+                                                sample_list):
     datapoints = []
     if len(start_time_list) == len(sample_list):
         for i, start_time in enumerate(start_time_list):
@@ -283,17 +471,17 @@ def form_data_point_list_from_start_time_sample(start_time_list: np.ndarray,
 
     return datapoints
 
-def form_time_delta_list_from_start_time_in_seconds(start_time_list: np.ndarray):
+def form_time_delta_list_from_start_time_in_seconds(start_time_list):
     start_time_time_delta_list = []
     for i in start_time_list:
-        start_time_time_delta_list.append(datetime.timedelta(seconds=i))
+        start_time_time_delta_list.append(timedelta(seconds=i))
 
     return start_time_time_delta_list
 
 def form_data_point_from_sample_array(sample_list):
     datapoints = []
     for i in sample_list:
-        datapoints.append(DataPoint.from_tuple(0, i))
+        datapoints.append(DataPoint.from_tuple(start_time=datetime.now(), sample=i))
 
     return datapoints
 
