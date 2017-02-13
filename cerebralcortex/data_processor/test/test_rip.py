@@ -37,6 +37,7 @@ from cerebralcortex.data_processor.signalprocessing.rip import up_down_intercept
 from cerebralcortex.data_processor.signalprocessing.vector import smooth, moving_average_curve
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
+from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_correct
 
 
 class TestPeakValleyComputation(unittest.TestCase):
@@ -44,8 +45,8 @@ class TestPeakValleyComputation(unittest.TestCase):
     def setUpClass(cls):
         super(TestPeakValleyComputation, cls).setUpClass()
         tz = pytz.timezone('US/Eastern')
-        cls.rip = []
-        cls._fs = 21.33
+        data = []
+        cls._sample_frequency = 21.33
         cls._smoothing_factor = 5
         cls._time_window = 8
         cls._expiration_amplitude_threshold_perc = 0.10
@@ -55,18 +56,18 @@ class TestPeakValleyComputation(unittest.TestCase):
         cls._min_neg_slope_count_peak_correction = 4
         cls._minimum_peak_to_valley_time_diff = 0.31
 
-        cls._window_length = int(round(cls._time_window * cls._fs))
+        cls._window_length = int(round(cls._time_window * cls._sample_frequency))
         with gzip.open(os.path.join(os.path.dirname(__file__), 'res/rip.csv.gz'), 'rt') as f:
             for l in f:
                 values = list(map(int, l.split(',')))
-                cls.rip.append(
+                data.append(
                     DataPoint.from_tuple(datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
         cls.rip_datastream = DataStream(None,None)
-        cls.rip_datastream.datapoints = cls.rip
+        cls.rip_datastream.data = data
 
     def test_smooth(self):
         ds = DataStream(None, None)
-        ds.datapoints = self.rip
+        ds.datapoints = self.rip_datastream.data
 
         result_smooth = smooth(ds.datapoints, self._smoothing_factor)
         sample_smooth_python = [i.sample for i in result_smooth[:5000]]
@@ -76,7 +77,7 @@ class TestPeakValleyComputation(unittest.TestCase):
 
     def test_moving_average_curve(self):
         ds = DataStream(None, None)
-        ds.datapoints = self.rip
+        ds.datapoints = self.rip_datastream.data
 
         data_smooth = smooth(ds.datapoints, self._smoothing_factor)
         result = moving_average_curve(data_smooth, self._window_length)
@@ -444,6 +445,19 @@ class TestPeakValleyComputation(unittest.TestCase):
 
         self.assertTrue(np.array_equal(expected_peaks_sample, output_peaks_sample))
         self.assertTrue(np.array_equal(expected_valleys_sample, output_valleys_sample))
+
+    def test_timestamp_correct(self):
+        rip_corrected = timestamp_correct(datastream=self.rip_datastream, sampling_frequency= self._sample_frequency)
+
+        timestamp_corrected_rip_data_unique_start_time_count = len(set([i.start_time for i in rip_corrected.data]))
+        raw_rip_data_unique_start_time_count = len(set([i.start_time for i in self.rip_datastream.data]))
+
+        self.assertGreaterEqual(timestamp_corrected_rip_data_unique_start_time_count, raw_rip_data_unique_start_time_count,
+                                msg='Timestamp corrected rip data has duplicate start times. '
+                                    'Check if rip raw data sample frequency missmatch with provided default rip sample frequency.')
+
+
+
 
 def form_data_point_from_start_time_array(start_time_list):
     datapoints = []
