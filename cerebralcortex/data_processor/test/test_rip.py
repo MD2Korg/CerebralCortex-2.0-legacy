@@ -241,10 +241,8 @@ class TestPeakValleyComputation(unittest.TestCase):
             'expected_peaks_samples': expected_peaks_samples
         })
 
-        '''
-        test case - 1: from up_intercepts to peak, increases from 50 to 90, then decreases from 90 to 60 by 3 point count.
-        which is less than  4 (self._min_neg_slope_count_peak_correction = 4). so peak position will not be updated.
-        '''
+        # test case - 1: from up_intercepts to peak, increases from 50 to 90, then decreases from 90 to 60 by 3 point count.
+        # which is less than  4 (self._min_neg_slope_count_peak_correction = 4). so peak position will not be updated.
         data_start_time = [1,2,3,4,5,6,7,8,9,10]
         data_samples = [10, 20, 30, 40, 50, 90, 80, 70, 60, 100]
 
@@ -272,13 +270,11 @@ class TestPeakValleyComputation(unittest.TestCase):
             'expected_peaks_samples': expected_peaks_samples
         })
 
-        '''
-        test case - 2: from up_intercepts to peak, increases from 30 to 60, then decreases from 60 to 10 by 5 point count.
-        which is greater than  4 (self._min_neg_slope_count_peak_correction = 4).
-        new peak sample value is 60. previous peak is at sample 100. so, amplitude change from new peak to prev peak is = 80%.
-        80% is not less than 30% (self._max_amplitude_change_peak_correction = 30).
-        so peak position will not be updated.
-        '''
+        # test case - 2: from up_intercepts to peak, increases from 30 to 60, then decreases from 60 to 10 by 5 point count.
+        # which is greater than  4 (self._min_neg_slope_count_peak_correction = 4).
+        # new peak sample value is 60. previous peak is at sample 100. so, amplitude change from new peak to prev peak is = 80%.
+        # 80% is not less than 30% (self._max_amplitude_change_peak_correction = 30).
+        # so peak position will not be updated.
 
         data_start_time = [1,2,3,4,5,6,7,8,9,10]
         data_samples = [10, 20, 30, 60, 50, 40, 30, 20, 10, 100]
@@ -307,13 +303,11 @@ class TestPeakValleyComputation(unittest.TestCase):
             'expected_peaks_samples': expected_peaks_samples
         })
 
-        '''
-        test case - 3: from up_intercepts to peak, increases from 30 to 90, then decreases from 90 to 10 by 5 point count.
-        which is greater than  4 (self._min_neg_slope_count_peak_correction = 4).
-        new peak sample value is 90. previous peak is at sample 100. so, amplitude change from new peak to prev peak is = 12.5%.
-        12.5% is less than 30% (self._max_amplitude_change_peak_correction = 30).
-        so peak position will be updated to new peak (sample = 90, start_time = 4)
-        '''
+        # test case - 3: from up_intercepts to peak, increases from 30 to 90, then decreases from 90 to 10 by 5 point count.
+        # which is greater than  4 (self._min_neg_slope_count_peak_correction = 4).
+        # new peak sample value is 90. previous peak is at sample 100. so, amplitude change from new peak to prev peak is = 12.5%.
+        # 12.5% is less than 30% (self._max_amplitude_change_peak_correction = 30).
+        # so peak position will be updated to new peak (sample = 90, start_time = 4)
 
         data_start_time = [1,2,3,4,5,6,7,8,9,10]
         data_samples = [10, 20, 30, 90, 50, 40, 30, 20, 10, 100]
@@ -367,8 +361,8 @@ class TestPeakValleyComputation(unittest.TestCase):
             peaks_output_samples = [i.sample for i in peaks_output]
             peaks_output_start_time = [i.start_time for i in peaks_output]
 
-            self.assertTrue(np.array_equal(expected_peaks_start_time, peaks_output_start_time))
-            self.assertTrue(np.array_equal(expected_peaks_samples, peaks_output_samples))
+            self.assertTrue(np.array_equal(expected_peaks_start_time, peaks_output_start_time), msg='Test failed for test case ' + str(i))
+            self.assertTrue(np.array_equal(expected_peaks_samples, peaks_output_samples), msg='Test failed for test case ' + str(i))
 
     def test_remove_close_valley_peak_pair(self):
         valleys_start_time = form_time_delta_list_from_start_time_in_seconds([1, 2]) # time in seconds
