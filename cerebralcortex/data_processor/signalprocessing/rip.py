@@ -261,7 +261,7 @@ def correct_peak_position(peaks: List[DataPoint],
 
             if not all(j >= 0 for j in slope_at_samples):
                 indices_neg_slope = [j for j in range(len(slope_at_samples)) if slope_at_samples[j] < 0]
-                peak_new = data_ui_to_peak[indices_neg_slope[0] - 1]
+                peak_new = data_ui_to_peak[indices_neg_slope[0]]
                 valley_peak_dist_new = peak_new.sample - valleys[i].sample
                 valley_peak_dist_prev = peaks[i].sample - valleys[i].sample
                 if valley_peak_dist_new == 0:
