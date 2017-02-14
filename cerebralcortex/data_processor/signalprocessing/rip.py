@@ -240,7 +240,7 @@ def correct_peak_position(peaks: List[DataPoint],
     :param min_neg_slope_count_peak_correction:
 
     """
-
+    # TODO: This logic block is too computationally inefficient (list comprehensions and accessing start_time)
     for i, item in enumerate(peaks):
         up_intercepts_valley_to_peak = []
         for j in range(len(up_intercepts)):
@@ -297,7 +297,7 @@ def correct_valley_position(peaks: List[DataPoint],
     :param data:
     """
     valley_updated = valleys.copy()
-
+    # TODO: This logic block is too computationally inefficient (list comprehensions and accessing start_time)
     for i in range(len(valleys)):
         up_intercepts_valley_to_peak = []
         for j in range(len(up_intercepts)):
@@ -439,7 +439,7 @@ def up_down_intercepts(data: List[DataPoint],
 
     up_intercepts = []
     down_intercepts = []
-
+    # TODO: This logic block is too computationally inefficient (list comprehensions and accessing start_time)
 
     mac_start_time_list = [i.start_time for i in mac]
 
