@@ -25,15 +25,13 @@
 import argparse
 import gzip
 import os
-import sys
 import time
-import traceback
 import uuid
-from pprint import pprint
 
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.data_processor.cStress import cStress
 from cerebralcortex.data_processor.preprocessor import parser
+from cerebralcortex.data_processor.signalprocessing.alignment import autosense_sequence_align
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.legacy import find
@@ -50,6 +48,7 @@ configuration_file = os.path.join(os.path.dirname(__file__), 'cerebralcortex.yml
 
 CC = CerebralCortex(configuration_file, master="local[*]", name="Memphis cStress Development App")
 
+
 def readfile(filename):
     data = []
     with gzip.open(filename, 'rt') as f:
@@ -60,17 +59,18 @@ def readfile(filename):
     return data
 
 
-def process_participant(identifier: int):
+def loader(identifier: int):
     participant = "SI%02d" % identifier
 
     participant_uuid = uuid.uuid4()
-    print(participant, participant_uuid)
-    try:
-        ecg = DataStream(None, participant_uuid)
-        ecg.data = readfile(find(basedir, {"participant": participant, "datasource": "ecg"}))
+    # print(participant, participant_uuid)
 
-        rip = DataStream(None, participant_uuid)
-        rip.data = readfile(find(basedir, {"participant": participant, "datasource": "rip"}))
+    try:
+        # ecg = DataStream(None, participant_uuid)
+        # ecg.data = readfile(find(basedir, {"participant": participant, "datasource": "ecg"}))
+        #
+        # rip = DataStream(None, participant_uuid)
+        # rip.data = readfile(find(basedir, {"participant": participant, "datasource": "rip"}))
 
         accelx = DataStream(None, participant_uuid)
         accelx.data = readfile(find(basedir, {"participant": participant, "datasource": "accelx"}))
@@ -81,23 +81,38 @@ def process_participant(identifier: int):
         accelz = DataStream(None, participant_uuid)
         accelz.data = readfile(find(basedir, {"participant": participant, "datasource": "accelz"}))
 
-        cStressFeatures = cStress(ecg, rip, accelx, accely, accelz)
-
-        result = (participant, len(ecg.data), len(rip.data), len(accelx.data), len(accely.data),
-                  len(accelz.data))
-
-        print(participant_uuid, result)
-        return result
+        return participant, accelx, accely, accelz
     except Exception as e:
-        print("File missing for %s" % participant)
-        print(e)
-        traceback.print_exc(file=sys.stderr)
+        # print("File missing for %s" % participant)
+        # print(e)
+        # traceback.print_exc(file=sys.stderr)
+        pass
+
+    return "ERROR"
+
+
+def cStress():
+    cStressFeatures = cStress(ecg, rip, accelx, accely, accelz)
+
+    result = (participant, len(ecg.data), len(rip.data), len(accelx.data), len(accely.data),
+              len(accelz.data))
+
+    print(participant_uuid, result)
 
 
 start_time = time.time()
-ids = CC.sparkSession.sparkContext.parallelize([i for i in range(1, 25)])
+ids = CC.sparkSession.sparkContext.parallelize([i for i in range(1, 5)])
 
-results = ids.map(process_participant)
-pprint(results.collect())
+data = ids.map(lambda i: loader(i))
+
+# print(data.map(lambda e: autosense_sequence_align(datastreams=[e[1], e[2], e[3]], sampling_frequency=64.0 / 6)).collect())
+
+filtered = data.filter(lambda x: len(x) == 4)
+aligned_data = filtered.map(
+    lambda e: (e[0], autosense_sequence_align(datastreams=[e[1], e[2], e[3]], sampling_frequency=64.0 / 6)))
+print(aligned_data.map(lambda x: (x[0], len(x[1].data))).collect())
+
+# results = ids.map(loader)
+# pprint(results.collect())
 end_time = time.time()
 print(end_time - start_time)

@@ -62,7 +62,7 @@ def cStress(raw_ecg: DataStream,
 
     # ECG and RIP signal morphology data quality
     ecg_data_quality = ECGDataQuality(ecg_corrected,
-                                      windowsize=5.0,  # What does windowsize mean here?
+                                      windowsize=5.0,  # What does window size mean here?
                                       bufferLength=3,
                                       acceptableOutlierPercent=50,
                                       outlierThresholdHigh=4500,
@@ -72,7 +72,7 @@ def cStress(raw_ecg: DataStream,
     # ecg_corrected.add_span_stream(ecg_data_quality)
 
     rip_data_quality = RIPDataQuality(rip_corrected,
-                                      windowsize=5.0,  # What does windowsize mean here?
+                                      windowsize=5.0,  # What does window size mean here?
                                       bufferLength=5,
                                       acceptableOutlierPercent=50,
                                       outlierThresholdHigh=4500,
