@@ -64,7 +64,7 @@ def cStress(rdd: RDD) -> RDD:
                                                                         sampling_frequency=accel_sampling_frequency)))
 
     # Accelerometer Feature Computation
-    accel_features = accel.map(lambda ds: (ds[0], accelerometer_features(ds[1])))
+    accel_features = accel.map(lambda ds: (ds[0], accelerometer_features(ds[1], window_length=10.0)))
 
     # rip features
     peak_valley = rip_corrected.map(lambda ds: (ds[0], rip.compute_peak_valley(rip=ds[1])))
