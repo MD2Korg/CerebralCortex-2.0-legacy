@@ -21,79 +21,57 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from pyspark import RDD
+
 from cerebralcortex.data_processor.feature.ecg import ecg_feature_computation
 from cerebralcortex.data_processor.feature.rip import rip_feature_computation
 from cerebralcortex.data_processor.signalprocessing import rip
 from cerebralcortex.data_processor.signalprocessing.accelerometer import accelerometer_features
-from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_correct, \
-    autosense_sequence_align
-from cerebralcortex.data_processor.signalprocessing.dataquality import ECGDataQuality, RIPDataQuality
+from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_correct, autosense_sequence_align
 from cerebralcortex.data_processor.signalprocessing.ecg import compute_rr_intervals
-from cerebralcortex.kernel.datatypes.datastream import DataStream
 
 
-def cStress(raw_ecg: DataStream,
-            raw_rip: DataStream,
-            raw_accel_x: DataStream,
-            raw_accel_y: DataStream,
-            raw_accel_z: DataStream) -> DataStream:
-    """
+def fix_two_joins(nested_data):
+    key = nested_data[0]
+    base_value = nested_data[1][0]
+    new_value = (nested_data[1][1],)
+    return key, base_value + new_value
 
-    :return:
-    :param raw_ecg:
-    :param raw_rip:
-    :param raw_accel_x:
-    :param raw_accel_y:
-    :param raw_accel_z:
-    """
+
+def cStress(rdd: RDD) -> RDD:
 
     # TODO: TWH Temporary
     ecg_sampling_frequency = 64.0
-    rip_sampling_frequency = 64.0 / 3.0
+    rip_sampling_frequency = 64.0
     accel_sampling_frequency = 64.0 / 6.0
 
+
     # Timestamp correct datastreams
-    ecg_corrected = timestamp_correct(datastream=raw_ecg, sampling_frequency=ecg_sampling_frequency)
-    rip_corrected = timestamp_correct(datastream=raw_rip, sampling_frequency=rip_sampling_frequency)
-    accel = autosense_sequence_align(datastreams=[timestamp_correct(raw_accel_x, accel_sampling_frequency),
-                                                  timestamp_correct(raw_accel_y, accel_sampling_frequency),
-                                                  timestamp_correct(raw_accel_z, accel_sampling_frequency)],
-                                     sampling_frequency=accel_sampling_frequency)
+    ecg_corrected = rdd.map(lambda ds: (
+    ds['participant'], timestamp_correct(datastream=ds['ecg'], sampling_frequency=ecg_sampling_frequency)))
+    rip_corrected = rdd.map(lambda ds: (
+    ds['participant'], timestamp_correct(datastream=ds['rip'], sampling_frequency=rip_sampling_frequency)))
 
-    # ECG and RIP signal morphology data quality
-    ecg_data_quality = ECGDataQuality(ecg_corrected,
-                                      windowsize=5.0,  # What does windowsize mean here?
-                                      bufferLength=3,
-                                      acceptableOutlierPercent=50,
-                                      outlierThresholdHigh=4500,
-                                      outlierThresholdLow=20,
-                                      badSegmentThreshod=2,
-                                      ecgBandLooseThreshold=47)
-    # ecg_corrected.add_span_stream(ecg_data_quality)
+    accelx_corrected = rdd.map(lambda ds: (
+    ds['participant'], timestamp_correct(datastream=ds['accelx'], sampling_frequency=accel_sampling_frequency)))
+    accely_corrected = rdd.map(lambda ds: (
+    ds['participant'], timestamp_correct(datastream=ds['accely'], sampling_frequency=accel_sampling_frequency)))
+    accelz_corrected = rdd.map(lambda ds: (
+    ds['participant'], timestamp_correct(datastream=ds['accelz'], sampling_frequency=accel_sampling_frequency)))
 
-    rip_data_quality = RIPDataQuality(rip_corrected,
-                                      windowsize=5.0,  # What does windowsize mean here?
-                                      bufferLength=5,
-                                      acceptableOutlierPercent=50,
-                                      outlierThresholdHigh=4500,
-                                      outlierThresholdLow=20,
-                                      badSegmentThreshod=2,
-                                      ripBandOffThreshold=20,
-                                      ripBandLooseThreshold=150)
-    # rip_corrected.add_span_stream(rip_data_quality)
+    accel_group = accelx_corrected.join(accely_corrected).join(accelz_corrected).map(fix_two_joins)
+    accel = accel_group.map(lambda ds: (ds[0], autosense_sequence_align(datastreams=[ds[1][0], ds[1][1], ds[1][2]],
+                                                                        sampling_frequency=accel_sampling_frequency)))
 
     # Accelerometer Feature Computation
-    accelerometer_magnitude, accelerometer_win_mag_deviations, accel_activity = accelerometer_features(accel)
+    accel_features = accel.map(lambda ds: (ds[0], accelerometer_features(ds[1])))
 
     # rip features
-    rip_peak_datastream, rip_valley_datastream = rip.compute_peak_valley(rip=rip_corrected)
+    peak_valley = rip_corrected.map(lambda ds: (ds[0], rip.compute_peak_valley(rip=ds[1])))
+    rip_features = peak_valley.map(lambda ds: (ds[0], rip_feature_computation(ds[1][0], ds[1][1])))
 
     # r-peak datastream computation
-    ecg_rr_datastream = compute_rr_intervals(ecg_corrected, ecg_sampling_frequency)
+    ecg_rr_rdd = ecg_corrected.map(lambda ds: (ds[0], compute_rr_intervals(ds[1], ecg_sampling_frequency)))
+    ecg_features = ecg_rr_rdd.map(lambda ds: (ds[0], ecg_feature_computation(ds[1], window_size=60, window_offset=60)))
 
-    ecg_features = ecg_feature_computation(ecg_rr_datastream, window_size=60, window_offset=60)
-    rip_features = rip_feature_computation(rip_peak_datastream, rip_valley_datastream)
-
-    print(len(ecg_features), len(rip_features))
-    # TODO: TWH Fix when feature vector result is available
-    return raw_ecg
+    return rip_features.join(ecg_features).join(accel_features).map(fix_two_joins)

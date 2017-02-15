@@ -25,9 +25,7 @@
 import argparse
 import gzip
 import os
-import sys
 import time
-import traceback
 import uuid
 from pprint import pprint
 
@@ -50,21 +48,26 @@ configuration_file = os.path.join(os.path.dirname(__file__), 'cerebralcortex.yml
 
 CC = CerebralCortex(configuration_file, master="local[*]", name="Memphis cStress Development App")
 
+
 def readfile(filename):
     data = []
     with gzip.open(filename, 'rt') as f:
+        count = 0
         for l in f:
             dp = parser.data_processor(l)
             if isinstance(dp, DataPoint):
                 data.append(dp)
+                count += 1
+            if count > 2500000000:
+                break
     return data
 
 
-def process_participant(identifier: int):
+def loader(identifier: int):
     participant = "SI%02d" % identifier
 
     participant_uuid = uuid.uuid4()
-    print(participant, participant_uuid)
+
     try:
         ecg = DataStream(None, participant_uuid)
         ecg.data = readfile(find(basedir, {"participant": participant, "datasource": "ecg"}))
@@ -81,23 +84,27 @@ def process_participant(identifier: int):
         accelz = DataStream(None, participant_uuid)
         accelz.data = readfile(find(basedir, {"participant": participant, "datasource": "accelz"}))
 
-        cStressFeatures = cStress(ecg, rip, accelx, accely, accelz)
-
-        result = (participant, len(ecg.data), len(rip.data), len(accelx.data), len(accely.data),
-                  len(accelz.data))
-
-        print(participant_uuid, result)
-        return result
+        return {"participant": participant, "ecg": ecg, "rip": rip, "accelx": accelx, "accely": accely,
+                "accelz": accelz}
     except Exception as e:
         print("File missing for %s" % participant)
-        print(e)
-        traceback.print_exc(file=sys.stderr)
+
+        return {"ERROR": 'missing data file'}
+
+
 
 
 start_time = time.time()
-ids = CC.sparkSession.sparkContext.parallelize([i for i in range(1, 25)])
+ids = CC.sparkSession.sparkContext.parallelize([i for i in range(1, 5)])
 
-results = ids.map(process_participant)
-pprint(results.collect())
+data = ids.map(lambda i: loader(i)).filter(lambda x: 'participant' in x)
+
+cstress_feature_vector = cStress(data)
+
+pprint(cstress_feature_vector.collect())
+
+
+# results = ids.map(loader)
+# pprint(results.collect())
 end_time = time.time()
 print(end_time - start_time)
