@@ -27,11 +27,11 @@ import gzip
 import os
 import time
 import uuid
+from pprint import pprint
 
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.data_processor.cStress import cStress
 from cerebralcortex.data_processor.preprocessor import parser
-from cerebralcortex.data_processor.signalprocessing.alignment import autosense_sequence_align
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.legacy import find
@@ -52,10 +52,14 @@ CC = CerebralCortex(configuration_file, master="local[*]", name="Memphis cStress
 def readfile(filename):
     data = []
     with gzip.open(filename, 'rt') as f:
+        count = 0
         for l in f:
             dp = parser.data_processor(l)
             if isinstance(dp, DataPoint):
                 data.append(dp)
+                count += 1
+            if count > 2500000000:
+                break
     return data
 
 
@@ -63,14 +67,13 @@ def loader(identifier: int):
     participant = "SI%02d" % identifier
 
     participant_uuid = uuid.uuid4()
-    # print(participant, participant_uuid)
 
     try:
-        # ecg = DataStream(None, participant_uuid)
-        # ecg.data = readfile(find(basedir, {"participant": participant, "datasource": "ecg"}))
-        #
-        # rip = DataStream(None, participant_uuid)
-        # rip.data = readfile(find(basedir, {"participant": participant, "datasource": "rip"}))
+        ecg = DataStream(None, participant_uuid)
+        ecg.data = readfile(find(basedir, {"participant": participant, "datasource": "ecg"}))
+
+        rip = DataStream(None, participant_uuid)
+        rip.data = readfile(find(basedir, {"participant": participant, "datasource": "rip"}))
 
         accelx = DataStream(None, participant_uuid)
         accelx.data = readfile(find(basedir, {"participant": participant, "datasource": "accelx"}))
@@ -81,36 +84,25 @@ def loader(identifier: int):
         accelz = DataStream(None, participant_uuid)
         accelz.data = readfile(find(basedir, {"participant": participant, "datasource": "accelz"}))
 
-        return participant, accelx, accely, accelz
+        return {"participant": participant, "ecg": ecg, "rip": rip, "accelx": accelx, "accely": accely,
+                "accelz": accelz}
     except Exception as e:
-        # print("File missing for %s" % participant)
-        # print(e)
-        # traceback.print_exc(file=sys.stderr)
-        pass
+        print("File missing for %s" % participant)
 
-    return "ERROR"
+        return {"ERROR": 'missing data file'}
 
 
-def cStress():
-    cStressFeatures = cStress(ecg, rip, accelx, accely, accelz)
-
-    result = (participant, len(ecg.data), len(rip.data), len(accelx.data), len(accely.data),
-              len(accelz.data))
-
-    print(participant_uuid, result)
 
 
 start_time = time.time()
 ids = CC.sparkSession.sparkContext.parallelize([i for i in range(1, 5)])
 
-data = ids.map(lambda i: loader(i))
+data = ids.map(lambda i: loader(i)).filter(lambda x: 'participant' in x)
 
-# print(data.map(lambda e: autosense_sequence_align(datastreams=[e[1], e[2], e[3]], sampling_frequency=64.0 / 6)).collect())
+cstress_feature_vector = cStress(data)
 
-filtered = data.filter(lambda x: len(x) == 4)
-aligned_data = filtered.map(
-    lambda e: (e[0], autosense_sequence_align(datastreams=[e[1], e[2], e[3]], sampling_frequency=64.0 / 6)))
-print(aligned_data.map(lambda x: (x[0], len(x[1].data))).collect())
+pprint(cstress_feature_vector.collect())
+
 
 # results = ids.map(loader)
 # pprint(results.collect())
