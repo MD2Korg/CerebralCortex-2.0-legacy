@@ -58,7 +58,7 @@ def readfile(filename):
             if isinstance(dp, DataPoint):
                 data.append(dp)
                 count += 1
-            if count > 2500000000:
+            if count > 20000:
                 break
     return data
 

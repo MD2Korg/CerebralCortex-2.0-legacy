@@ -49,7 +49,7 @@ class TestRIPFeatures(unittest.TestCase):
                     DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
 
         rip_ds = DataStream(None, None)
-        rip_ds.data = rip
+        rip_ds.data = rip[:5000]
 
         cls.peak, cls.valley = compute_peak_valley(rip_ds, fs=rip_sampling_frequency)
 
