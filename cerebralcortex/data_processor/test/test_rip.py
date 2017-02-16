@@ -38,6 +38,7 @@ from cerebralcortex.data_processor.signalprocessing.vector import smooth, moving
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_correct
+from typing import List
 
 
 class TestPeakValleyComputation(unittest.TestCase):
@@ -62,6 +63,7 @@ class TestPeakValleyComputation(unittest.TestCase):
                 values = list(map(int, l.split(',')))
                 data.append(
                     DataPoint.from_tuple(datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
+        cls._data_start_time_to_index = get_data_start_time_to_index_dic(data=data)
         cls.rip_datastream = DataStream(None,None)
         cls.rip_datastream.data = data
 
@@ -100,7 +102,11 @@ class TestPeakValleyComputation(unittest.TestCase):
         data_input = form_data_point_list_from_start_time_sample(start_time_list=data_start_time_list, sample_list=data_sample_list)
         mac_input = form_data_point_list_from_start_time_sample(start_time_list=mac_start_time_list, sample_list=mac_sample_list)
 
-        up_intercepts, down_intercepts = up_down_intercepts(data=data_input, mac=mac_input)
+        data_start_time_to_index = get_data_start_time_to_index_dic(data=data_input)
+
+        up_intercepts, down_intercepts = up_down_intercepts(data=data_input,
+                                                            mac=mac_input,
+                                                            data_start_time_to_index=data_start_time_to_index)
 
         output_up_intercepts_sample = [i.sample for i in up_intercepts]
         output_down_intercepts_sample = [i.sample for i in down_intercepts]
@@ -202,8 +208,13 @@ class TestPeakValleyComputation(unittest.TestCase):
         up_intercepts_input = form_data_point_list_from_start_time_sample(start_time_list=up_intercepts_start_time, sample_list=up_intercepts_samples)
         data_input = form_data_point_list_from_start_time_sample(start_time_list=data_start_time, sample_list=data_samples)
 
+        data_start_time_to_index = get_data_start_time_to_index_dic(data=data_input)
+        valleys_corrected_ouput = correct_valley_position(peaks=peaks_input,
+                                                          valleys=valleys_input,
+                                                          up_intercepts=up_intercepts_input,
+                                                          data=data_input,
+                                                          data_start_time_to_index=data_start_time_to_index)
 
-        valleys_corrected_ouput = correct_valley_position(peaks=peaks_input, valleys=valleys_input, up_intercepts=up_intercepts_input, data=data_input)
         valleys_corrected_ouput_start_time = [i.start_time for i in valleys_corrected_ouput]
         valleys_corrected_ouput_samples = [i.sample for i in valleys_corrected_ouput]
 
@@ -357,7 +368,15 @@ class TestPeakValleyComputation(unittest.TestCase):
             peaks_input = form_data_point_list_from_start_time_sample(start_time_list=peaks_start_time, sample_list=peaks_samples)
             data_input = form_data_point_list_from_start_time_sample(start_time_list=data_start_time, sample_list=data_samples)
 
-            peaks_output = correct_peak_position(peaks=peaks_input, valleys=valleys_input, up_intercepts=up_intercepts_input, data=data_input, max_amplitude_change_peak_correction=self._max_amplitude_change_peak_correction, min_neg_slope_count_peak_correction=self._min_neg_slope_count_peak_correction)
+            data_start_time_to_index = get_data_start_time_to_index_dic(data=data_input)
+            peaks_output = correct_peak_position(peaks=peaks_input,
+                                                 valleys=valleys_input,
+                                                 up_intercepts=up_intercepts_input,
+                                                 data=data_input,
+                                                 max_amplitude_change_peak_correction=self._max_amplitude_change_peak_correction,
+                                                 min_neg_slope_count_peak_correction=self._min_neg_slope_count_peak_correction,
+                                                 data_start_time_to_index=data_start_time_to_index)
+
             peaks_output_samples = [i.sample for i in peaks_output]
             peaks_output_start_time = [i.start_time for i in peaks_output]
 
@@ -451,7 +470,12 @@ class TestPeakValleyComputation(unittest.TestCase):
                                     'Check if rip raw data sample frequency missmatch with provided default rip sample frequency.')
 
 
+def get_data_start_time_to_index_dic(data: List[DataPoint]) -> dict:
+    data_start_time_to_index = {}
+    for index, d in enumerate(data):
+        data_start_time_to_index[d.start_time] = index
 
+    return data_start_time_to_index
 
 def form_data_point_from_start_time_array(start_time_list):
     datapoints = []

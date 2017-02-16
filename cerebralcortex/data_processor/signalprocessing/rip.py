@@ -61,47 +61,59 @@ def compute_peak_valley(rip: DataStream,
     window_length = int(round(time_window * fs))
     data_mac = moving_average_curve(data_smooth, window_length=window_length)
 
-    up_intercepts, down_intercepts = up_down_intercepts(data=data_smooth, mac=data_mac)
-    up_intercepts, down_intercepts = filter_intercept_outlier(up_intercepts=up_intercepts,
+    data_smooth_start_time_to_index = {}
+    for index, data in enumerate(data_smooth):
+        data_smooth_start_time_to_index[data.start_time] = index
+
+    up_intercepts, down_intercepts = up_down_intercepts(data=data_smooth,
+                                                        mac=data_mac,
+                                                        data_start_time_to_index=data_smooth_start_time_to_index)
+
+    up_intercepts_filtered, down_intercepts_filtered = filter_intercept_outlier(up_intercepts=up_intercepts,
                                                               down_intercepts=down_intercepts)
 
-    peaks, valleys = generate_peak_valley(up_intercepts=up_intercepts,
-                                          down_intercepts=down_intercepts,
+    peaks, valleys = generate_peak_valley(up_intercepts=up_intercepts_filtered,
+                                          down_intercepts=down_intercepts_filtered,
                                           data=data_smooth)
 
-    valleys = correct_valley_position(peaks=peaks, valleys=valleys, up_intercepts=up_intercepts, data=data_smooth)
+    valleys_corrected = correct_valley_position(peaks=peaks,
+                                      valleys=valleys,
+                                      up_intercepts=up_intercepts_filtered,
+                                      data=data_smooth,
+                                      data_start_time_to_index=data_smooth_start_time_to_index)
 
-    peaks = correct_peak_position(peaks=peaks,
-                                  valleys=valleys,
-                                  up_intercepts=up_intercepts,
+    peaks_corrected = correct_peak_position(peaks=peaks,
+                                  valleys=valleys_corrected,
+                                  up_intercepts=up_intercepts_filtered,
                                   data=data_smooth,
                                   max_amplitude_change_peak_correction=max_amplitude_change_peak_correction,
-                                  min_neg_slope_count_peak_correction=min_neg_slope_count_peak_correction)
+                                  min_neg_slope_count_peak_correction=min_neg_slope_count_peak_correction,
+                                  data_start_time_to_index=data_smooth_start_time_to_index)
 
     # remove too close valley peak pair.
-    peaks, valleys = remove_close_valley_peak_pair(peaks=peaks,
-                                                   valleys=valleys,
+    peaks_filtered_close, valleys_filtered_close = remove_close_valley_peak_pair(peaks=peaks_corrected,
+                                                   valleys=valleys_corrected,
                                                    minimum_peak_to_valley_time_diff=minimum_peak_to_valley_time_diff)
 
     # Remove small  Expiration duration < 0.31
-    peaks, valleys = filter_expiration_duration_outlier(peaks=peaks,
-                                                        valleys=valleys,
+    peaks_filtered_exp_dur, valleys_filtered_exp_dur = filter_expiration_duration_outlier(peaks=peaks_filtered_close,
+                                                        valleys=valleys_filtered_close,
                                                         threshold_expiration_duration=threshold_expiration_duration)
 
     # filter out peak valley pair of inspiration of small amplitude.
-    peaks, valleys = filter_small_amp_inspiration_peak_valley(peaks=peaks,
-                                                              valleys=valleys,
+    peaks_filtered_insp_amp, valleys_filtered_insp_amp = filter_small_amp_inspiration_peak_valley(peaks=peaks_filtered_exp_dur,
+                                                              valleys=valleys_filtered_exp_dur,
                                                               inspiration_amplitude_threshold_perc=inspiration_amplitude_threshold_perc)
 
     # filter out peak valley pair of expiration of small amplitude.
-    peaks, valleys = filter_small_amp_expiration_peak_valley(peaks=peaks,
-                                                             valleys=valleys,
+    peaks_filtered_exp_amp, valleys_filtered_exp_amp = filter_small_amp_expiration_peak_valley(peaks=peaks_filtered_insp_amp,
+                                                             valleys=valleys_filtered_insp_amp,
                                                              expiration_amplitude_threshold_perc=expiration_amplitude_threshold_perc)
 
     peak_datastream = DataStream.from_datastream([rip])
-    peak_datastream.data = peaks
+    peak_datastream.data = peaks_filtered_exp_amp
     valley_datastream = DataStream.from_datastream([rip])
-    valley_datastream.data = valleys
+    valley_datastream.data = valleys_filtered_exp_amp
 
     return peak_datastream, valley_datastream
 
@@ -224,7 +236,8 @@ def correct_peak_position(peaks: List[DataPoint],
                           up_intercepts: List[DataPoint],
                           data: List[DataPoint],
                           max_amplitude_change_peak_correction: float,
-                          min_neg_slope_count_peak_correction: int) -> List[DataPoint]:
+                          min_neg_slope_count_peak_correction: int,
+                          data_start_time_to_index: dict) -> List[DataPoint]:
     """
     Correct peak position by checking if there is a notch in the inspiration branch at left position.
     If at least 60% inspiration is done at a notch point, assume that notch as an original peak.
@@ -238,41 +251,43 @@ def correct_peak_position(peaks: List[DataPoint],
     :param data:
     :param max_amplitude_change_peak_correction:
     :param min_neg_slope_count_peak_correction:
+    :param data_start_time_to_index: hash table for data where start_time is key, index is value
 
     """
-    # TODO: This logic block is too computationally inefficient (list comprehensions and accessing start_time)
     for i, item in enumerate(peaks):
-        up_intercepts_valley_to_peak = []
-        for j in range(len(up_intercepts)):
-            if valleys[i].start_time < up_intercepts[j].start_time < peaks[i].start_time:
-                up_intercepts_valley_to_peak.append(up_intercepts[j])
-
-        if len(up_intercepts_valley_to_peak) > 1:
-            raise Exception("More than one consecutive up intercepts.")
-
-        elif len(up_intercepts_valley_to_peak) == 1:
-            up_intercept = up_intercepts_valley_to_peak[0]
-
+        if valleys[i].start_time < up_intercepts[i].start_time < peaks[i].start_time:
+            up_intercept = up_intercepts[i]
             # points between current valley and UI.
-            data_ui_to_peak = [j for j in data if up_intercept.start_time <= j.start_time <= peaks[i].start_time]
+            if up_intercept.start_time not in data_start_time_to_index or peaks[i].start_time not in data_start_time_to_index:
+                exception_message = 'Data has no start time for peak or up intercept start time at index ' + str(i)
+                raise Exception(exception_message)
+            else:
+                data_up_intercept_index = data_start_time_to_index[up_intercept.start_time]
+                data_peak_index = data_start_time_to_index[peaks[i].start_time]
 
-            sample_ui_to_peak = [j.sample for j in data_ui_to_peak]
-            slope_at_samples = np.diff(sample_ui_to_peak)
+                data_ui_to_peak = data[data_up_intercept_index: data_peak_index + 1]
 
-            if not all(j >= 0 for j in slope_at_samples):
-                indices_neg_slope = [j for j in range(len(slope_at_samples)) if slope_at_samples[j] < 0]
-                peak_new = data_ui_to_peak[indices_neg_slope[0]]
-                valley_peak_dist_new = peak_new.sample - valleys[i].sample
-                valley_peak_dist_prev = peaks[i].sample - valleys[i].sample
-                if valley_peak_dist_new == 0:
-                    raise Exception("New peak to valley distance is equal to zero. "
-                                    "This will encounter divide by zero exception.")
-                else:
-                    amplitude_change = (valley_peak_dist_prev - valley_peak_dist_new) / valley_peak_dist_new * 100
+                sample_ui_to_peak = [j.sample for j in data_ui_to_peak]
+                slope_at_samples = np.diff(sample_ui_to_peak)
 
-                    if len(indices_neg_slope) >= min_neg_slope_count_peak_correction:
-                        if amplitude_change <= max_amplitude_change_peak_correction:
-                            peaks[i] = peak_new  # 60% inspiration is done at that point.
+                if not all(j >= 0 for j in slope_at_samples):
+                    indices_neg_slope = [j for j in range(len(slope_at_samples)) if slope_at_samples[j] < 0]
+                    peak_new = data_ui_to_peak[indices_neg_slope[0]]
+                    valley_peak_dist_new = peak_new.sample - valleys[i].sample
+                    valley_peak_dist_prev = peaks[i].sample - valleys[i].sample
+                    if valley_peak_dist_new == 0:
+                        raise Exception("New peak to valley distance is equal to zero. "
+                                        "This will encounter divide by zero exception.")
+                    else:
+                        amplitude_change = (valley_peak_dist_prev - valley_peak_dist_new) / valley_peak_dist_new * 100
+
+                        if len(indices_neg_slope) >= min_neg_slope_count_peak_correction:
+                            if amplitude_change <= max_amplitude_change_peak_correction:
+                                peaks[i] = peak_new  # 60% inspiration is done at that point.
+
+        else:
+            # TODO: Discuss whether raise exception or not for this scenerio.
+            break # up intercept at i is not between valley and peak at i
 
     return peaks
 
@@ -280,7 +295,8 @@ def correct_peak_position(peaks: List[DataPoint],
 def correct_valley_position(peaks: List[DataPoint],
                             valleys: List[DataPoint],
                             up_intercepts: List[DataPoint],
-                            data: List[DataPoint]) -> List[DataPoint]:
+                            data: List[DataPoint],
+                            data_start_time_to_index: dict) -> List[DataPoint]:
     """
     Correct Valley position by locating actual valley using maximum slope algorithm which is
     located between current valley and following peak.
@@ -295,25 +311,22 @@ def correct_valley_position(peaks: List[DataPoint],
     :param valleys:
     :param up_intercepts:
     :param data:
+    :param data_start_time_to_index: hash table for data where start_time is key, index is value
     """
     valley_updated = valleys.copy()
-    # TODO: This logic block is too computationally inefficient (list comprehensions and accessing start_time)
     for i in range(len(valleys)):
-        up_intercepts_valley_to_peak = []
-        for j in range(len(up_intercepts)):
-            if valleys[i].start_time < up_intercepts[j].start_time < peaks[i].start_time:
-                up_intercepts_valley_to_peak.append(up_intercepts[j])
+        if valleys[i].start_time < up_intercepts[i].start_time < peaks[i].start_time:
+            up_intercept = up_intercepts[i]
 
-        if len(up_intercepts_valley_to_peak) > 0:
-            if len(up_intercepts_valley_to_peak) > 1:
-                raise Exception('More than 2 consecutive up intercept is detected.')
+            if valleys[i].start_time not in data_start_time_to_index or up_intercept.start_time not in data_start_time_to_index:
+                exception_message = 'Data has no start time for valley or up intercept start time at index ' + str(i)
+                raise Exception(exception_message)
             else:
-                up_intercept = up_intercepts_valley_to_peak[0]
+                valley_index = data_start_time_to_index[valleys[i].start_time]
+                up_intercept_index = data_start_time_to_index[up_intercept.start_time]
 
-                data_valley_to_ui = []
-                for j in data:
-                    if valleys[i].start_time <= j.start_time <= up_intercept.start_time:
-                        data_valley_to_ui.append(j)
+                data_valley_to_ui = data[valley_index: up_intercept_index + 1]
+
                 sample_valley_to_ui = [j.sample for j in data_valley_to_ui]
 
                 slope_at_samples = np.diff(sample_valley_to_ui)
@@ -330,6 +343,11 @@ def correct_valley_position(peaks: List[DataPoint],
                         if consecutive_positive_slopes[k] == max(consecutive_positive_slopes):
                             indices_max_pos_slope.append(k)
                     valley_updated[i] = data_valley_to_ui[indices_max_pos_slope[-1]]
+
+        else:
+            # TODO: discuss whether raise exception or not
+            # Up intercept at index i is not between valley and peak at index i.
+            break
 
     return valley_updated
 
@@ -426,7 +444,8 @@ def filter_intercept_outlier(up_intercepts: List[DataPoint],
     return up_intercepts_updated, down_intercepts_updated
 
 def up_down_intercepts(data: List[DataPoint],
-                       mac: List[DataPoint]) -> [List[DataPoint], List[DataPoint]]:
+                       mac: List[DataPoint],
+                       data_start_time_to_index: dict) -> [List[DataPoint], List[DataPoint]]:
     """
     Returns Up and Down Intercepts.
     Moving Average Centerline curve intersects breath cycle twice. Once in the inhalation branch
@@ -439,11 +458,11 @@ def up_down_intercepts(data: List[DataPoint],
 
     up_intercepts = []
     down_intercepts = []
-    # TODO: This logic block is too computationally inefficient (list comprehensions and accessing start_time)
 
-    mac_start_time_list = [i.start_time for i in mac]
-
-    subsets = [i for i in data if i.start_time in mac_start_time_list]
+    subsets = []
+    for m in mac:
+        data_index = data_start_time_to_index[m.start_time]
+        subsets.append(data[data_index])
 
     if len(subsets) == len(mac):
         for i in range(len(mac) - 1):
