@@ -28,6 +28,10 @@
     {
       "name": "platform",
       "identifier": "aec29183-3a45-4ab4-9beb-72475b3cf38a"
+    },
+    {
+      "name": "informed consent",
+      "identifier": "aec29183-3a45-4ab4-9beb-72475b3cf38b"
     }
   ]
 }
