@@ -74,4 +74,5 @@ def cStress(rdd: RDD) -> RDD:
     ecg_rr_rdd = ecg_corrected.map(lambda ds: (ds[0], compute_rr_intervals(ds[1], ecg_sampling_frequency)))
     ecg_features = ecg_rr_rdd.map(lambda ds: (ds[0], ecg_feature_computation(ds[1], window_size=60, window_offset=60)))
 
-    return rip_features.join(ecg_features).join(accel_features).map(fix_two_joins)
+    # return rip_features.join(ecg_features).join(accel_features).map(fix_two_joins)
+    return ecg_features

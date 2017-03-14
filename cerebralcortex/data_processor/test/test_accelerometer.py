@@ -31,6 +31,7 @@ from random import random
 import pytz
 
 from cerebralcortex.data_processor.signalprocessing.accelerometer import accelerometer_features
+from cerebralcortex.data_processor.signalprocessing.alignment import autosense_sequence_align
 from cerebralcortex.data_processor.signalprocessing.vector import window_std_dev
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
@@ -41,19 +42,24 @@ class TestAccelerometer(unittest.TestCase):
     def setUpClass(cls):
         super(TestAccelerometer, cls).setUpClass()
         tz = pytz.timezone('US/Eastern')
+        cls.sampling_frequency = 64.0 / 6.0
         cls.accelx = []
         with gzip.open(os.path.join(os.path.dirname(__file__), 'res/accelx.csv.gz'), 'rt') as f:
             for l in f:
                 values = list(map(int, l.split(',')))
                 cls.accelx.append(
                     DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
-
+        cls.accelx_ds = DataStream(None, None)
+        cls.accelx_ds.data = cls.accelx
+        
         cls.accely = []
         with gzip.open(os.path.join(os.path.dirname(__file__), 'res/accely.csv.gz'), 'rt') as f:
             for l in f:
                 values = list(map(int, l.split(',')))
                 cls.accely.append(
                     DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
+        cls.accely_ds = DataStream(None, None)
+        cls.accely_ds.data = cls.accely
 
         cls.accelz = []
         with gzip.open(os.path.join(os.path.dirname(__file__), 'res/accelz.csv.gz'), 'rt') as f:
@@ -61,6 +67,8 @@ class TestAccelerometer(unittest.TestCase):
                 values = list(map(int, l.split(',')))
                 cls.accelz.append(
                     DataPoint.from_tuple(datetime.datetime.fromtimestamp(values[0] / 1000000.0, tz=tz), values[1]))
+        cls.accelz_ds = DataStream(None, None)
+        cls.accelz_ds.data = cls.accelz
 
     def setUp(self):
         self.size = 100000
@@ -88,22 +96,17 @@ class TestAccelerometer(unittest.TestCase):
         self.assertEqual(az.start_time, ts)
         self.assertAlmostEqual(az.sample, 37.00211, delta=0.001)
 
-    def test_window_std_dev_one(self):
+    def test_window_std_dev_two(self):
         ts = datetime.datetime.now(tz=pytz.timezone('US/Central'))
-        dev = window_std_dev([DataPoint.from_tuple(ts, 10)], ts)
+        dev = window_std_dev([DataPoint.from_tuple(ts, 10), DataPoint.from_tuple(ts, 10)], ts)
         self.assertEqual(dev.sample, 0.0)
 
+    def test_window_std_dev_error(self):
+        ts = datetime.datetime.now(tz=pytz.timezone('US/Central'))
+        self.assertRaises(Exception, window_std_dev, [DataPoint.from_tuple(ts, 10)], ts)
+
     def test_accelerometer_features(self):
-        ds = DataStream(None, None)
-
-        data = []
-        # TODO: Fix the test case once timestamp correction and sequence alignment is written
-        for i in range(min(len(self.accelx), len(self.accely), len(self.accelz))):
-            data.append(DataPoint.from_tuple(self.accelx[i].start_time, [self.accelx[i].sample,
-                                                                         self.accely[i].sample,
-                                                                         self.accelz[i].sample]))
-
-        ds.data = data
+        ds = autosense_sequence_align([self.accelx_ds, self.accely_ds, self.accelz_ds], self.sampling_frequency)
 
         accelerometer_magnitude, accelerometer_win_mag_deviations, accel_activity = accelerometer_features(ds)
 
@@ -111,8 +114,7 @@ class TestAccelerometer(unittest.TestCase):
         self.assertEqual(len(accelerometer_win_mag_deviations.data), 687)
         self.assertEqual(len(accel_activity.data), 687)
 
-        self.assertEqual(len([dp for dp in accel_activity.data if dp.sample]),
-                         0)  # TODO: Is this correct
+        self.assertEqual(len([dp for dp in accel_activity.data if dp.sample]), 0)  # TODO: Is this correct
 
 
 if __name__ == '__main__':

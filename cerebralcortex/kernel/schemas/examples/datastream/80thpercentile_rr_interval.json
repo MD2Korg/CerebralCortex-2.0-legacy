@@ -1,5 +1,5 @@
 {
-  "identifier": 1,
+  "identifier": "8405dc31-fca9-4390-840e-5c888c3dbba0",
   "user": "a970e186-e960-11e6-bf0e-fe55135034f3",
   "name": "80th_percentile_rr_variance",
   "description": "80th percentile",
@@ -11,7 +11,7 @@
     }
   ],
   "execution_context": {
-    "processing_module": 5,
+    "processing_module": "ac72b0bc-8e0f-45f2-87a9-08642b757f61",
     "input_parameters": [
       {
         "name": "window_size",
@@ -25,35 +25,30 @@
     "input_streams": [
       {
         "name": "ecg_rr_interval",
-        "stream_identifier": 40
+        "stream_identifier": "5b7fb6f3-7bf6-4031-881c-a25faf112dd1"
       }
-    ],
-    "metadata": {
-      "platform": {
-        "device": {
-          "model": "Samsung Galaxy S5",
-          "OS": "6.0.0",
-          "battery_capacity": "8500mah"
-        }
-      }
-    }
+    ]
   },
   "annotations": [
     {
       "name": "study",
-      "stream_identifier": 5
+      "identifier": "5b7fb6f3-7bf6-4031-881c-a25faf112dd9"
     },
     {
       "name": "privacy",
-      "stream_identifier": 6
+      "identifier": "01dd3847-4bae-418b-8fcd-03efc4607df0"
     },
     {
       "name": "access control",
-      "stream_identifier": 7
+      "identifier": "d1108a2c-fe86-4adc-8d95-f8bcf379955b"
     },
     {
-      "name": "data source",
-      "stream_identifier": 8
+      "name": "data_source",
+      "identifier": "d7cfab9d-c5c1-436f-a145-b03a7e3e1704"
+    },
+    {
+      "name": "platform",
+      "identifier": "aec29183-3a45-4ab4-9beb-72475b3cf38a"
     }
   ]
 }

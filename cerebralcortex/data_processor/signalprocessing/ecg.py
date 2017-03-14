@@ -31,7 +31,6 @@ from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 
 
-
 def classify_ecg_window(data: List[DataPoint],
                         range_threshold: int = 200,
                         slope_threshold: int = 50,
@@ -58,7 +57,6 @@ def classify_ecg_window(data: List[DataPoint],
     return True
 
 
-
 def filter_bad_ecg(ecg: DataStream,
                    fs: float,
                    no_of_secs: int = 2) -> DataStream:
@@ -78,7 +76,6 @@ def filter_bad_ecg(ecg: DataStream,
 
     ecg_filtered = DataStream.from_datastream([ecg])
     ecg_filtered_array = []
-
 
     for key, data in window_data.items():
         if classify_ecg_window(data, range_threshold=200, slope_threshold=50, maximum_value=4000):
@@ -122,8 +119,8 @@ def rr_interval_update(rpeak_temp1: List[DataPoint],
 def compute_moving_window_int(sample: np.ndarray,
                               fs: float,
                               blackmanWinlen: int,
-                              filter_length:int = 257,
-                              delta:float=.02) -> np.ndarray:
+                              filter_length: int = 257,
+                              delta: float = .02) -> np.ndarray:
     """
     :param sample: ecg sample array
     :param fs: sampling frequency
@@ -166,9 +163,6 @@ def compute_moving_window_int(sample: np.ndarray,
     mov_win_int_signal /= np.percentile(mov_win_int_signal, 90)
 
     return mov_win_int_signal
-
-
-
 
 
 def check_peak(data: List[DataPoint]) -> bool:
@@ -219,7 +213,7 @@ def compute_r_peaks(threshold_1: float,
 
     """
 
-    peak_location_in_signal_array = [i[0] for i in peak_tuple_array] #location of the simple peaks in signal array
+    peak_location_in_signal_array = [i[0] for i in peak_tuple_array]  # location of the simple peaks in signal array
     amplitude_in_peak_locations = [i[1] for i in peak_tuple_array]  # simple peak's amplitude in signal array
 
     threshold_2 = 0.5 * threshold_1  # any signal value between threshold_2 and threshold_1 is a noise peak
@@ -232,19 +226,25 @@ def compute_r_peaks(threshold_1: float,
 
         # if for 166 percent of the present RR interval no peak is detected as R peak then threshold_2 is taken as the
         # R peak threshold and the maximum of the range is taken as a R peak and RR interval is updated accordingly
-        if len(rpeak_array_indices) >= 1 and peak_location_in_signal_array[ind_rpeak] - peak_location_in_signal_array[rpeak_inds_in_peak_array[-1]] > 1.66 * rr_ave and ind_rpeak - rpeak_inds_in_peak_array[-1] > 1:
+        if len(rpeak_array_indices) >= 1 and peak_location_in_signal_array[ind_rpeak] - peak_location_in_signal_array[
+            rpeak_inds_in_peak_array[-1]] > 1.66 * rr_ave and ind_rpeak - rpeak_inds_in_peak_array[-1] > 1:
 
             # values and indexes of previous peaks discarded as not an R peak whose magnitude is above threshold_2
-            searchback_array = [(k - rpeak_inds_in_peak_array[-1],amplitude_in_peak_locations[k]) for k in range(rpeak_inds_in_peak_array[-1] + 1, ind_rpeak) if
-                                               3 * sig_lev > amplitude_in_peak_locations[k] > threshold_2]
+            searchback_array = [(k - rpeak_inds_in_peak_array[-1], amplitude_in_peak_locations[k]) for k in
+                                range(rpeak_inds_in_peak_array[-1] + 1, ind_rpeak) if
+                                3 * sig_lev > amplitude_in_peak_locations[k] > threshold_2]
 
             if len(searchback_array) > 0:
                 # maximum inside the range calculated beforehand is taken as R peak
                 searchback_array_inrange_values = [x[1] for x in searchback_array]
                 searchback_max_index = np.argmax(searchback_array_inrange_values)
-                rpeak_array_indices.append(peak_location_in_signal_array[rpeak_inds_in_peak_array[-1] +searchback_array[searchback_max_index][0]])
-                rpeak_inds_in_peak_array.append(rpeak_inds_in_peak_array[-1] +searchback_array[searchback_max_index][0])
-                sig_lev = ewma(sig_lev,mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]],.125)  # update the current signal level
+                rpeak_array_indices.append(peak_location_in_signal_array[
+                                               rpeak_inds_in_peak_array[-1] + searchback_array[searchback_max_index][
+                                                   0]])
+                rpeak_inds_in_peak_array.append(
+                    rpeak_inds_in_peak_array[-1] + searchback_array[searchback_max_index][0])
+                sig_lev = ewma(sig_lev, mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]],
+                               .125)  # update the current signal level
                 threshold_1 = noise_lev + 0.25 * (sig_lev - noise_lev)
                 threshold_2 = 0.5 * threshold_1
                 rr_ave = rr_interval_update(rpeak_array_indices, rr_ave)
@@ -258,10 +258,12 @@ def compute_r_peaks(threshold_1: float,
             if threshold_1 <= mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]] < 3 * sig_lev:
                 rpeak_array_indices.append(peak_location_in_signal_array[ind_rpeak])
                 rpeak_inds_in_peak_array.append(ind_rpeak)
-                sig_lev = ewma(sig_lev,mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]],.125)  # update the signal level
+                sig_lev = ewma(sig_lev, mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]],
+                               .125)  # update the signal level
             # noise peak checking
             elif threshold_1 > mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]] > threshold_2:
-                noise_lev = ewma(noise_lev,mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]],.125) # update the noise level
+                noise_lev = ewma(noise_lev, mov_win_int_signal[peak_location_in_signal_array[ind_rpeak]],
+                                 .125)  # update the noise level
             threshold_1 = noise_lev + 0.25 * (sig_lev - noise_lev)
             threshold_2 = 0.5 * threshold_1
             ind_rpeak += 1
@@ -283,9 +285,9 @@ def ewma(value: float, new_value: float, alpha: float) -> float:
 # TODO: CODE_REVIEW: Justify in the method documentation string the justification of the default values
 # TODO: CODE_REVIEW: Make hard-coded constants default method parameter
 def remove_close_peaks(rpeak_temp1: list,
-                        sample: np.ndarray,
-                        fs: float,
-                        min_range:float=.5) -> list:
+                       sample: np.ndarray,
+                       fs: float,
+                       min_range: float = .5) -> list:
     """
     This function removes one of two peaks from two consecutive R peaks
     if difference among them is less than the minimum possible
@@ -296,33 +298,32 @@ def remove_close_peaks(rpeak_temp1: list,
     :return: R peak array with no close R peaks
 
     """
-    difference=0
-    rpeak_temp2=rpeak_temp1
-    while difference !=1:
-        length_Rpeak_temp2 =len(rpeak_temp2)
-        temp=np.diff(rpeak_temp2)
-        comp_index1=[rpeak_temp2[i] for i in range(len(temp)) if temp[i]<  min_range*fs ]
-        comp_index2=[rpeak_temp2[i+1] for i in range(len(temp)) if temp[i]< min_range*fs]
-        comp1=sample[comp_index1]
-        comp2=sample[comp_index2]
-        checkmin=np.matrix([comp1,comp2])
-        temp_ind1=[i for i in range(len(temp)) if temp[i]<min_range*fs]
-        temp_ind2=np.argmin(np.array(checkmin),axis=0)
-        temp_ind=temp_ind1 + temp_ind2
-        temp_ind=np.unique(temp_ind)
-        count=0
+    difference = 0
+    rpeak_temp2 = rpeak_temp1
+    while difference != 1:
+        length_Rpeak_temp2 = len(rpeak_temp2)
+        temp = np.diff(rpeak_temp2)
+        comp_index1 = [rpeak_temp2[i] for i in range(len(temp)) if temp[i] < min_range * fs]
+        comp_index2 = [rpeak_temp2[i + 1] for i in range(len(temp)) if temp[i] < min_range * fs]
+        comp1 = sample[comp_index1]
+        comp2 = sample[comp_index2]
+        checkmin = np.matrix([comp1, comp2])
+        temp_ind1 = [i for i in range(len(temp)) if temp[i] < min_range * fs]
+        temp_ind2 = np.argmin(np.array(checkmin), axis=0)
+        temp_ind = temp_ind1 + temp_ind2
+        temp_ind = np.unique(temp_ind)
+        count = 0
         for i in temp_ind:
-            rpeak_temp2.remove(rpeak_temp2[i-count])
-            count=count+1
-        difference=length_Rpeak_temp2-len(rpeak_temp2)+1
+            rpeak_temp2.remove(rpeak_temp2[i - count])
+            count = count + 1
+        difference = length_Rpeak_temp2 - len(rpeak_temp2) + 1
     return rpeak_temp2
-
 
 
 def confirm_peaks(rpeak_temp1: list,
                   sample: np.ndarray,
                   fs: float,
-                  range_for_checking:float = 1/10) -> np.ndarray:
+                  range_for_checking: float = 1 / 10) -> np.ndarray:
     """
 
     This function does the final check on the R peaks detected and
@@ -337,12 +338,12 @@ def confirm_peaks(rpeak_temp1: list,
 
     """
     for i in range(1, len(rpeak_temp1) - 1):
-        start_index = int(rpeak_temp1[i] - np.ceil(range_for_checking*fs))
-        end_index = int(rpeak_temp1[i] + np.ceil(range_for_checking*fs) + 1)
+        start_index = int(rpeak_temp1[i] - np.ceil(range_for_checking * fs))
+        end_index = int(rpeak_temp1[i] + np.ceil(range_for_checking * fs) + 1)
 
         index = np.argmax(sample[start_index:end_index])
 
-        rpeak_temp1[i] = rpeak_temp1[i] - np.ceil(range_for_checking*fs) + index
+        rpeak_temp1[i] = rpeak_temp1[i] - np.ceil(range_for_checking * fs) + index
 
     return np.array(rpeak_temp1).astype(np.int64)
 
@@ -351,7 +352,7 @@ def confirm_peaks(rpeak_temp1: list,
 def detect_rpeak(ecg: DataStream,
                  fs: float = 64,
                  threshold: float = 0.5,
-                 blackman_win_len_range:float=1/5) -> DataStream:
+                 blackman_win_len_range: float = 1 / 5) -> DataStream:
     """
     This program implements the Pan Tomkins algorithm on ECG signal to detect the R peaks
 
@@ -379,10 +380,10 @@ def detect_rpeak(ecg: DataStream,
     timestamp = np.array([i.start_time for i in data])
 
     # computes the moving window integration of the signal
-    blackman_win_len = np.ceil(fs *blackman_win_len_range)
+    blackman_win_len = np.ceil(fs * blackman_win_len_range)
     y = compute_moving_window_int(sample, fs, blackman_win_len)
 
-    peak_location_values = [(i,y[i]) for i in range(2, len(y) - 1) if check_peak(y[i - 2:i + 3])]
+    peak_location_values = [(i, y[i]) for i in range(2, len(y) - 1) if check_peak(y[i - 2:i + 3])]
 
     # initial RR interval average
     peak_location = [i[0] for i in peak_location_values]

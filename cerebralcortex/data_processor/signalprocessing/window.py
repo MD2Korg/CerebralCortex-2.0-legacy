@@ -69,7 +69,7 @@ def window(data: List[DataPoint],
 
 def window_sliding(data: List[DataPoint],
                    window_size: float,
-                   window_offset: float):
+                   window_offset: float) -> OrderedDict:
     """
     Sliding Window Implementation
 

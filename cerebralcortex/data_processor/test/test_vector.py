@@ -97,6 +97,23 @@ class TestVector(unittest.TestCase):
         # for sample in m.data:
         #     self.assertAlmostEqual(sample.sample, 0.1857005338535236, delta=1e-6)
 
+    def test_magnitude_empty(self):
+        ds = DataStream(None, None, data=[])
+        self.assertIsInstance(ds, DataStream)
+
+        m = magnitude(normalize(ds))
+        self.assertIsInstance(m, DataStream)
+        self.assertEqual(len(m.data), 0)
+
+    def test_normalize_empty(self):
+        ds = DataStream(None, None, data=[])
+        self.assertIsInstance(ds, DataStream)
+
+        m = normalize(ds)
+        self.assertIsInstance(m, DataStream)
+        self.assertEqual(len(m.data), 0)
+
+
 
 if __name__ == '__main__':
     unittest.main()

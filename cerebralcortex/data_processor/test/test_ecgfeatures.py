@@ -98,5 +98,6 @@ class TestECGFeatures(unittest.TestCase):
         self.assertAlmostEqual(rr_20.data[0].sample, 0.58499999999999996, delta=0.01)
         self.assertAlmostEqual(rr_heart_rate.data[0].sample, 97.56123355471891, delta=0.01)
 
+
 if __name__ == '__main__':
     unittest.main()

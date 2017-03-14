@@ -38,15 +38,17 @@ def normalize(datastream: DataStream) -> DataStream:
     :param datastream:
     :return:
     """
+    result = DataStream.from_datastream(input_streams=[datastream])
+    if datastream.data is None or len(datastream.data) == 0:
+        result.data = []
+        return result
+
     input_data = np.array([i.sample for i in datastream.data])
 
     data = preprocessing.normalize(input_data, axis=0)
 
-    result_data = [DataPoint.from_tuple(start_time=v.start_time, sample=data[i])
+    result.data = [DataPoint.from_tuple(start_time=v.start_time, sample=data[i])
                    for i, v in enumerate(datastream.data)]
-
-    result = DataStream.from_datastream(input_streams=[datastream])
-    result.data = result_data
 
     return result
 
@@ -57,15 +59,17 @@ def magnitude(datastream: DataStream) -> DataStream:
     :param datastream:
     :return:
     """
+    result = DataStream.from_datastream(input_streams=[datastream])
+    if datastream.data is None or len(datastream.data) == 0:
+        result.data = []
+        return result
+
     input_data = np.array([i.sample for i in datastream.data])
 
-    data = norm(input_data, axis=1).tolist()  # TODO: Fix function to not compute normalized magnitudes
+    data = norm(input_data, axis=1).tolist()
 
-    result_data = [DataPoint.from_tuple(start_time=v.start_time, sample=data[i])
+    result.data = [DataPoint.from_tuple(start_time=v.start_time, sample=data[i])
                    for i, v in enumerate(datastream.data)]
-
-    result = DataStream.from_datastream(input_streams=[datastream])
-    result.data = result_data
 
     return result
 
@@ -88,6 +92,10 @@ def smooth(data: List[DataPoint],
     :param data:
     :param span:
     """
+
+    if data is None or len(data) == 0:
+        return []
+
     sample = [i.sample for i in data]
     sample_middle = np.convolve(sample, np.ones(span, dtype=int), 'valid') / span
     divisor = np.arange(1, span - 1, 2)
@@ -116,6 +124,9 @@ def moving_average_curve(data: List[DataPoint],
     :param data:
     :param window_length:
     """
+    if data is None or len(data) == 0:
+        return []
+
     sample = [i.sample for i in data]
     mac = []
     for i in range(window_length, len(sample) - (window_length + 1)):
@@ -133,5 +144,9 @@ def window_std_dev(data: List[DataPoint],
     :param window_start:
     :return:
     """
+
+    if data is None or len(data) < 2:
+        raise Exception('Standard deviation requires at least 2 values to compute')
+
     data_points = np.array([dp.sample for dp in data])
     return DataPoint.from_tuple(window_start, np.std(data_points))

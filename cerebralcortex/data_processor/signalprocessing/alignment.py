@@ -35,6 +35,9 @@ from cerebralcortex.kernel.datatypes.datastream import DataStream
 def interpolate_gaps(data: List[DataPoint],
                      sampling_frequency: float,
                      interpolation_gap_multiplier: float = 10.0) -> List[DataPoint]:
+    if data is None or len(data) == 0:
+        return []
+
     sampling_interval = 1.0 / sampling_frequency
 
     max_interpolation_gap = sampling_interval * interpolation_gap_multiplier
@@ -51,7 +54,6 @@ def interpolate_gaps(data: List[DataPoint],
 
     if len(gap_points) == 0:
         return data
-
 
     gap_index = 0
     in_gap = False
@@ -114,6 +116,12 @@ def timestamp_correct(datastream: DataStream,
                       min_available_gaps: int = 3600,  # TODO: Does this matter anymore?
                       min_split_gap: datetime.timedelta = datetime.timedelta(seconds=30),
                       max_data_points_per_segment: int = 100000000) -> DataStream:
+    result = DataStream.from_datastream([datastream])
+    result.data = []
+
+    if len(datastream.data) == 0:
+        return result
+
     data = datastream.data
     time_deltas = np.diff([dp.start_time for dp in data])
 
@@ -144,8 +152,6 @@ def timestamp_correct(datastream: DataStream,
 
     segments.append(interpolate_gaps(segment_data, sampling_frequency))
 
-    result = DataStream.from_datastream([datastream])
-    result.data = []
     for s in segments:
         begin_time = s[0].start_time.timestamp()
         end_time = s[-1].start_time.timestamp()
@@ -171,8 +177,11 @@ def timestamp_correct(datastream: DataStream,
 
 def autosense_sequence_align(datastreams: List[DataStream],
                              sampling_frequency: float) -> DataStream:
-
     result = DataStream.from_datastream(input_streams=datastreams)
+    result.data = []
+
+    if len(datastreams) == 0:
+        return result
 
     start_time = None
     for ds in datastreams:
@@ -194,12 +203,9 @@ def autosense_sequence_align(datastreams: List[DataStream],
 
     data_array = np.array(data_block)
 
-    data = []
     dimensions = data_array.shape[0]
     for i in range(0, max_index):
         sample = [data_array[d][i].sample for d in range(0, dimensions)]
-        data.append(DataPoint.from_tuple(data_array[0][i].start_time, sample))
-
-    result.data = data
+        result.data.append(DataPoint.from_tuple(data_array[0][i].start_time, sample))
 
     return result

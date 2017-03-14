@@ -1,6 +1,6 @@
 {
-  "identifier": 89,
-  "user": "a970e186-e960-11e6-bf0e-fe55135034f3",
+  "identifier": "31a84a5d-549b-480b-8b6d-9faa898894f0",
+  "owner": "a970e186-e960-11e6-bf0e-fe55135034f3",
   "name": "ecg",
   "description": "RAW ecg from AutoSense",
   "data_descriptor": [
@@ -10,29 +10,28 @@
     }
   ],
   "execution_context": {
-    "processing_module": 7,
-    "metadata": {
-      "platform": {
-        "device": {
-          "model": "Samsung Galaxy S5",
-          "OS": "6.0.0",
-          "battery_capacity": "8500mah"
-        }
-      }
-    }
+    "processing_module": "61b7e1ca-3112-40bd-a754-442361b9b62d"
   },
   "annotations": [
     {
       "name": "study",
-      "stream_identifier": 5
+      "identifier": "5b7fb6f3-7bf6-4031-881c-a25faf112dd9"
     },
     {
       "name": "privacy",
-      "stream_identifier": 6
+      "identifier": "01dd3847-4bae-418b-8fcd-03efc4607df0"
     },
     {
       "name": "access control",
-      "stream_identifier": 7
+      "identifier": "d1108a2c-fe86-4adc-8d95-f8bcf379955b"
+    },
+    {
+      "name": "platform",
+      "identifier": "aec29183-3a45-4ab4-9beb-72475b3cf38a"
+    },
+    {
+      "name": "informed consent",
+      "identifier": "aec29183-3a45-4ab4-9beb-72475b3cf38b"
     }
   ]
 }
