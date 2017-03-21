@@ -1,16 +1,97 @@
-from pprint import pprint
-
 from flask import request
-from flask_restplus import Namespace, Resource, fields
+from flask_restplus import Namespace, Resource, fields as rest_fields
 
-api = Namespace('stream', description='Data and annotation stream related information')
+from cerebralcortex.apiserver import CC
+from cerebralcortex.kernel.datatypes.datapoint import DataPoint
+from cerebralcortex.kernel.datatypes.datastream import Stream
 
-# TODO: Look in to this: Define model using JSON Schema
-# http://flask-restplus.readthedocs.io/en/stable/marshalling.html
-stream = api.model('Stream', {
-    'identifier': fields.String(required=True),
-    'name': fields.String(required=True)
+api = Namespace('stream', description='Data and annotation streams')
+
+data_descriptor = api.model('DataDescriptor', {
+    'type': rest_fields.String(required=True),
+    'unit': rest_fields.String(required=True),
+    'descriptive_statistic': rest_fields.String(required=False)
 })
+parameter = api.model('Parameter', {
+    'name': rest_fields.String(required=True),
+    'value': rest_fields.Arbitrary(required=True)
+})
+stream_entry = api.model('Stream Entry', {
+    'name': rest_fields.String(required=True),
+    'identifier': rest_fields.String(required=True)
+    # "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+})
+execution_context = api.model('Execution Context', {
+    'input_parameters': rest_fields.List(rest_fields.Nested(parameter)),
+    'input_streams': rest_fields.List(rest_fields.Nested(stream_entry))
+})
+annotations = api.model('Annotation', {
+    'name': rest_fields.String(required=True),
+    'identifier': rest_fields.String(required=True)
+    # "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+})
+stream = api.model('Stream', {
+    'identifier': rest_fields.String(required=True),
+    # "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+    'owner': rest_fields.String(required=True),
+    # "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+    'name': rest_fields.String(required=True),
+    'data_descriptor': rest_fields.List(rest_fields.Nested(data_descriptor), required=True),
+    'execution_context': rest_fields.Nested(execution_context, required=True),
+    'annotations': rest_fields.List(rest_fields.Nested(annotations))
+})
+
+data_element = api.model('Data Element', {
+    'start_time': rest_fields.DateTime(required=True),
+    'end_time': rest_fields.DateTime(required=False),
+    'sample': rest_fields.List(rest_fields.Raw(required=True))
+})
+
+stream_data = api.model('Stream Data', {
+    'identifier': rest_fields.String(required=True),
+    # "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+    'data': rest_fields.List(rest_fields.Nested(data_element), required=True)
+})
+
+# class AnnotationItem(Schema):
+#     name = fields.String(required=True)
+#     identifier = fields.UUID(required=True)
+#
+#
+# class StreamEntry(Schema):
+#     name = fields.String()
+#     identifier = fields.UUID(required=True)
+#
+#
+# class Parameter(Schema):
+#     name = fields.String(required=True)
+#     value = fields.Raw(required=True)
+#
+#
+# class DataDescriptorItem(Schema):
+#     type = fields.String(required=True)
+#     unit = fields.String(required=True)
+#     descriptive_statistic = fields.String()
+#
+#
+# class ExecutionContext(Schema):
+#     identifier = fields.UUID(required=True)
+#     input_parameters = fields.List(fields.Nested(Parameter))
+#     input_streams = fields.List(fields.Nested(StreamEntry))
+#
+#
+# class StreamSchema(Schema):
+#     identifier = fields.UUID(required=True)
+#     owner = fields.UUID(required=True)
+#     name = fields.String(required=True)
+#     data_descriptor = fields.List(fields.Nested(DataDescriptorItem), required=True)
+#     execution_context = fields.Dict(fields.Nested(ExecutionContext), required=True)
+#     annotations = fields.List(fields.Nested(AnnotationItem))
+#
+#     @post_load
+#     def make_stream(self, data):
+#         return CC_Stream(**data)
+
 
 STREAMS = [
     {
@@ -25,7 +106,7 @@ STREAMS = [
             }
         ],
         "execution_context": {
-            "processing_module": "61b7e1ca-3112-40bd-a754-442361b9b62d"
+
         },
         "annotations": [
             {
@@ -52,7 +133,7 @@ STREAMS = [
     },
     {
         "identifier": "8405dc31-fca9-4390-840e-5c888c3dbba0",
-        "user": "a970e186-e960-11e6-bf0e-fe55135034f3",
+        "owner": "a970e186-e960-11e6-bf0e-fe55135034f3",
         "name": "80th_percentile_rr_variance",
         "description": "80th percentile",
         "data_descriptor": [
@@ -63,7 +144,6 @@ STREAMS = [
             }
         ],
         "execution_context": {
-            "processing_module": "ac72b0bc-8e0f-45f2-87a9-08642b757f61",
             "input_parameters": [
                 {
                     "name": "window_size",
@@ -77,7 +157,7 @@ STREAMS = [
             "input_streams": [
                 {
                     "name": "ecg_rr_interval",
-                    "stream_identifier": "5b7fb6f3-7bf6-4031-881c-a25faf112dd1"
+                    "identifier": "5b7fb6f3-7bf6-4031-881c-a25faf112dd1"
                 }
             ]
         },
@@ -108,20 +188,24 @@ STREAMS = [
 ]
 
 
+# stream_schema = StreamSchema()
+
+
 @api.route('/')
-class StreamList(Resource):
+class APIStreamList(Resource):
     @api.doc('list_streams')
-    # @api.marshal_list_with(stream)
+    @api.marshal_list_with(stream)
     def get(self):
         return STREAMS
 
 
 @api.route('/<uuid:identifier>')
 @api.param('identifier', 'Stream Details')
+@api.response(403, 'Stream parameter error')
 @api.response(404, 'Stream not found')
-class Stream(Resource):
+class APIStream(Resource):
     @api.doc('get_stream_by_identifier')
-    # @api.marshal_with(stream)
+    @api.marshal_with(stream)
     def get(self, identifier):
         for u in STREAMS:
             if u['identifier'] == str(identifier):
@@ -129,34 +213,60 @@ class Stream(Resource):
         api.abort(404)
 
     @api.doc('create_stream_by_identifier')
+    @api.marshal_with(stream)
     def post(self, identifier):
-        pprint(request.json)
+        parameters = request.json
 
-        # TODO: What should the response object look like?
-        return request.json, 201
+        if str(identifier) != parameters['identifier']:
+            return api.abort(403, "URL identifier mismatch with JSON document request")
+
+        try:
+
+            new_stream = Stream(identifier=parameters['identifier'],
+                                owner=parameters['owner'],
+                                name=parameters['name'],
+                                description=parameters['description'],
+                                data_descriptor=parameters['data_descriptor'],
+                                execution_context=parameters['execution_context'],
+                                annotations=parameters['annotations'])
+
+            result = CC.update_or_create(new_stream)
+            CC.save_stream(result)  # TODO: Should the semantics be here or automatically within CC
+            return parameters, 201
+
+        except KeyError as e:
+            return api.abort(404, "Named parameter not found: " + str(e))
+
+
+
 
 
 @api.route('/<uuid:identifier>/data')
 @api.param('identifier', 'stream identifier')
-class StreamData(Resource):
+@api.response(403, 'Stream parameter error')
+@api.response(404, 'Stream not found')
+class APIStreamData(Resource):
     @api.doc('put data into stream')
+    @api.marshal_with(stream_data)
     def put(self, identifier):
-        pprint(request.json)
+        parameters = request.json
 
-        # TODO: What should the response object look like?
-        return request.json
-        # api.abort(404)
+        if str(identifier) not in ['5b7fb6f3-7bf6-4031-881c-a25faf112dd9', '5b7fb6f3-7bf6-4031-881c-a25faf112ddf']:
+            return api.abort(404, "Identifier not found")
 
+        if str(identifier) != parameters['identifier']:
+            return api.abort(403, "URL identifier mismatch with JSON document request")
 
-        # Error format: https://github.com/googleapis/googleapis/blob/master/google/rpc/code.proto
-        # {
-        #     "error": {
-        #         "code": 401,
-        #         "message": "Request had invalid credentials.",
-        #         "status": "UNAUTHENTICATED",
-        #         "details": [{
-        #             "@type": "type.googleapis.com/google.rpc.RetryInfo",
-        #             ...
-        #         }]
-        #     }
-        # }
+        ds = CC.get_stream(identifier)
+
+        try:
+            for di in parameters['data']:  # TODO: Test this loop's performance
+                if 'end_time' in di:
+                    ds.data.append(DataPoint(start_time=di['start_time'], end_time=di['end_time'], sample=di['sample']))
+                else:
+                    ds.data.append(DataPoint(start_time=di['start_time'], sample=di['sample']))
+
+        except KeyError as e:
+            return api.abort(404, "Named parameter not found: " + str(e))
+
+        return parameters, 201

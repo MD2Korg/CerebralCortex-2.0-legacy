@@ -1,6 +1,6 @@
 from flask_restplus import Namespace, Resource, fields
 
-api = Namespace('user', description='User related information')
+api = Namespace('user', description='Users')
 
 user = api.model('User', {
     'identifier': fields.String(required=True),
@@ -16,19 +16,19 @@ USERS = [
 @api.route('/')
 class UserList(Resource):
     @api.doc('list_users')
-    @api.marshal_list_with(user)
+    # @api.marshal_list_with(user)
     def get(self):
         return USERS
 
 
-@api.route('/<id>')
-@api.param('id', 'User Identifier')
+@api.route('/<uuid:identifier>')
+@api.param('identifier', 'User Identifier')
 @api.response(404, 'User not found')
 class User(Resource):
     @api.doc('get_user')
-    @api.marshal_with(user)
-    def get(self, id):
+    # @api.marshal_with(user)
+    def get(self, identifier):
         for u in USERS:
-            if u['identifier'] == id:
+            if u['identifier'] == identifier:
                 return u
         api.abort(404)
