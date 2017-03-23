@@ -28,14 +28,12 @@ from typing import Any
 
 class DataPoint:
     def __init__(self,
-                 datastream_id: int = None,
                  start_time: datetime = None,
                  end_time: datetime = None,
                  sample: Any = None):
         self._start_time = start_time
         self._end_time = end_time
         self._sample = sample
-        self._datastream_id = datastream_id
 
     @property
     def sample(self):
@@ -49,13 +47,16 @@ class DataPoint:
     def end_time(self):
         return self._end_time
 
-    @property
-    def datastream_id(self):
-        return self._datastream_id
+    # @property
+    # def datastream_id(self):
+    #     return self._datastream_id
 
     @classmethod
     def from_tuple(cls, start_time: datetime, sample: Any, end_time: datetime = None):
         return cls(None, start_time, end_time, sample)
 
     def __str__(self):
-        return str(self.datastream_id) + " - " + str(self.start_time) + " - " + str(self.sample)
+        return str(self.start_time) + " - " + str(self.sample)
+
+    def __repr__(self):
+        return 'DataPoint(' + ', '.join(map(str, [self.start_time, self.end_time, self.sample]))

@@ -23,25 +23,25 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from typing import List
+from uuid import UUID
 
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
-from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.kernel.datatypes.enumerations import StreamTypes
+from cerebralcortex.kernel.datatypes.stream import Stream
 from cerebralcortex.kernel.datatypes.subtypes import DataDescriptor, ExecutionContext, StreamReference
-from cerebralcortex.kernel.datatypes.user import User
 
 
-class AnnotationStream(DataStream):
+class AnnotationStream(Stream):
     def __init__(self,
-                 identifier: int = None,
-                 user: User = None,
-                 name: str = None,
+                 identifier: UUID = None,
+                 owner: UUID = None,
+                 name: UUID = None,
                  description: str = None,
                  data_descriptor: List[DataDescriptor] = None,
                  execution_context: ExecutionContext = None,
                  annotations: List[StreamReference] = None,
                  data: List[DataPoint] = None):
-        super().__init__(identifier, user, name, description, data_descriptor, execution_context, annotations,
+        super().__init__(identifier, owner, name, description, data_descriptor, execution_context, annotations,
                          data)
 
         self._datastream_type = StreamTypes.ANNOTATION

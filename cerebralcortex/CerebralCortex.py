@@ -21,12 +21,14 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+from uuid import UUID
 
 from pyspark.sql import SQLContext
 from pyspark.sql import SparkSession
 
 from cerebralcortex.configuration import Configuration
+from cerebralcortex.kernel.datatypes.datastream import DataStream
+from cerebralcortex.kernel.datatypes.stream import Stream
 
 
 class CerebralCortex:
@@ -41,7 +43,7 @@ class CerebralCortex:
 
         self.sc = self.sparkSession.sparkContext
 
-        self.sqlContext = SQLContext(self.sc) # TODO: This may need to become a sparkSession
+        self.sqlContext = SQLContext(self.sc)  # TODO: This may need to become a sparkSession
 
         self.configuration = Configuration(filepath=configuration_file).config
 
@@ -52,6 +54,25 @@ class CerebralCortex:
     # def save_datastream(self, datastream):
     #     Data(self.sc, self.sqlContext, self.configuration).store_datastream(datastream)
 
+    def save_stream(self, stream: Stream):
+        # Save the stream here
+        pass
+
+    def get_stream(self, identifier: UUID) -> DataStream:
+
+        return DataStream(identifier, data=[])
+
+    def update_or_create(self, stream: Stream):
+        """
+        This method should search the DBs to see if this stream object already exists.
+        If it exists, it will be loaded into memory and updated based on this input parameter
+        If not, it will be created
+
+        :param stream:
+        :return:
+        """
+
+        return stream
 
     def find(self, query):
         """
@@ -59,7 +80,6 @@ class CerebralCortex:
         :param query: partial dictionary matching
         """
         pass
-
 
     def readfile(self, filename):
         data = []
