@@ -29,6 +29,7 @@ from pyspark.sql import SparkSession
 from cerebralcortex.configuration import Configuration
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.kernel.datatypes.stream import Stream
+from cerebralcortex.kernel.DataStoreEngine.Data.Data import Data
 
 
 class CerebralCortex:
@@ -47,12 +48,12 @@ class CerebralCortex:
 
         self.configuration = Configuration(filepath=configuration_file).config
 
-    # def get_datastream(self, stream_identifier):
-    #     return Data(self.sc, self.sqlContext, self.configuration).get_datastream(stream_identifier)
-    #
-    #
-    # def save_datastream(self, datastream):
-    #     Data(self.sc, self.sqlContext, self.configuration).store_datastream(datastream)
+    def get_datastream(self, stream_identifier, start_time: int = "", end_time: int = "", data_type="all"):
+        return Data(self.sc, self.sqlContext, self.configuration).get_stream(stream_identifier, start_time, end_time, data_type)
+
+
+    def save_datastream(self, datastream):
+        Data(self.sc, self.sqlContext, self.configuration).store_stream(datastream)
 
     def save_stream(self, stream: Stream):
         # Save the stream here

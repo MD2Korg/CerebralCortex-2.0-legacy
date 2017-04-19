@@ -41,16 +41,15 @@ class TestConfiguration(unittest.TestCase):
         cassandra = cfg.config['cassandra']
         mysql = cfg.config['mysql']
 
-        self.assertEqual(cassandra['keyspace'], 'cortex')
+        self.assertEqual(cassandra['keyspace'], 'cerebralcortex')
         self.assertEqual(cassandra['db_user'], '')
         self.assertEqual(cassandra['db_pass'], '')
-        self.assertEqual(cassandra['datapoint_table'], 'datapoint')
+        self.assertEqual(cassandra['datapoint_table'], 'data')
 
-        self.assertEqual(mysql['database'], 'cortex')
+        self.assertEqual(mysql['database'], 'cerebralcortex')
         self.assertEqual(mysql['db_user'], 'root')
         self.assertEqual(mysql['db_pass'], 'pass')
-        self.assertEqual(mysql['datastream_table'], 'datastream')
-        self.assertEqual(mysql['processing_module_table'], 'processing_module')
+        self.assertEqual(mysql['datastream_table'], 'stream')
         self.assertEqual(mysql['user_table'], 'user')
         self.assertEqual(mysql['study_table'], 'study')
 

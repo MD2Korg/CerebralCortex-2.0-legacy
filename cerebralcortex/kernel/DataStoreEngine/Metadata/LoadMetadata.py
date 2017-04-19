@@ -22,9 +22,10 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import uuid
 
 class LoadMetadata:
-    @classmethod
+
     def mySQLQueryBuilder(self, jsonQueryParam: dict) -> str:
         """
         :param jsonQueryParam:
@@ -81,65 +82,36 @@ class LoadMetadata:
             "tableName"] + " " + whereClause + " " + orderedByColumnName + " " + sortingOrder + " " + limitBy
         return qry
 
-    def get_datastream_info(self, datastreamID, userID: int = "", processinModuleID: int = "",
-                            limitRecords: str = "") -> list:
+    def get_stream_info(self, stream_id, stream_owner_id: int = "", records_limit: str = "") -> list:
         """
-        :param datastreamID:
-        :param userID:
+        :param stream_id:
+        :param stream_owner_id:
         :param processinModuleID:
-        :param limitRecords: range (e.g., 1,10 or 130,200)
+        :param records_limit: range (e.g., 1,10 or 130,200)
         :return: list
         """
-        whereClause = "id=" + str(datastreamID)
+        whereClause = "identifier='" + str(stream_id)+"'"
 
-        if (userID != ""):
-            whereClause += " and user_id=" + str(userID)
-        if (processinModuleID != ""):
-            whereClause += " and processing_module_id=" + str(processinModuleID)
+        if (stream_owner_id != ""):
+            whereClause += " and owner=" + str(stream_owner_id)
 
         jsonQueryParam = {
             "columnNames": "*",
             "tableName": self.datastreamTable,
             "whereClause": whereClause,
-            "orderedByColumnName": "id",
+            "orderedByColumnName": "identifier",
             "sortingOrder": "ASC",
-            "limitBy": limitRecords
+            "limitBy": records_limit
         }
         return self.executeQuery(self.mySQLQueryBuilder(jsonQueryParam))
 
-    def getSpanstreamInfo(self, spanID, sourceID: int = "", processinModuleID: int = "",
-                          limitRecords: str = "") -> list:
+    def get_user_info(self, user_id, records_limit: str = "") -> list:
         """
-        :param spanID:
-        :param sourceID:
-        :param processinModuleID:
-        :param limitRecords: range (e.g., 1,10 or 130,200)
+        :param user_id:
+        :param records_limit: range (e.g., 1,10 or 130,200)
         :return: list
         """
-        whereClause = "id=" + str(spanID)
-
-        if (sourceID != ""):
-            whereClause += " and source_id=" + str(sourceID)
-        if (processinModuleID != ""):
-            whereClause += " and processing_module_id=" + str(processinModuleID)
-
-        jsonQueryParam = {
-            "columnNames": "*",
-            "tableName": self.spanstreamTable,
-            "whereClause": whereClause,
-            "orderedByColumnName": "id",
-            "sortingOrder": "ASC",
-            "limitBy": limitRecords
-        }
-        return self.executeQuery(self.mySQLQueryBuilder(jsonQueryParam))
-
-    def getUserInfo(self, userID, limitRecords: str = "") -> list:
-        """
-        :param userID:
-        :param limitRecords: range (e.g., 1,10 or 130,200)
-        :return: list
-        """
-        whereClause = "id=" + str(userID)
+        whereClause = "id=" + str(user_id)
 
         jsonQueryParam = {
             "columnNames": "*",
@@ -147,57 +119,75 @@ class LoadMetadata:
             "whereClause": whereClause,
             "orderedByColumnName": "id",
             "sortingOrder": "ASC",
-            "limitBy": limitRecords
+            "limitBy": records_limit
         }
         return self.executeQuery(self.mySQLQueryBuilder(jsonQueryParam))
 
-    def get_study_info(self, studyID, limitRecords: str = "") -> list:
-        """
-        :param studyID:
-        :param limitRecords: range (e.g., 1,10 or 130,200)
-        :return: list
-        """
-        whereClause = "id=" + str(studyID)
-
-        jsonQueryParam = {
-            "columnNames": "*",
-            "tableName": self.studyTable,
-            "whereClause": whereClause,
-            "orderedByColumnName": "id",
-            "sortingOrder": "ASC",
-            "limitBy": limitRecords
-        }
-        return self.executeQuery(self.mySQLQueryBuilder(jsonQueryParam))
-
-    def getProcessingModuleInfo(self, processinModuleID, limitRecords: str = "") -> list:
-        """
-        :param processinModuleID:
-        :param limitRecords: range (e.g., 1,10 or 130,200)
-        :return: list
-        """
-        whereClause = "id=" + str(processinModuleID)
-
-        jsonQueryParam = {
-            "columnNames": "*",
-            "tableName": self.processingModuleTable,
-            "whereClause": whereClause,
-            "orderedByColumnName": "id",
-            "sortingOrder": "ASC",
-            "limitBy": limitRecords
-        }
-        return self.executeQuery(self.mySQLQueryBuilder(jsonQueryParam))
 
     def executeQuery(self, qry: str) -> list:
         """
         :param qry: SQL Query
         :return: results of a query
         """
-
         self.cursor.execute(qry)
         results = self.cursor.fetchall()
         self.cursor.close()
         self.dbConnection.close()
         if len(results) == 0:
-            raise "No record found."
+            raise ValueError("No record found.")
         else:
             return results
+
+    def get_stream_id_name(self, owner_id: uuid, name: str, data_type: str = "id") -> str:
+        """
+        This method will return an ID of a stream if the data_type is set to "id" OR stream name if data_type is set to "name"
+        :param owner_id:
+        :param name:
+        :param data_type:
+        :return:
+        """
+        qry = "SELECT * from "+self.datastreamTable+" where owner=%s and name=%s"
+        vals = owner_id, name
+        self.cursor.execute(qry, vals)
+        result = self.cursor.fetchall()
+        if result:
+            if data_type=="id":
+                return result[0][0]
+            elif data_type=="name":
+                return result[0][2]
+            else:
+                raise ValueError("Unknow data type. Only acceptable data-types are id or name.")
+        else:
+            return False
+
+    # def get_accelerometer_id_by_owner_id(self, owner_id: uuid, sensor_type: str, data_type="id") -> str:
+    #     """
+    #     Returns accelerometer id based on provided sensor type. accepted types for autosense are x, y, z and for
+    #     motionsense accepted type is motionsense
+    #     :param owner_id:
+    #     :param sensor_type:
+    #     :return: accelerometer id
+    #     """
+    #     if sensor_type== "x":
+    #         name = "autosense-x"
+    #     elif sensor_type== "y":
+    #         name = "autosense-y"
+    #     elif sensor_type== "z":
+    #         name = "autosense-z"
+    #     elif sensor_type== "motionsense":
+    #         name = "motionsense_accel"
+    #     else:
+    #         raise ValueError("Unknown type. Only acceptable types are x, y, z, or motionsense.")
+    #
+    #     qry = "SELECT * from stream where owner='"+owner_id+"' and name='"+name+"'"
+    #     self.cursor.execute(qry)
+    #     result = self.cursor.fetchall()
+    #     if result:
+    #         if data_type=="id":
+    #             return result[0][0]
+    #         elif data_type=="name":
+    #             return result[0][1]
+    #         else:
+    #             raise ValueError("Unknow data type. Only acceptable data-types are id or name.")
+    #     else:
+    #         return False

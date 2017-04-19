@@ -21,61 +21,103 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+import json
+import uuid
 
 
 class StoreMetadata:
-    def storeDatastrem(self, datastreamID: int = None, studyIDs: int = None, userID: int = None,
-                       processingModuleID: int = None,
-                       sourceIDs: dict = None,
-                       datastreamType: str = None, metadata: dict = None) -> int:
+    # stream_identifier, ownerID, name,
+    # data_descriptor, execution_context,
+    # annotations,
+    # stream_type
+
+    def store_stream_info(self, stream_identifier: int = None, stream_owner_id: str = None, name: str = None,
+                          data_descriptor: dict = None,
+                          execution_context: dict = None,
+                          annotations: dict = None, stream_type: str = None):
         """
-        This method will update a record if datastreamID is provided else it would insert a new record.
-        :param datastreamID:
-        :param studyIDs:
-        :param userID:
-        :param processingModuleID:
-        :param sourceIDs:
-        :param datastreamType:
-        :param metadata:
-        :return: id (int) of last inserted datastream in MySQL
+        This method will update a record if stream already exist else it will insert a new record.
+        :param stream_identifier:
+        :param stream_owner_id:
+        :param name:
+        :param data_descriptor:
+        :param execution_context:
+        :param annotations:
+        :param stream_type:
         """
-        if (datastreamID == None):
-            qry = "INSERT INTO " + self.datastreamTable + " (study_ids, user_id, processing_module_id, source_ids, type, metadata) VALUES('" + str(
-                studyIDs) + "','" + str(userID) + "','" + str(processingModuleID) + "','" + str(
-                sourceIDs) + "','" + str(datastreamType) + "','" + str(metadata) + "')"
+        exe = 0
+        isStreamCreated = self.append_annotations(stream_identifier, stream_owner_id, name, data_descriptor,
+                                                  execution_context, annotations, stream_type)
+        isIDCreated = self.is_id_created(stream_owner_id, name)
+
+        if isIDCreated:
+            stream_identifier = isIDCreated
+            isStreamCreated = True
+
+        if (isStreamCreated == True):
+            qry = "UPDATE " + self.datastreamTable + " set annotations=JSON_ARRAY_APPEND(annotations, '$.annotations',  CAST(%s AS JSON)) where identifier=%s"
+            vals = json.dumps(annotations), str(stream_identifier)
+            exe = 1
+        elif (isStreamCreated == False):
+            qry = "INSERT INTO " + self.datastreamTable + " (identifier, owner, name, data_descriptor, execution_context, annotations, type) VALUES(%s, %s, %s, %s, %s, %s, %s, %s)"
+            vals = str(stream_identifier), str(stream_owner_id), str(name), json.dumps(
+                data_descriptor), json.dumps(execution_context), json.dumps(annotations), stream_type
+            exe = 1
+        if exe == 1:
+            self.cursor.execute(qry, vals)
+            self.dbConnection.commit()
+            self.cursor.close()
+            self.dbConnection.close()
+
+    def append_annotations(self, stream_identifier: uuid, stream_owner_id: uuid, name: str,
+                           data_descriptor: dict,
+                           execution_context: dict,
+                           annotations: dict,
+                           stream_type: str):
+        """
+        This method will check if the stream already exist with the same data (as provided in params) except annotations.
+        :param stream_identifier:
+        :param stream_owner_id:
+        :param name:
+        :param data_descriptor:
+        :param execution_context:
+        :param stream_type:
+        """
+        qry = "select * from " + self.datastreamTable + " where identifier = %(identifier)s"
+        vals = {'identifier': str(stream_identifier)}
+        self.cursor.execute(qry, vals)
+        result = self.cursor.fetchall()
+        if result:
+            if (result[0][0] == str(stream_identifier)):
+                if (result[0][1] != stream_owner_id):
+                    raise Exception("Update failed: owner ID is not same..")
+                elif (result[0][2] != name):
+                    raise Exception("Update failed: name is not same..")
+                elif (json.loads(result[0][3]) != data_descriptor):
+                    raise Exception("Update failed: data descriptor is not same.")
+                elif (json.loads(result[0][4]) != execution_context):
+                    raise Exception("Update failed: execution context is not same.")
+                elif (result[0][6] != stream_type):
+                    raise Exception("Update failed: type is not same.")
+                elif (json.loads(result[0][5]) == annotations):
+                    return "annotations are same."
+                elif (json.loads(result[0][5]) != annotations):
+                    return "annotations are same!"
+                else:
+                    return True
         else:
-            qry = "UPDATE " + self.datastreamTable + " set study_ids='" + str(studyIDs) + "' , user_id='" + str(
-                userID) + "' , processing_module_id='" + str(processingModuleID) + "' , source_ids='" + str(
-                sourceIDs) + "' , type='" + str(datastreamType) + "' , metadata='" + str(
-                metadata) + "' where id=" + str(
-                datastreamID)
-        return self.executeQueryq(qry)
+            return False
 
-    def storeProcessingModule(self, metadata: dict, processingModuleID: int = "") -> int:
-        """
-        This method will update a record if processingModuleID is provided else it would insert a new record.
-        :param metadata:
-        :param processingModuleID:
-        :return: id (int) of last inserted processing module in MySQL
-        """
-        if (processingModuleID != ""):
-            qry = "UPDATE " + self.processingModuleTable + " set metadata='" + metadata + "' where id=" + str(
-                processingModuleID)
+
+    def is_id_created(self, owner_id, name):
+        # if stream name, id, and owner are same then return true
+        qry = "SELECT * from "+self.datastreamTable+" where owner=%s and name=%s"
+        vals = owner_id, name
+        self.cursor.execute(qry, vals)
+        result = self.cursor.fetchall()
+        if result:
+            return result[0][0]
         else:
-            qry = "INSERT INTO " + self.processingModuleTable + " (metadata) VALUES('" + metadata + "')"
+            return False
 
-        return self.executeQuery(qry)
 
-    def executeQueryq(self, qry: str):
-        """
-        This method executes MySQL query, commits data, closes cursor and database connections
-        :param qry: SQL Query
-        :return: id (int) of last inserted record in MySQL
-        """
-        self.cursor.execute(qry)
-        lastAddedRecordID = self.cursor.lastrowid
-        self.dbConnection.commit()
-        self.cursor.close()
-        self.dbConnection.close()
-
-        return lastAddedRecordID

@@ -1,0 +1,14 @@
+cassandra:
+  keyspace: cerebralcortex
+  db_user: ""
+  db_pass: ""
+  datapoint_table: data
+
+
+mysql:
+  database: cerebralcortex
+  db_user: root
+  db_pass: pass
+  datastream_table: stream
+  user_table: user
+  study_table: study

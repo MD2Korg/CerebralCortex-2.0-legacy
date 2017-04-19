@@ -36,12 +36,14 @@ class DataStream(Stream):
                  identifier: UUID = None,
                  owner: UUID = None,
                  name: UUID = None,
-                 description: str = None,
+                 #description: str = None,
                  data_descriptor: List[DataDescriptor] = None,
                  execution_context: ExecutionContext = None,
                  annotations: List[StreamReference] = None,
+                 stream_type: str = None,
                  data: List[DataPoint] = None):
-        super().__init__(identifier, owner, name, description, data_descriptor, execution_context, annotations,
-                         data)
+        super().__init__(identifier, owner, name, data_descriptor, execution_context, annotations, stream_type, data)
 
-        self._datastream_type = StreamTypes.DATASTREAM
+        #self._datastream_type = StreamTypes.DATASTREAM
+
+
