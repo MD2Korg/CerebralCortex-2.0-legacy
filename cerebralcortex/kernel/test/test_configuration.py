@@ -1,4 +1,4 @@
-# Copyright (c) 2017, MD2K Center of Excellence
+# Copyright (c) 2016, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -21,30 +21,38 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from typing import List
-from uuid import UUID
-import datetime
+import os
+import unittest
 
-from cerebralcortex.kernel.datatypes.datapoint import DataPoint
-from cerebralcortex.kernel.datatypes.stream import Stream
-from cerebralcortex.kernel.datatypes.subtypes import DataDescriptor, StreamReference
-from cerebralcortex.kernel.datatypes.subtypes import ExecutionContext
+from cerebralcortex.configuration import Configuration
 
 
-class DataStream(Stream):
-    def __init__(self,
-                 identifier: UUID = None,
-                 owner: UUID = None,
-                 name: UUID = None,
-                 data_descriptor: List[DataDescriptor] = None,
-                 execution_context: ExecutionContext = None,
-                 annotations: List[StreamReference] = None,
-                 stream_type: str = None,
-                 start_time: datetime = None,
-                 end_time: datetime = None,
-                 data: List[DataPoint] = None):
-        super().__init__(identifier, owner, name, data_descriptor, execution_context, annotations, stream_type, start_time, end_time, data)
+class TestConfiguration(unittest.TestCase):
+    def setUp(self):
+        self.testConfigFile = os.path.join(os.path.dirname(__file__), 'res/test_configuration.yml')
 
-        #self._datastream_type = StreamTypes.DATASTREAM
+    def test_None(self):
+        cfg = Configuration()
+        self.assertIsNone(cfg.config)
+
+    def test_ConfigurationFile(self):
+        cfg = Configuration(filepath=self.testConfigFile)
+
+        cassandra = cfg.config['cassandra']
+        mysql = cfg.config['mysql']
+
+        self.assertEqual(cassandra['keyspace'], 'cerebralcortex')
+        self.assertEqual(cassandra['db_user'], '')
+        self.assertEqual(cassandra['db_pass'], '')
+        self.assertEqual(cassandra['datapoint_table'], 'data')
+
+        self.assertEqual(mysql['database'], 'cerebralcortex')
+        self.assertEqual(mysql['db_user'], 'root')
+        self.assertEqual(mysql['db_pass'], 'pass')
+        self.assertEqual(mysql['datastream_table'], 'stream')
+        self.assertEqual(mysql['user_table'], 'user')
+        self.assertEqual(mysql['study_table'], 'study')
 
 
+if __name__ == '__main__':
+    unittest.main()

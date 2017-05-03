@@ -1,4 +1,4 @@
-# Copyright (c) 2016, MD2K Center of Excellence
+# Copyright (c) 2017, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -21,39 +21,36 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-import os
-import unittest
-
-from cerebralcortex.configuration import Configuration
 
 
-class TestConfiguration(unittest.TestCase):
-    def setUp(self):
-        self.testConfigFile = os.path.join(os.path.dirname(__file__), 'res/test_configuration.yml')
+class data_descriptor:
 
-    def test_None(self):
-        cfg = Configuration()
-        self.assertIsNone(cfg.config)
+    @staticmethod
+    def get_data_descriptor(dd_type: str, dd_unit: str, dd_labels: dict) -> dict:
 
-    def test_ConfigurationFile(self):
-        cfg = Configuration(filepath=self.testConfigFile)
+        """
+         Please have a look at /kernel/schema/examples/ for schema and field details
+        :param dd_type:
+        :param dd_unit:
+        :param dd_labels:
+        :return:
+        """
+        if not dd_type:
+            raise ValueError("Type cannot be empty.")
+        elif not dd_unit:
+            raise ValueError("Unit cannot be empty.")
+        elif not dd_labels:
+            raise ValueError("Labels name cannot be empty.")
+        else:
+            data_descriptor = {
+                "data_descriptor": [
+                    {
+                        "type": dd_type,
+                        "unit": dd_unit,
+                        "labels": dd_labels
 
-        cassandra = cfg.config['cassandra']
-        mysql = cfg.config['mysql']
+                    }
+                ]
+            }
+        return data_descriptor
 
-        self.assertEqual(cassandra['keyspace'], 'cortex')
-        self.assertEqual(cassandra['db_user'], '')
-        self.assertEqual(cassandra['db_pass'], '')
-        self.assertEqual(cassandra['datapoint_table'], 'datapoint')
-
-        self.assertEqual(mysql['database'], 'cortex')
-        self.assertEqual(mysql['db_user'], 'root')
-        self.assertEqual(mysql['db_pass'], 'pass')
-        self.assertEqual(mysql['datastream_table'], 'datastream')
-        self.assertEqual(mysql['processing_module_table'], 'processing_module')
-        self.assertEqual(mysql['user_table'], 'user')
-        self.assertEqual(mysql['study_table'], 'study')
-
-
-if __name__ == '__main__':
-    unittest.main()

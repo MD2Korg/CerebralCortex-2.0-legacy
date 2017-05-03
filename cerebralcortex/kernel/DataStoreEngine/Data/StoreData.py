@@ -1,4 +1,4 @@
-# Copyright (c) 2016, MD2K Center of Excellence
+# Copyright (c) 2017, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,67 +22,70 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import json
+
 from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
+from cerebralcortex.kernel.datatypes.datastream import DataStream
 
 
 class StoreData:
+    def store_stream(self, datastream: DataStream):
+        """
+
+        :param datastream:
+        """
+        stream_identifier = datastream.identifier
+        ownerID = datastream.owner
+        name = datastream.name
+        data_descriptor = datastream.data_descriptor
+        execution_context = datastream.execution_context
+        annotations = datastream.annotations
+        stream_type = datastream.datastream_type
+        data = datastream.data
+
+        if data:
+            if isinstance(data, list):
+                total_dp = len(data) - 1
+                new_start_time = data[0].start_time
+                new_end_time = data[total_dp].start_time
+            else:
+                new_start_time = data.start_time
+                new_end_time = data.start_time
+
+            Metadata(self.CC_obj).store_stream_info(stream_identifier, ownerID, name,
+                                                    data_descriptor, execution_context,
+                                                    annotations,
+                                                    stream_type, new_start_time, new_end_time)
+            dataframe = self.map_datapoint_to_dataframe(stream_identifier, data)
+
+            self.store_data(dataframe, self.datapointTable)
+
     def store_data(self, dataframe_data: object, table_name: str):
         """
         :param dataframe_data: pyspark Dataframe
         :param table_name: Cassandra table name
         """
+
+        if table_name == "":
+            raise Exception("Table name cannot be null.")
+        elif dataframe_data == "":
+            raise Exception("Data cannot be null.")
+
         dataframe_data.write.format("org.apache.spark.sql.cassandra") \
             .mode('append') \
             .options(table=table_name, keyspace=self.keyspaceName) \
             .save()
 
-    # These two methods will be moved to struct classes
-    def save_datapoint(self, df: object):
-        """
-        :param df:
-        """
-        self.store_data(df, self.datapointTable)
-
-    # def saveSpan(self, df: object):
-    #     """
-    #     :param df:
-    #     """
-    #     self.storeData(df, self.spanTable)
-
-    def map_datapoint_to_dataframe(self, datastream_id, datapoints):
+    def map_datapoint_to_dataframe(self, stream_id, datapoints):
         temp = []
         for i in datapoints:
-            day = i.getStartTime()
+            day = i.start_time
             day = day.strftime("%Y%m%d")
-            dp = datastream_id, day, i.getStartTime(), i.getEndTime(), i.sample, i.getMetadata()
+            dp = str(stream_id), day, i.start_time, i.end_time, json.dumps(i.sample)
             temp.append(dp)
 
         temp_RDD = self.sparkContext.parallelize(temp)
         df = self.sqlContext.createDataFrame(temp_RDD,
-                                             ["datastream_id", "day", "start_time", "end_time", "sample", "metadata"])
+                                             ["identifier", "day", "start_time", "end_time", "sample"])
 
         return df
-
-    def store_datastream(self, datastream):
-        datastream_identifier = datastream.get_identifier()
-        study_ids = datastream.getStudyIDs()  # TO-DO, only add study-ids if they exist
-        user_id = datastream.userObj.getID()
-
-        processing_module_id = datastream.processingModuleObj.getID()
-        datastream_type = datastream.get_datastream_type()
-        metadata = datastream.getMetadata().getMetadata()
-        source_ids = datastream.get_source_ids()
-        data = datastream.data
-
-        # if datastream_identifier is empty then create a new datastream_identifier in MySQL database and return the newly added datastream_identifier
-        lastAddedRecordID = Metadata(self.configuration).storeDatastrem(datastream_identifier, study_ids, user_id,
-                                                                        processing_module_id, source_ids,
-                                                                        datastream_type,
-                                                                        metadata)
-
-        if datastream_identifier == "":
-            datastream_identifier = lastAddedRecordID
-
-        dataframe = self.map_datapoint_to_dataframe(datastream_identifier, data)
-
-        self.save_datapoint(dataframe)

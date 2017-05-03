@@ -30,11 +30,10 @@ from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 
 class Annotation(DataPoint):
     def __init__(self,
-                 annotationstream_id: int = None,
                  start_time: datetime = None,
                  end_time: datetime = None,
                  sample: Dict = None):
-        super().__init__(datastream_id=annotationstream_id,
+        super().__init__(
                          start_time=start_time,
                          end_time=end_time,
                          sample=sample)

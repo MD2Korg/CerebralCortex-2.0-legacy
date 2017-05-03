@@ -22,6 +22,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from uuid import UUID
+import datetime
 
 from pyspark.sql import SQLContext
 from pyspark.sql import SparkSession
@@ -29,10 +30,12 @@ from pyspark.sql import SparkSession
 from cerebralcortex.configuration import Configuration
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.kernel.datatypes.stream import Stream
+from cerebralcortex.kernel.DataStoreEngine.Data.Data import Data
+from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 
 
 class CerebralCortex:
-    def __init__(self, configuration_file, master=None, name=None):
+    def __init__(self, configuration_file, master=None, name=None, time_zone=None):
         ss = SparkSession.builder
         if name:
             ss.appName(name)
@@ -47,12 +50,14 @@ class CerebralCortex:
 
         self.configuration = Configuration(filepath=configuration_file).config
 
-    # def get_datastream(self, stream_identifier):
-    #     return Data(self.sc, self.sqlContext, self.configuration).get_datastream(stream_identifier)
-    #
-    #
-    # def save_datastream(self, datastream):
-    #     Data(self.sc, self.sqlContext, self.configuration).store_datastream(datastream)
+        self.time_zone = time_zone;
+
+    def get_datastream(self, stream_identifier, start_time: datetime = None, end_time: datetime = None, data_type=DataSet.COMPLETE):
+        return Data(self).get_stream(stream_identifier, start_time, end_time, data_type)
+
+
+    def save_datastream(self, datastream):
+        Data(self).store_stream(datastream)
 
     def save_stream(self, stream: Stream):
         # Save the stream here

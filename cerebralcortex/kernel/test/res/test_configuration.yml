@@ -1,15 +1,16 @@
 cassandra:
-  keyspace: cortex
+  keyspace: cerebralcortex
   db_user: ""
   db_pass: ""
-  datapoint_table: datapoint
+  datapoint_table: data
 
 
 mysql:
-  database: cortex
+  database: cerebralcortex
   db_user: root
   db_pass: pass
-  datastream_table: datastream
+  datastream_table: stream
   processing_module_table: processing_module
   user_table: user
   study_table: study
+

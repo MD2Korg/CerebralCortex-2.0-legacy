@@ -23,6 +23,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from typing import List
 from uuid import UUID
+import datetime
 
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.subtypes import StreamReference, DataDescriptor, ExecutionContext
@@ -33,20 +34,23 @@ class Stream:
                  identifier: UUID = None,
                  owner: UUID = None,
                  name: UUID = None,
-                 description: str = None,
                  data_descriptor: List[DataDescriptor] = None,
                  execution_context: ExecutionContext = None,
                  annotations: List[StreamReference] = None,
+                 stream_type: str = None,
+                 start_time: datetime = None,
+                 end_time: datetime = None,
                  data: List[DataPoint] = None
                  ):
         self._identifier = identifier
         self._owner = owner
         self._name = name
-        self._description = description
         self._data_descriptor = data_descriptor
-        self._datastream_type = None
+        self._datastream_type = stream_type
         self._execution_context = execution_context
         self._annotations = annotations
+        self._start_time = start_time
+        self._end_time = end_time
         self._data = data
 
     def find_annotation_references(self, identifier: int = None, name: str = None):
@@ -79,7 +83,7 @@ class Stream:
         return self._identifier
 
     @property
-    def user(self):
+    def owner(self):
         return self._owner
 
     @property
@@ -89,14 +93,6 @@ class Stream:
     @name.setter
     def name(self, value):
         self._name = value
-
-    @property
-    def description(self):
-        return self._description
-
-    @description.setter
-    def description(self, value):
-        self._description = value
 
     @property
     def data_descriptor(self):
@@ -126,23 +122,23 @@ class Stream:
     def data(self, value):
         result = []
         for dp in value:
-            result.append(DataPoint(self._identifier, dp.start_time, dp.end_time, dp.sample))
+            result.append(DataPoint(dp.start_time, dp.end_time, dp.sample))
         self._data = result
 
     @classmethod
     def from_datastream(cls, input_streams: List):
-        result = cls(user=input_streams[0].user)
+        result = cls(owner=input_streams[0].owner)
 
         # TODO: Something with provenance tracking from datastream list
 
         return result
 
     def __str__(self):
-        return str(self.identifier) + " - " + str(self.user) + " - " + str(self.data)
+        return str(self.identifier) + " - " + str(self.owner) + " - " + str(self.data)
 
     def __repr__(self):
         result = "Stream(" + ', '.join(map(str, [self.identifier,
-                                                 self.user,
+                                                 self.owner,
                                                  self.name,
                                                  self.description,
                                                  self.data_descriptor,

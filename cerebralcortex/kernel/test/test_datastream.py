@@ -50,7 +50,7 @@ class TestDataStream(unittest.TestCase):
                         self.annotations,
                         self.data)
 
-        self.assertEqual(ds.user, self.user)
+        self.assertEqual(ds.owner, self.user)
         self.assertEqual(ds.data_descriptor[0].unit, 'milliseconds')
         self.assertEqual(ds.data_descriptor[0].type, 'float')
 

@@ -63,3 +63,10 @@ fabric.properties
 
 # End of https://www.gitignore.io/api/intellij
 
+/.gitignore
+/cerebralcortex/kernel/DataStoreEngine/test_db_engine.py
+/cerebralcortex/kernel/DataStoreEngine/test_query_builder.py
+/cerebralcortex/data_processor/data_diagnostic/spark-warehouse/
+/cerebralcortex/data_processor/data_diagnostic/db_get.py
+/cerebralcortex/data_processor/data_diagnostic/sample_metadata.json
+/cerebralcortex/data_processor/data_diagnostic/todo

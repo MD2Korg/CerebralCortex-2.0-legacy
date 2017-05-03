@@ -1,4 +1,4 @@
-# Copyright (c) 2016, MD2K Center of Excellence
+# Copyright (c) 2017, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,9 +22,11 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import datetime
+import uuid
+
 
 class LoadMetadata:
-    @classmethod
     def mySQLQueryBuilder(self, jsonQueryParam: dict) -> str:
         """
         :param jsonQueryParam:
@@ -81,65 +83,36 @@ class LoadMetadata:
             "tableName"] + " " + whereClause + " " + orderedByColumnName + " " + sortingOrder + " " + limitBy
         return qry
 
-    def get_datastream_info(self, datastreamID, userID: int = "", processinModuleID: int = "",
-                            limitRecords: str = "") -> list:
+    def get_stream_info(self, stream_id, stream_owner_id: int = "", records_limit: str = "") -> list:
         """
-        :param datastreamID:
-        :param userID:
+        :param stream_id:
+        :param stream_owner_id:
         :param processinModuleID:
-        :param limitRecords: range (e.g., 1,10 or 130,200)
+        :param records_limit: range (e.g., 1,10 or 130,200)
         :return: list
         """
-        whereClause = "id=" + str(datastreamID)
+        whereClause = "identifier='" + str(stream_id) + "'"
 
-        if (userID != ""):
-            whereClause += " and user_id=" + str(userID)
-        if (processinModuleID != ""):
-            whereClause += " and processing_module_id=" + str(processinModuleID)
+        if (stream_owner_id != ""):
+            whereClause += " and owner=" + str(stream_owner_id)
 
         jsonQueryParam = {
             "columnNames": "*",
             "tableName": self.datastreamTable,
             "whereClause": whereClause,
-            "orderedByColumnName": "id",
+            "orderedByColumnName": "identifier",
             "sortingOrder": "ASC",
-            "limitBy": limitRecords
+            "limitBy": records_limit
         }
         return self.executeQuery(self.mySQLQueryBuilder(jsonQueryParam))
 
-    def getSpanstreamInfo(self, spanID, sourceID: int = "", processinModuleID: int = "",
-                          limitRecords: str = "") -> list:
+    def get_user_info(self, user_id, records_limit: str = "") -> list:
         """
-        :param spanID:
-        :param sourceID:
-        :param processinModuleID:
-        :param limitRecords: range (e.g., 1,10 or 130,200)
+        :param user_id:
+        :param records_limit: range (e.g., 1,10 or 130,200)
         :return: list
         """
-        whereClause = "id=" + str(spanID)
-
-        if (sourceID != ""):
-            whereClause += " and source_id=" + str(sourceID)
-        if (processinModuleID != ""):
-            whereClause += " and processing_module_id=" + str(processinModuleID)
-
-        jsonQueryParam = {
-            "columnNames": "*",
-            "tableName": self.spanstreamTable,
-            "whereClause": whereClause,
-            "orderedByColumnName": "id",
-            "sortingOrder": "ASC",
-            "limitBy": limitRecords
-        }
-        return self.executeQuery(self.mySQLQueryBuilder(jsonQueryParam))
-
-    def getUserInfo(self, userID, limitRecords: str = "") -> list:
-        """
-        :param userID:
-        :param limitRecords: range (e.g., 1,10 or 130,200)
-        :return: list
-        """
-        whereClause = "id=" + str(userID)
+        whereClause = "id=" + str(user_id)
 
         jsonQueryParam = {
             "columnNames": "*",
@@ -147,43 +120,7 @@ class LoadMetadata:
             "whereClause": whereClause,
             "orderedByColumnName": "id",
             "sortingOrder": "ASC",
-            "limitBy": limitRecords
-        }
-        return self.executeQuery(self.mySQLQueryBuilder(jsonQueryParam))
-
-    def get_study_info(self, studyID, limitRecords: str = "") -> list:
-        """
-        :param studyID:
-        :param limitRecords: range (e.g., 1,10 or 130,200)
-        :return: list
-        """
-        whereClause = "id=" + str(studyID)
-
-        jsonQueryParam = {
-            "columnNames": "*",
-            "tableName": self.studyTable,
-            "whereClause": whereClause,
-            "orderedByColumnName": "id",
-            "sortingOrder": "ASC",
-            "limitBy": limitRecords
-        }
-        return self.executeQuery(self.mySQLQueryBuilder(jsonQueryParam))
-
-    def getProcessingModuleInfo(self, processinModuleID, limitRecords: str = "") -> list:
-        """
-        :param processinModuleID:
-        :param limitRecords: range (e.g., 1,10 or 130,200)
-        :return: list
-        """
-        whereClause = "id=" + str(processinModuleID)
-
-        jsonQueryParam = {
-            "columnNames": "*",
-            "tableName": self.processingModuleTable,
-            "whereClause": whereClause,
-            "orderedByColumnName": "id",
-            "sortingOrder": "ASC",
-            "limitBy": limitRecords
+            "limitBy": records_limit
         }
         return self.executeQuery(self.mySQLQueryBuilder(jsonQueryParam))
 
@@ -192,12 +129,59 @@ class LoadMetadata:
         :param qry: SQL Query
         :return: results of a query
         """
-
         self.cursor.execute(qry)
-        results = self.cursor.fetchall()
+        rows = self.cursor.fetchall()
         self.cursor.close()
         self.dbConnection.close()
-        if len(results) == 0:
-            raise "No record found."
+        if len(rows) == 0:
+            raise ValueError("No record found.")
         else:
-            return results
+            return rows
+
+    def get_stream_id_by_owner_id(self, owner_id: uuid, stream_name: str, start_time=None, end_time=None) -> str:
+        """
+        returns a stream id of an owner
+        :param owner_id:
+        :param stream_name:
+        :param data_type:
+        :return:
+        """
+        if start_time != None and end_time != None:
+            qry = "SELECT identifier from " + self.datastreamTable + " where owner=%s and name=%s"
+            vals = owner_id, stream_name
+        else:
+            qry = "SELECT * from " + self.datastreamTable + " where owner=%s and name=%s"
+            vals = owner_id, stream_name
+
+        self.cursor.execute(qry, vals)
+        rows = self.cursor.fetchall()
+        if rows:
+            return rows[0]["identifier"]
+        else:
+            return False
+
+    def get_stream_ids_of_owner(self, owner_id: uuid, stream_name: str = None, start_time: datetime = None,
+                                end_time: datetime = None) -> str:
+        """
+        It returns all the stream ids that an owner owns
+        :param owner_id:
+        :return:
+        """
+
+        if start_time != None and end_time != None:
+            if stream_name != None:
+                qry = "SELECT identifier, name from " + self.datastreamTable + " where owner=%s and name=%s and start_time<=%s and end_time>=%s"
+                self.cursor.execute(qry, (owner_id, stream_name, start_time, end_time))
+            else:
+                qry = "SELECT identifier, name from " + self.datastreamTable + " where owner=%s and start_time<=%s and end_time>=%s"
+                self.cursor.execute(qry, (owner_id, start_time, end_time))
+        else:
+            if stream_name != None:
+                qry = "SELECT * from " + self.datastreamTable + " where owner=%s and name=%s"
+                self.cursor.execute(qry, (owner_id, stream_name))
+            else:
+                qry = "SELECT identifier, name from " + self.datastreamTable + " where owner=%s"
+                self.cursor.execute(qry, (owner_id))
+
+        rows = self.cursor.fetchall()
+        return rows[0]["identifier"]

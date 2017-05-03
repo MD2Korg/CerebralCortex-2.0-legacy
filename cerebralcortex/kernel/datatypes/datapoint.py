@@ -53,7 +53,7 @@ class DataPoint:
 
     @classmethod
     def from_tuple(cls, start_time: datetime, sample: Any, end_time: datetime = None):
-        return cls(None, start_time, end_time, sample)
+        return cls(start_time, end_time, sample)
 
     def __str__(self):
         return str(self.start_time) + " - " + str(self.sample)

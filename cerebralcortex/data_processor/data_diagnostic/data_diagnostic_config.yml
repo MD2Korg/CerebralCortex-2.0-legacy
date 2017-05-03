@@ -1,0 +1,105 @@
+general:
+  window_size: 60
+
+sampling_rate:
+  rip: 21.33
+  ecg: 64
+  autosense_accel: 10.67
+  motionsense: 16
+
+battery_marker:
+  phone_powered_off: 0 #min=0 and max=100
+  phone_battery_down: 10
+  autosense_powered_off: 0 #Min=0 and Max=6
+  autosense_battery_down: 0.5 #Min=0 and Max=6
+  motionsense_powered_off: 1 #min= and max=
+  motionsense_battery_down: 10 #min= and max=
+
+
+attachment_marker:
+  ecg_on_body: 1000
+  rip_on_body: 1000
+  motionsense_on_body: 0.00003
+  #these two parameters are only used with GSR. In future, we might not have GSR values.
+  improper_attachment: 750
+  gsr_off_body: 1800
+
+packet_loss_marker:
+  #min=0 and max=1.0
+  ecg_acceptable_packet_loss: 0.33
+  rip_acceptable_packet_loss: 0.33
+  motionsense_acceptable_packet_loss: 0.33
+
+sensor_unavailable_marker:
+  #Threshold to distinguish between a wireless disconnection and sensor-off
+  ecg: 4000
+  rip: 4000
+  motionsense: 0.005
+
+labels:
+  autosense_unavailable: 4
+  motionsense_unavailable: 4
+  #attachment labels
+  ecg_improper_attachment: 10
+  ecg_off_body: 8
+  ecg_on_body: 9
+  rip_improper_attachment: 10
+  rip_off_body: 8
+  rip_on_body: 9
+  motionsense_improper_attachment: 10
+  motionsense_off_body: 8
+  motionsense_on_body: 9
+  #packet loss labels
+  ecg_packet_loss: 6
+  rip_packet_loss: 6
+  motionsense_packet_loss: 6
+  #battery labels
+  phone_powered_off: 20
+  phone_battery_down: 16
+  autosesen_powered_off: 18
+  autosense_battery_down: 14
+  motionsense_powered_off: 18
+  motionsense_battery_down: 14
+
+sensor_types:
+  phone_battery: phone_battery
+  autosense_battery: autosense_battery
+  autosense_rip: autosense_rip
+  autosense_ecg: autosense_ecg
+  autosense_accel_x: autosense_accel_x
+  autosense_accel_y: autosense_accel_y
+  autosense_accel_z: autosense_accel_z
+  motionsense_battery: motionsense_battery
+  motionsense_accel: motionsense_accel
+
+algo_names:
+  battery_marker: battery
+  attachment_marker: attachment
+  sensor_unavailable_marker: sensor_unavailable
+  packet_loss_marker: packet_loss
+
+output_stream_names:
+  ddt_ecg_attachment: ddt_ecg_attachment
+  ddt_rip_attachment: ddt_rip_attachment
+  ddt_motionsense_attachment: ddt_motionsense_attachment
+
+  ddt_phone_battery: ddt_phone_battery
+  ddt_autosense_battery: ddt_autosense_battery
+  ddt_motionsense_battery: ddt_motionsense_battery
+
+  ddt_autosense_unavailable: ddt_autosense_unavailable
+  ddt_motionsense_unavailable: ddt_motionsense_unavailable
+
+  ddt_ecg_packet_loss: ddt_ecg_packet_loss
+  ddt_rip_packet_loss: ddt_rip_packet_loss
+  ddt_motionsense_packet_loss: ddt_motionsense_packet_loss
+
+description:
+  data_diagnostic: "Data-diagnostic module helps to identify the causes of missing data."
+  attachment_marker: "Attachment marker algorithm uses variance of a windowed signals data to mark the window as on/off body or improperly attached."
+  battery_data_marker: "Battery data marker algorithm uses battery levels to label when the batter was down or device was powered off."
+  packet_loss_marker: "Packet loss marker algorithm marks a window as packet-loss if received packets in a window is less than the acceptable packet loss threshold."
+  sensor_unavailable_marker: "Sensor unavailable algorithm uses battery-off stream to analyze whether battery was actually powered off or a person walked away from the phone."
+
+
+
