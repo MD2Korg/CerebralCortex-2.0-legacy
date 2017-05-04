@@ -1,6 +1,6 @@
 {
   "identifier": "8405dc31-fca9-4390-840e-5c888c3dbba0",
-  "user": "a970e186-e960-11e6-bf0e-fe55135034f3",
+  "owner": "a970e186-e960-11e6-bf0e-fe55135034f3",
   "name": "80th_percentile_rr_variance",
   "description": "80th percentile",
   "data_descriptor": [

@@ -29,12 +29,11 @@ from cerebralcortex.kernel.datatypes.annotationstream import AnnotationStream
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.enumerations import StreamTypes
 from cerebralcortex.kernel.datatypes.subtypes import DataDescriptor, ExecutionContext, StreamReference
-from cerebralcortex.kernel.datatypes.user import User
 
 
 class TestAnnotationStream(unittest.TestCase):
     def setUp(self):
-        self.user = User(uuid4())
+        self.user = uuid4()
         self.dd = [DataDescriptor("float", "milliseconds", None)]
         self.ec = ExecutionContext(88, None, None, None)
         self.annotations = [StreamReference("TestAnnotation2", 56), StreamReference("TestAnnotation2", 59)]
@@ -43,7 +42,7 @@ class TestAnnotationStream(unittest.TestCase):
     def test_datastream_init(self):
         ds = AnnotationStream(45,
                               self.user,
-                              "TestStream",
+                              self.user,
                               "Testing Init Function",
                               self.dd,
                               self.ec,
