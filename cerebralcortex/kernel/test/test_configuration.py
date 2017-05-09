@@ -21,8 +21,9 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-import os
 import unittest
+
+import os
 
 from cerebralcortex.configuration import Configuration
 
@@ -48,7 +49,7 @@ class TestConfiguration(unittest.TestCase):
 
         self.assertEqual(mysql['database'], 'cerebralcortex')
         self.assertEqual(mysql['db_user'], 'root')
-        self.assertEqual(mysql['db_pass'], 'pass')
+        self.assertEqual(mysql['db_pass'], 'random_root_password')
         self.assertEqual(mysql['datastream_table'], 'stream')
         self.assertEqual(mysql['user_table'], 'user')
         self.assertEqual(mysql['study_table'], 'study')

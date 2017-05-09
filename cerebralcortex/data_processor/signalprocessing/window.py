@@ -23,18 +23,17 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import math
-from collections import OrderedDict
 from datetime import datetime, timedelta
 from typing import List
 
 import pytz
+from collections import OrderedDict
 
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 
 
-
 def window(data: List[DataPoint],
-           window_size: float, all_windows:bool=False) -> OrderedDict:
+           window_size: float, all_windows: bool = False) -> OrderedDict:
     """
     Special case of a sliding window with no overlaps
     :param data:
@@ -47,7 +46,7 @@ def window(data: List[DataPoint],
 
 def window_sliding(data: List[DataPoint],
                    window_size: float,
-                   window_offset: float, all_windows) -> OrderedDict:
+                   window_offset: float, all_windows=False) -> OrderedDict:
     """
     Sliding Window Implementation
 
@@ -68,13 +67,12 @@ def window_sliding(data: List[DataPoint],
 
     windowed_datastream = OrderedDict()
 
-    if all_windows==True:
+    if all_windows:
         for _key, _data in create_all_windows(data, window_size, window_offset):
             windowed_datastream[_key] = _data
     else:
         for key, data in window_iter(data, window_size, window_offset):
             windowed_datastream[key] = data
-
 
     return windowed_datastream
 
@@ -109,6 +107,7 @@ def window_iter(iterable: List[DataPoint],
         data.append(element)
     yield key, data
 
+
 def create_all_windows(datapoint: List[DataPoint], window_size: float, window_offset: float):
     """
     This method will create a complete list of a windows between start and end time of the data provided.
@@ -119,7 +118,7 @@ def create_all_windows(datapoint: List[DataPoint], window_size: float, window_of
                                        (st,et),[], (if a window does not contain any data}
                                         ...]
     """
-    #print(datapoint)
+    # print(datapoint)
     window_start_time = epoch_align(datapoint[0].start_time, window_offset)
     window_end_time = window_start_time + timedelta(seconds=window_size)
     window_data = []
@@ -145,6 +144,7 @@ def create_all_windows(datapoint: List[DataPoint], window_size: float, window_of
             window_start_time = _w_start_time
     key = (window_start_time, window_end_time)
     yield key, window_data
+
 
 def epoch_align(ts: datetime,
                 offset: float,
