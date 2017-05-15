@@ -2,7 +2,6 @@
   "identifier": "31a84a5d-549b-480b-8b6d-9faa898894f0",
   "owner": "a970e186-e960-11e6-bf0e-fe55135034f3",
   "name": "ecg",
-  "description": "RAW ecg from AutoSense",
   "data_descriptor": [
     {
       "type": "number",
@@ -13,12 +12,12 @@
     "processing_module": {
       "name": "cStress",
       "description": "Something here",
-      "input_parameters": [
-        "window_size",
-        "window_offset",
-        "low_level_threshold",
-        "high_level_threshold"
-      ],
+      "input_parameters": {
+        "window_size": 60,
+        "window_offset": 300,
+        "low_level_threshold": 1.3,
+        "high_level_threshold": 4.3
+      },
       "input_streams": [
         {
           "name": "stress_likelihood"
@@ -32,17 +31,30 @@
           "name": "stress_episodes"
         }
       ],
-      "algorithm": {
-        "method": "cerebralcortex.data_processor.signalprocessing.ecg.compute_r_peaks",
-        "description": "Something here",
-        "authors": [
-          "John Doe"
-        ],
-        "version": "0.1.3",
-        "reference": {
-          "url": "https://github.com/MD2Korg/CerebralCortex/"
+      "algorithm": [
+        {
+          "method": "cerebralcortex.data_processor.signalprocessing.ecg.compute_r_peaks",
+          "description": "Something here",
+          "authors": [
+            "John Doe"
+          ],
+          "version": "0.1.3",
+          "reference": {
+            "url": "https://github.com/MD2Korg/CerebralCortex/"
+          }
+        },
+        {
+          "method": "cerebralcortex.data_processor.data_diagnostic.2ndAlgo",
+          "description": "Description of second algo if there is any.",
+          "authors": [
+            "Ali"
+          ],
+          "version": "0.0.1",
+          "reference": {
+            "url": "url of pub"
+          }
         }
-      }
+      ]
     }
   },
   "annotations": [

@@ -8,9 +8,8 @@ cassandra:
 mysql:
   database: cerebralcortex
   db_user: root
-  db_pass: random_root_password
+  db_pass: pass
   datastream_table: stream
   processing_module_table: processing_module
   user_table: user
   study_table: study
-

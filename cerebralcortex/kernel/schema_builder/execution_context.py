@@ -24,56 +24,55 @@
 
 
 class execution_context:
-
     def get_execution_context(self, processing_module: dict, algorithm: dict) -> dict:
         """
         Please have a look at /kernel/schema/examples/ for schema and field details
         :param processing_module:
         :param algorithm:
         """
-        processing_module = self.processing_module_schema(processing_module)
-        algorithm = self.algorithm_schema(algorithm)
-
         ec = {**processing_module, **algorithm}
         execution_context = {"execution_context": ec}
         return execution_context
 
     @staticmethod
-    def processing_module_schema(pm: dict):
-        """
-
-        :param pm:
-        :return:
-        """
-        if not pm:
-            raise ValueError("Processing module schema cannot be empty.")
-        elif not pm["name"]:
-            raise ValueError("Processing module name cannot be empty.")
-
-        elif not pm["description"]:
-            raise ValueError("Processing module description cannot be empty.")
-
-        elif not pm["output_streams"]:
-            raise ValueError("Name of output stream cannot be empty.")
+    def processing_module_schema(name, pm_description, input_params, input_streams):
+        if not name:
+            raise ValueError("Name is a mandatory field")
+        elif not pm_description:
+            raise ValueError("Processing module description is a mandatory field")
+        elif not input_params:
+            raise ValueError("Input params is mandatory field")
         else:
-            return {"processing_module": pm}
+            processing_module = {
+                "processing_module": {
+                    "name": name,
+                    "description": pm_description,
+                    "input_parameters": input_params,
+                    "input_streams": input_streams
+                }
+            }
+        return processing_module
 
     @staticmethod
-    def algorithm_schema(algo: dict):
-        """
+    def algorithm_schema(method, algo_description, authors, version, ref):
 
-        :param algo:
-        :return:
-        """
-        if not algo:
-            raise ValueError("Algorithm schema cannot be empty.")
-        elif not algo["method"]:
-            raise ValueError("Algorithm package path cannot be empty.")
-        elif not algo["description"]:
-            raise ValueError("Algorithm description cannot be empty.")
-        elif not algo["authors"]:
-            raise ValueError("Algorithm's author/developer name cannot be empty.")
-        elif not algo["version"]:
-            raise ValueError("Algorithm's version number cannot be empty.")
+        if not method:
+            raise ValueError("Complete path to the algorithm is mandatory field")
+        elif not algo_description:
+            raise ValueError("Algorithm description  is mandatory field")
+        elif not authors:
+            raise ValueError("Author(s) list  is mandatory field")
+        elif not version:
+            raise ValueError("Version is mandatory field")
         else:
-            return {"algorithm": algo}
+            algo = {
+                "algorithm": {
+                    "method": method,
+                    "description": algo_description,
+                    "authors": authors,
+                    "version": version,
+                    "reference": ref
+                }
+            }
+
+        return algo

@@ -46,7 +46,7 @@ def store(input_streams: dict, data: OrderedDict, CC_obj: CerebralCortex, config
     stream_name = input_streams[0]["name"]
 
     stream_uuid = uuid.uuid4()
-    result = process_data(stream_uuid, stream_name, input_streams, algo_type, config)
+    result = process_data(stream_name, input_streams, algo_type, config)
 
     data_descriptor = json.loads(result["dd"])
     execution_context = json.loads(result["ec"])
@@ -54,20 +54,19 @@ def store(input_streams: dict, data: OrderedDict, CC_obj: CerebralCortex, config
 
     metadata = CC_obj.get_datastream(parent_stream_id, data_type=DataSet.ONLY_METADATA)
 
-    owner = metadata._owner
-    name = execution_context["execution_context"]["processing_module"]["output_streams"][0]["name"]
+    owner = metadata.owner
+    name = metadata.name
     stream_type = "datastream"
 
-    ds = DataStream(identifier=stream_uuid, owner=owner, name=name, data_descriptor=data_descriptor,
+    ds = DataStream(owner=owner, name=name, data_descriptor=data_descriptor,
                     execution_context=execution_context, annotations=annotations,
                     stream_type=stream_type, data=data)
 
     CC_obj.save_datastream(ds)
 
 
-def process_data(stream_uuid: uuid, stream_name: str, input_streams: dict, algo_type: str, config: dict) -> dict:
+def process_data(stream_name: str, input_streams: dict, algo_type: str, config: dict) -> dict:
     """
-    :param stream_uuid:
     :param stream_name:
     :param input_streams:
     :param algo_type:
@@ -75,17 +74,17 @@ def process_data(stream_uuid: uuid, stream_name: str, input_streams: dict, algo_
     :return:
     """
     if algo_type == config["algo_names"]["attachment_marker"]:
-        result = attachment_marker(stream_uuid, stream_name, input_streams, config)
+        result = attachment_marker(stream_name, input_streams, config)
     elif algo_type == config["algo_names"]["battery_marker"]:
-        result = battery_data_marker(stream_uuid, stream_name, input_streams, config)
+        result = battery_data_marker(stream_name, input_streams, config)
     elif algo_type == config["algo_names"]["sensor_unavailable_marker"]:
-        result = sensor_unavailable(stream_uuid, stream_name, input_streams, config)
+        result = sensor_unavailable(stream_name, input_streams, config)
     elif algo_type == config["algo_names"]["packet_loss_marker"]:
-        result = packet_loss(stream_uuid, stream_name, input_streams, config)
+        result = packet_loss(stream_name, input_streams, config)
     return result
 
 
-def attachment_marker(generated_stream_id: uuid, stream_name: str, input_streams: dict, config: dict) -> dict:
+def attachment_marker(stream_name: str, input_streams: dict, config: dict) -> dict:
     """
     :param generated_stream_id:
     :param stream_name:
@@ -108,11 +107,10 @@ def attachment_marker(generated_stream_id: uuid, stream_name: str, input_streams
     else:
         raise ValueError("Incorrect sensor type")
 
-    output_stream = [{"name": name, "id": str(generated_stream_id)}];
     method = 'cerebralcortex.data_processor.data_diagnostic.attachment_marker'
     algo_description = config["description"]["attachment_marker"]
 
-    ec = get_execution_context(name, input_param, input_streams, output_stream, method,
+    ec = get_execution_context(name, input_param, input_streams, method,
                                algo_description, config)
     dd = get_data_descriptor(config["algo_names"]["attachment_marker"], config)
     anno = get_annotations()
@@ -120,10 +118,9 @@ def attachment_marker(generated_stream_id: uuid, stream_name: str, input_streams
     return {"ec": ec, "dd": dd, "anno": anno}
 
 
-def battery_data_marker(generated_stream_id: uuid, stream_name: str, input_streams: dict, config: dict) -> dict:
+def battery_data_marker(stream_name: str, input_streams: dict, config: dict) -> dict:
     """
 
-    :param generated_stream_id:
     :param stream_name:
     :param input_streams:
     :param config:
@@ -148,23 +145,19 @@ def battery_data_marker(generated_stream_id: uuid, stream_name: str, input_strea
     else:
         raise ValueError("Incorrect sensor type")
 
-    output_stream = [{"name": name, "id": str(generated_stream_id)}];
-
     algo_description = config["description"]["battery_data_marker"]
 
     method = 'cerebralcortex.data_processor.data_diagnostic.BatteryDataMarker'
 
-    ec = get_execution_context(name, input_param, input_streams, output_stream, method,
-                               algo_description, config)
+    ec = get_execution_context(name, input_param, input_streams, method, algo_description, config)
     dd = get_data_descriptor(config["algo_names"]["battery_marker"], config)
     anno = get_annotations()
     return {"ec": ec, "dd": dd, "anno": anno}
 
 
-def sensor_unavailable(generated_stream_id: uuid, sensor_type: str, input_streams: dict, config: dict) -> dict:
+def sensor_unavailable(sensor_type: str, input_streams: dict, config: dict) -> dict:
     """
 
-    :param generated_stream_id:
     :param sensor_type:
     :param input_streams:
     :param config:
@@ -186,21 +179,20 @@ def sensor_unavailable(generated_stream_id: uuid, sensor_type: str, input_stream
     else:
         raise ValueError("Incorrect sensor type")
 
-    output_stream = [{"name": name, "id": str(generated_stream_id)}];
+    #output_stream = {"name": name, "id": str(generated_stream_id)};
     algo_description = config["description"]["sensor_unavailable_marker"]
     method = 'cerebralcortex.data_processor.data_diagnostic.packet_loss_marker'
 
-    ec = get_execution_context(name, input_param, input_streams, output_stream, method,
+    ec = get_execution_context(name, input_param, input_streams, method,
                                algo_description, config)
     dd = get_data_descriptor(config["algo_names"]["sensor_unavailable_marker"], config)
     anno = get_annotations()
     return {"ec": ec, "dd": dd, "anno": anno}
 
 
-def packet_loss(generated_stream_id: uuid, sensor_type: str, input_streams: dict, config: dict) -> dict:
+def packet_loss(sensor_type: str, input_streams: dict, config: dict) -> dict:
     """
 
-    :param generated_stream_id:
     :param sensor_type:
     :param input_streams:
     :param config:
@@ -222,11 +214,11 @@ def packet_loss(generated_stream_id: uuid, sensor_type: str, input_streams: dict
     else:
         raise ValueError("Incorrect sensor type")
 
-    output_stream = [{"name": name, "id": str(generated_stream_id)}];
+    #output_stream = {"name": name, "id": str(generated_stream_id)};
     algo_description = config["description"]["packet_loss_marker"]
     method = 'cerebralcortex.data_processor.data_diagnostic.packet_loss_marker'
 
-    ec = get_execution_context(name, input_param, input_streams, output_stream, method,
+    ec = get_execution_context(name, input_param, input_streams, method,
                                algo_description, config)
     dd = get_data_descriptor(config["algo_names"]["packet_loss_marker"], config)
     anno = get_annotations()
@@ -268,32 +260,31 @@ def get_data_descriptor(algo_type: str, config: dict) -> dict:
     return json.dumps(data_descriptor.get_data_descriptor("label", "window", dd))
 
 
-def get_execution_context(name: str, input_param: dict, input_streams: dict, output_streams: dict, method: str,
+
+def get_execution_context(name: str, input_param: dict, input_streams: dict, method: str,
                           algo_description: str, config: dict) -> dict:
     """
     :param name:
     :param input_param:
     :param input_streams:
-    :param output_streams:
     :param method:
     :param algo_description:
     :param config:
     :return:
     """
-    author = ["Ali"]
+    author = [{"name":"Ali", "email": "nasir.ali08@gmail.com"}]
     version = '0.0.1'
-    ref = 'url of pub'
+    ref = {"url": "http://www.cs.memphis.edu/~santosh/Papers/Continuous-Stress-BCB-2014.pdf"}
 
     processing_module = {"name": name,
                          "description": config["description"]["data_diagnostic"],
                          "input_parameters": input_param,
-                         "input_streams": input_streams,
-                         "output_streams": output_streams}
-    algorithm = {"method": method,
+                         "input_streams": input_streams}
+    algorithm = [{"method": method,
                  "description": algo_description,
                  "authors": author,
                  "version": version,
-                 "reference": ref}
+                 "reference": ref}]
 
     ec = execution_context().get_execution_context(processing_module, algorithm)
     return json.dumps(ec)
@@ -303,5 +294,5 @@ def get_annotations() -> dict:
     """
     :return:
     """
-    annotations = {}
+    annotations = []
     return json.dumps(annotations)

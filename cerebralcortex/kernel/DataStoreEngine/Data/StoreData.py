@@ -34,7 +34,7 @@ class StoreData:
 
         :param datastream:
         """
-        stream_identifier = datastream.identifier
+
         ownerID = datastream.owner
         name = datastream.name
         data_descriptor = datastream.data_descriptor
@@ -52,10 +52,14 @@ class StoreData:
                 new_start_time = data.start_time
                 new_end_time = data.start_time
 
+            result = Metadata(self.CC_obj).is_id_created2(ownerID, name, data_descriptor, execution_context)
+
+            stream_identifier = result["id"]
             Metadata(self.CC_obj).store_stream_info(stream_identifier, ownerID, name,
                                                     data_descriptor, execution_context,
                                                     annotations,
-                                                    stream_type, new_start_time, new_end_time)
+                                                    stream_type, new_start_time, new_end_time, result["status"])
+
             dataframe = self.map_datapoint_to_dataframe(stream_identifier, data)
 
             self.store_data(dataframe, self.datapointTable)
@@ -70,22 +74,38 @@ class StoreData:
             raise Exception("Table name cannot be null.")
         elif dataframe_data == "":
             raise Exception("Data cannot be null.")
-
         dataframe_data.write.format("org.apache.spark.sql.cassandra") \
             .mode('append') \
             .options(table=table_name, keyspace=self.keyspaceName) \
             .save()
 
     def map_datapoint_to_dataframe(self, stream_id, datapoints):
+
         temp = []
+        no_end_time = 0
         for i in datapoints:
             day = i.start_time
             day = day.strftime("%Y%m%d")
-            dp = str(stream_id), day, i.start_time, i.end_time, json.dumps(i.sample)
+            if isinstance(i.sample, str):
+                sample = i.sample
+            else:
+                sample = json.dumps(i.sample)
+
+            if i.end_time:
+                dp = str(stream_id), day, i.start_time, i.end_time, sample
+            else:
+                dp = str(stream_id), day, i.start_time, sample
+                if no_end_time != 1:
+                    no_end_time = 1
+
             temp.append(dp)
 
         temp_RDD = self.sparkContext.parallelize(temp)
-        df = self.sqlContext.createDataFrame(temp_RDD,
-                                             ["identifier", "day", "start_time", "end_time", "sample"])
-
+        if (no_end_time == 1):
+            df = self.sqlContext.createDataFrame(temp_RDD,
+                                                 schema=["identifier", "day", "start_time", "sample"]).coalesce(400)
+        else:
+            df = self.sqlContext.createDataFrame(temp_RDD,
+                                                 schema=["identifier", "day", "start_time", "end_time",
+                                                         "sample"]).coalesce(400)
         return df

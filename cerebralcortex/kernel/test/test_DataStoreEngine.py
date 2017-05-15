@@ -32,7 +32,6 @@ from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 
-# @unittest.skip("Skipped test class: Figure out a way to test with MySQLand Cassandra")
 class TestDataStoreEngine(unittest.TestCase):
     def setUp(self):
         self.testConfigFile = os.path.join(os.path.dirname(__file__), 'res/test_configuration.yml')
@@ -40,7 +39,11 @@ class TestDataStoreEngine(unittest.TestCase):
         self.CC = CerebralCortex(self.testConfigFile, master="local[*]", name="Cerebral Cortex DataStoreEngine Tests", time_zone="US/Central")
 
         self.configuration = self.CC.configuration
-
+        self.test_store_stream()
+        self.test_get_stream_id_name()
+        self.test_get_stream_info()
+        self.test_append_annotations()
+        self.test_store_stream()
         # TODO: populate databases with sample information for these tests
 
     def test_store_stream_info(self):
@@ -55,18 +58,16 @@ class TestDataStoreEngine(unittest.TestCase):
                                                        "06634264-56bc-4c92-abd7-377dbbad79dd", "data-diagnostic-test",
                                                        data_descriptor, execution_context,
                                                        annotations,
-                                                       stream_type, start_time, end_time)
+                                                       stream_type, start_time, end_time, "new")
 
     def test_get_stream_id_name(self):
         stream_id = Metadata(self.CC).get_stream_id_by_owner_id("06634264-56bc-4c92-abd7-377dbbad79dd",
                                                                     "data-diagnostic-test")
         self.assertEqual(stream_id, "6db98dfb-d6e8-4b27-8d55-95b20fa0f754")
 
-    def test_get_stream_info(self, stream_meta:dict=None):
-        if stream_meta:
-            stream_info = stream_meta
-        else:
-            stream_info = Metadata(self.CC).get_stream_info("6db98dfb-d6e8-4b27-8d55-95b20fa0f754")
+    def test_get_stream_info(self):
+
+        stream_info = Metadata(self.CC).get_stream_info("6db98dfb-d6e8-4b27-8d55-95b20fa0f754")
 
         self.assertEqual(stream_info[0]["identifier"], "6db98dfb-d6e8-4b27-8d55-95b20fa0f754")
         self.assertEqual(stream_info[0]["owner"], "06634264-56bc-4c92-abd7-377dbbad79dd")

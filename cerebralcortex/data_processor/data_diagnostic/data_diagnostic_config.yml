@@ -97,7 +97,7 @@ output_stream_names:
 description:
   data_diagnostic: "Data-diagnostic module helps to identify the causes of missing data."
   attachment_marker: "Attachment marker algorithm uses variance of a windowed signals data to mark the window as on/off body or improperly attached."
-  battery_data_marker: "Battery data marker algorithm uses battery levels to label when the batter was down or device was powered off."
+  battery_data_marker: "Battery data marker uses battery levels to determine whether the battery was down or device was powered off."
   packet_loss_marker: "Packet loss marker algorithm marks a window as packet-loss if received packets in a window is less than the acceptable packet loss threshold."
   sensor_unavailable_marker: "Sensor unavailable algorithm uses battery-off stream to analyze whether battery was actually powered off or a person walked away from the phone."
 
