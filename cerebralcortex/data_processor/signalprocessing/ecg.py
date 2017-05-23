@@ -71,13 +71,14 @@ def filter_bad_ecg(ecg: DataStream,
     :return:  filtered ecg datastream
     """
 
-    window_length = int(no_of_secs * fs)
+    window_length = no_of_secs
     window_data = window(ecg.data, window_size=window_length)
 
     ecg_filtered = DataStream.from_datastream([ecg])
     ecg_filtered_array = []
 
     for key, data in window_data.items():
+        print(len(data))
         if classify_ecg_window(data, range_threshold=200, slope_threshold=50, maximum_value=4000):
             ecg_filtered_array.extend(data)
 

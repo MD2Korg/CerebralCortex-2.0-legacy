@@ -95,7 +95,7 @@ def loader(identifier: int):
 
 
 start_time = time.time()
-ids = CC.sparkSession.sparkContext.parallelize([i for i in range(1, 25)])
+ids = CC.sparkSession.sparkContext.parallelize([i for i in range(1, 2)])
 
 data = ids.map(lambda i: loader(i)).filter(lambda x: 'participant' in x)
 

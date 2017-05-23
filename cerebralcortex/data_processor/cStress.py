@@ -29,7 +29,7 @@ from cerebralcortex.data_processor.signalprocessing import rip
 from cerebralcortex.data_processor.signalprocessing.accelerometer import accelerometer_features
 from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_correct, autosense_sequence_align
 from cerebralcortex.data_processor.signalprocessing.ecg import compute_rr_intervals
-
+from cerebralcortex.data_processor.signalprocessing.dataquality import ECGDataQuality
 
 def fix_two_joins(nested_data):
     key = nested_data[0]
@@ -45,6 +45,9 @@ def cStress(rdd: RDD) -> RDD:
     rip_sampling_frequency = 64.0
     accel_sampling_frequency = 64.0 / 6.0
 
+
+    ecg_quality = rdd.map(lambda ds: (
+        ds['participant'], ECGDataQuality(ds['ecg'])))
 
     # Timestamp correct datastreams
     ecg_corrected = rdd.map(lambda ds: (

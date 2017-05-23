@@ -46,7 +46,7 @@ def ECGDataQuality(datastream: DataStream,
     :param ecgBandLooseThreshold:
     :return:
     """
-    # windows = window(datastream.datapoints, window_size=windowsize)
+    windows = window(datastream.datapoints, window_size=windowsize)
 
     # TODO: Do something with windows here
 
