@@ -375,7 +375,10 @@ def detect_rpeak(ecg: DataStream,
     """
 
     data = ecg.data
-
+    result = DataStream.from_datastream([ecg])
+    if len(data)==0:
+        result.data = []
+        return result
     sample = np.array([i.sample for i in data])
     timestamp = np.array([i.start_time for i in data])
 
@@ -403,7 +406,7 @@ def detect_rpeak(ecg: DataStream,
             DataPoint.from_tuple(rpeak_timestamp[k], rpeak_value[k].seconds + rpeak_value[k].microseconds / 1e6))
 
     # Create resulting datastream to be returned
-    result = DataStream.from_datastream([ecg])
+
     result.data = result_data
 
     return result
