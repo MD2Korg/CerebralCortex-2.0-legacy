@@ -46,8 +46,6 @@ def cStress(rdd: RDD) -> RDD:
     accel_sampling_frequency = 64.0 / 6.0
 
 
-    ecg_quality = rdd.map(lambda ds: (
-        ds['participant'], ECGDataQuality(ds['ecg'])))
 
     # Timestamp correct datastreams
     ecg_corrected = rdd.map(lambda ds: (
@@ -61,6 +59,9 @@ def cStress(rdd: RDD) -> RDD:
     ds['participant'], timestamp_correct(datastream=ds['accely'], sampling_frequency=accel_sampling_frequency)))
     accelz_corrected = rdd.map(lambda ds: (
     ds['participant'], timestamp_correct(datastream=ds['accelz'], sampling_frequency=accel_sampling_frequency)))
+
+    ecg_quality = ecg_corrected.map(lambda ds: (ds[0], ECGDataQuality(ds[1])))
+    ecg_quality.take(1)
 
     accel_group = accelx_corrected.join(accely_corrected).join(accelz_corrected).map(fix_two_joins)
     accel = accel_group.map(lambda ds: (ds[0], autosense_sequence_align(datastreams=[ds[1][0], ds[1][1], ds[1][2]],
