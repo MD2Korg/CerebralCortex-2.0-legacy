@@ -24,10 +24,10 @@
 
 from cerebralcortex.kernel.datatypes.annotationstream import AnnotationStream
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-
+from cerebralcortex.data_processor.signalprocessing.window import window
 
 def ECGDataQuality(datastream: DataStream,
-                   windowsize: float = 5.0,
+                   windowsize: float = 2.0,
                    bufferLength: int = 3,
                    acceptableOutlierPercent: int = 50,
                    outlierThresholdHigh: int = 4500,
@@ -46,13 +46,15 @@ def ECGDataQuality(datastream: DataStream,
     :param ecgBandLooseThreshold:
     :return:
     """
-    print(len(datastream.data))
+
     # windows = window(datastream.datapoints, window_size=windowsize)
 
     # TODO: Do something with windows here
 
     result = DataStream.from_datastream(input_streams=[datastream])
-
+    window_data = window(datastream.data, window_size=windowsize)
+    for key,data in window_data.items():
+        print(len(data))
     # Do something here for data quality
     # ecgQuality = []
     # for i in range(1, 10):
@@ -61,8 +63,8 @@ def ECGDataQuality(datastream: DataStream,
     #                            endtime=datetime.now(),
     #                            label=DataQuality.GOOD))
     #
-    # result.set_spans(ecgQuality)
-
+    # # result.set_spans(ecgQuality)
+    # print(datastream.data[0].start_time)
     return result
 
 
