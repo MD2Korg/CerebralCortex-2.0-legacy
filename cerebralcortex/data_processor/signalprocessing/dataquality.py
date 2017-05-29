@@ -22,9 +22,15 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from cerebralcortex.kernel.datatypes.annotationstream import AnnotationStream
+# from cerebralcortex.kernel.datatypes.annotationstream import AnnotationStream
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.data_processor.signalprocessing.window import window
+from cerebralcortex.kernel.datatypes.datapoint import DataPoint
+import random
+
+def compute_dataquality_ecg(data):
+    return random.randint(0,1)
+
 
 def ECGDataQuality(datastream: DataStream,
                    windowsize: float = 2.0,
@@ -33,7 +39,7 @@ def ECGDataQuality(datastream: DataStream,
                    outlierThresholdHigh: int = 4500,
                    outlierThresholdLow: int = 20,
                    badSegmentThreshod: int = 2,
-                   ecgBandLooseThreshold: int = 47) -> AnnotationStream:
+                   ecgBandLooseThreshold: int = 47) -> DataStream:
     """
 
     :param datastream:
@@ -51,21 +57,24 @@ def ECGDataQuality(datastream: DataStream,
 
     # TODO: Do something with windows here
 
-    result = DataStream.from_datastream(input_streams=[datastream])
+    quality_stream = DataStream.from_datastream(input_streams=[datastream])
     window_data = window(datastream.data, window_size=windowsize)
-    for key,data in window_data.items():
-        print(len(data))
-    # Do something here for data quality
-    # ecgQuality = []
-    # for i in range(1, 10):
-    #     ecgQuality.append(Span(result.getID(),
-    #                            starttime=datetime.now(),
-    #                            endtime=datetime.now(),
-    #                            label=DataQuality.GOOD))
-    #
-    # # result.set_spans(ecgQuality)
-    # print(datastream.data[0].start_time)
-    return result
+
+    ecg_quality = []
+    for key, data in window_data.items():
+        result = compute_dataquality_ecg(data)
+        if len(ecg_quality)==0:
+            ecg_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
+        else:
+            if ecg_quality[-1].sample == result:
+                new_point = DataPoint.from_tuple(ecg_quality[-1].start_time, result, data[-1].start_time)
+                ecg_quality[-1] = new_point
+            else:
+                ecg_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
+    quality_stream.data = ecg_quality
+    print(ecg_quality[0].end_time-ecg_quality[0].start_time)
+    return quality_stream
+
 
 
 def RIPDataQuality(datastream: DataStream,
@@ -76,7 +85,7 @@ def RIPDataQuality(datastream: DataStream,
                    outlierThresholdLow=20,
                    badSegmentThreshod=2,
                    ripBandOffThreshold=20,
-                   ripBandLooseThreshold=150) -> AnnotationStream:
+                   ripBandLooseThreshold=150) -> DataStream:
     """
 
     :param datastream:
