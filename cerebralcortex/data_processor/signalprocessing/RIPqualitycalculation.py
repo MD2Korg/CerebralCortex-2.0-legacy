@@ -87,7 +87,7 @@ def classify_buffer(range_values:list,
 
 
 def compute_dataquality_rip(data:list,
-                            rip_range:list = [],
+                            rip_range:list,
                             acceptable_outlier_percent: float = .34,
                             outlier_threshold_high: float = .9769,
                             outlier_threshold_low: float = .004884,
