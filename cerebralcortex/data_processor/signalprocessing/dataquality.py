@@ -28,7 +28,7 @@ from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.data_processor.signalprocessing.ECGqualitycalculation import compute_dataquality_ecg
 from cerebralcortex.data_processor.signalprocessing.RIPqualitycalculation import compute_dataquality_rip
-import matplotlib.pyplot as plt
+
 
 
 def ECGDataQuality(datastream: DataStream,
