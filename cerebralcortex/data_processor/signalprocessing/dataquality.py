@@ -56,12 +56,7 @@ def ECGDataQuality(datastream: DataStream,
                 ecg_quality[-1] = new_point
             else:
                 ecg_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
-        x=[i.start_time for i in data]
-        y=[i.sample for i in data]
-        # if result == 0:
-        # plt.figure()
-        # plt.plot(x, y)
-        # plt.show()
+
     ecg_quality_stream.data = ecg_quality
 
     return ecg_quality_stream
@@ -91,12 +86,7 @@ def RIPDataQuality(datastream: DataStream,
                 rip_quality[-1] = new_point
             else:
                 rip_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
-        x=[i.start_time for i in data]
-        y=[i.sample for i in data]
-        # if result == 0:
-        # plt.figure()
-        # plt.plot(x, y)
-        # plt.show()
+
     rip_quality_stream.data = rip_quality
 
     return rip_quality_stream
