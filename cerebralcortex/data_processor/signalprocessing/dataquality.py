@@ -27,6 +27,7 @@ from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.data_processor.signalprocessing.ECGqualitycalculation import compute_dataquality_ecg
+from cerebralcortex.data_processor.signalprocessing.RIPqualitycalculation import compute_dataquality_rip
 import matplotlib.pyplot as plt
 
 
@@ -39,7 +40,7 @@ def ECGDataQuality(datastream: DataStream,
                    ecg_threshold_slope: float = .02443,
                    buffer_length: int = 3) -> DataStream:
 
-    quality_stream = DataStream.from_datastream(input_streams=[datastream])
+    ecg_quality_stream = DataStream.from_datastream(input_streams=[datastream])
     print(len(datastream.data))
     window_data = window(datastream.data, window_size=windowsize)
 
@@ -61,48 +62,44 @@ def ECGDataQuality(datastream: DataStream,
         # plt.figure()
         # plt.plot(x, y)
         # plt.show()
-    quality_stream.data = ecg_quality
+    ecg_quality_stream.data = ecg_quality
 
-    return quality_stream
-
+    return ecg_quality_stream
 
 
 def RIPDataQuality(datastream: DataStream,
-                   windowsize: float = 5.0,
-                   bufferLength=5,
-                   acceptableOutlierPercent=50,
-                   outlierThresholdHigh=4500,
-                   outlierThresholdLow=20,
-                   badSegmentThreshod=2,
-                   ripBandOffThreshold=20,
-                   ripBandLooseThreshold=150) -> DataStream:
-    """
+                   windowsize: float = 4.0,
+                   acceptable_outlier_percent: float = .34,
+                   outlier_threshold_high: float = .9769,
+                   outlier_threshold_low: float = .004884,
+                   rip_threshold_band_loose: float = .0428,
+                   rip_threshold_slope: float = .0733,
+                   buffer_length: int = 3) -> DataStream:
 
-    :param datastream:
-    :param windowsize:
-    :param bufferLength:
-    :param acceptableOutlierPercent:
-    :param outlierThresholdHigh:
-    :param outlierThresholdLow:
-    :param badSegmentThreshod:
-    :param ripBandOffThreshold:
-    :param ripBandLooseThreshold:
-    :return:
-    """
-    # windows = window(datastream.datapoints, window_size=windowsize)
+    rip_quality_stream = DataStream.from_datastream(input_streams=[datastream])
+    window_data = window(datastream.data, window_size=windowsize)
 
-    # TODO: Do something with windows here
+    rip_quality = []
+    rip_range = []
+    for key, data in window_data.items():
+        result = compute_dataquality_rip(data,rip_range,acceptable_outlier_percent,outlier_threshold_high,outlier_threshold_low,rip_threshold_band_loose,rip_threshold_slope,buffer_length)
+        if len(rip_quality)==0:
+            rip_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
+        else:
+            if rip_quality[-1].sample == result:
+                new_point = DataPoint.from_tuple(rip_quality[-1].start_time, result, data[-1].start_time)
+                rip_quality[-1] = new_point
+            else:
+                rip_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
+        x=[i.start_time for i in data]
+        y=[i.sample for i in data]
+        # if result == 0:
+        # plt.figure()
+        # plt.plot(x, y)
+        # plt.show()
+    rip_quality_stream.data = rip_quality
 
-    result = DataStream.from_datastream(input_streams=[datastream])
+    return rip_quality_stream
 
-    # # Do something here for data quality
-    # ripQuality = []
-    # for i in range(1, 10):
-    #     ripQuality.append(Span(result.getID(),
-    #                            starttime=datetime.now(),
-    #                            endtime=datetime.now(),
-    #                            label=DataQuality.GOOD))
-    #
-    # result.set_spans(ripQuality)
 
-    return result
+
