@@ -33,7 +33,7 @@ def classify_data_points(data:list,
     outlier_counts = [0]*3
     outlier_counts[1]= data[0].sample
     outlier_counts[2]= data[0].sample
-    for i in range(len(data)):
+    for i,item in enumerate(data):
         im = (len(data)-1) if i==0 else i-1
         ip = 0 if (i==len(data)-1) else i+1
         stuck =(data[i].sample==data[im].sample) and (data[i].sample==data[ip].sample)
