@@ -22,12 +22,104 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# from cerebralcortex.kernel.datatypes.annotationstream import AnnotationStream
+
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
-from cerebralcortex.data_processor.signalprocessing.ECGqualitycalculation import compute_dataquality_ecg
-from cerebralcortex.data_processor.signalprocessing.RIPqualitycalculation import compute_dataquality_rip
+
+def classify_data_points(data:list,
+                         ecg_or_rip:object,
+                         threshold_slope: float,
+                         outlier_threshold_high: float = .9769,
+                         outlier_threshold_low: float = .004884,
+                         ADC_range: int = 4095)->list:
+    outlier_counts = [0]*3
+    outlier_counts[1]= data[0].sample
+    outlier_counts[2]= data[0].sample
+    for i,item in enumerate(data):
+        im = (len(data)-1) if i==0 else i-1
+        ip = 0 if (i==len(data)-1) else i+1
+        stuck =(item.sample==data[im].sample) and (item.sample==data[ip].sample)
+        flip = abs(item.sample-data[im].sample)> outlier_threshold_high*ADC_range  or abs(item.sample-data[ip].sample)> outlier_threshold_high*ADC_range
+        if ecg_or_rip=="ecg":
+            disc = abs(item.sample-data[im].sample)> threshold_slope*ADC_range  and abs(item.sample-data[ip].sample)> threshold_slope*ADC_range
+        else:
+            disc = abs(item.sample-data[im].sample)> threshold_slope*ADC_range  or abs(item.sample-data[ip].sample)> threshold_slope*ADC_range
+
+        if disc:
+            outlier_counts[0]+=1
+        elif stuck:
+            outlier_counts[0]+=1
+        elif flip:
+            outlier_counts[0]+=1
+        elif item.sample >= outlier_threshold_high*ADC_range:
+            outlier_counts[0]+=1
+        elif item.sample <= outlier_threshold_low*ADC_range:
+            outlier_counts[0]+=1
+        else:
+            if item.sample > outlier_counts[1]:
+                outlier_counts[1] = item.sample
+            if item.sample < outlier_counts[2]:
+                outlier_counts[2]= item.sample
+    return outlier_counts
+
+
+
+
+def classify_segment(data:list,
+                     outlier_counts:list,
+                     acceptable_outlier_percent: float = .34)->int:
+    if outlier_counts[0] > acceptable_outlier_percent * len(data):
+        return 1
+    else:
+        return 0
+
+
+
+def classify_buffer(range_values:list,
+                    threshold_band_loose:float,
+                    buffer_length:int = 3,
+                    ADC_range: int = 4095)-> int:
+    amplitude_small = 0
+    if len(range_values) < buffer_length:
+        return amplitude_small
+    else:
+        for item in range_values:
+            if item.sample < threshold_band_loose*ADC_range:
+                amplitude_small+=1
+        return amplitude_small
+
+
+
+
+
+def compute_dataquality(data:list,
+                        ecg_range:list,
+                        ecg_or_rip: object ,
+                        threshold_band_loose: float,
+                        threshold_slope: float,
+                        acceptable_outlier_percent: float = .34,
+                        outlier_threshold_high: float = .9769,
+                        outlier_threshold_low: float = .004884,
+                        buffer_length: int = 3,
+                        ADC_range: int = 4095)->int:
+    outlier_counts = classify_data_points(data,ecg_or_rip,threshold_slope,outlier_threshold_high,outlier_threshold_low)
+
+    segment_class = classify_segment(data,outlier_counts,acceptable_outlier_percent)
+
+    ecg_range.append(DataPoint.from_tuple(data[0].start_time, outlier_counts[1]-outlier_counts[2]))
+
+    range_values = ecg_range[(-1)*buffer_length:]
+    amplitude_small = classify_buffer(range_values, threshold_band_loose, buffer_length)
+
+    if segment_class == 1:
+        return 1
+    elif 2 * amplitude_small > buffer_length:
+        return 1
+    elif (outlier_counts[1]-outlier_counts[2]) <= threshold_band_loose *ADC_range:
+        return 1
+    return 0
+
 
 
 
@@ -46,7 +138,7 @@ def ECGDataQuality(datastream: DataStream,
     ecg_quality = []
     ecg_range = []
     for key, data in window_data.items():
-        result = compute_dataquality_ecg(data,ecg_range,acceptable_outlier_percent,outlier_threshold_high,outlier_threshold_low,ecg_threshold_band_loose,ecg_threshold_slope,buffer_length)
+        result = compute_dataquality(data,ecg_range,"ecg",ecg_threshold_band_loose,ecg_threshold_slope,acceptable_outlier_percent,outlier_threshold_high,outlier_threshold_low,buffer_length)
         if len(ecg_quality)==0:
             ecg_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
         else:
@@ -76,7 +168,7 @@ def RIPDataQuality(datastream: DataStream,
     rip_quality = []
     rip_range = []
     for key, data in window_data.items():
-        result = compute_dataquality_rip(data,rip_range,acceptable_outlier_percent,outlier_threshold_high,outlier_threshold_low,rip_threshold_band_loose,rip_threshold_slope,buffer_length)
+        result = compute_dataquality(data,rip_range,"rip",rip_threshold_band_loose,rip_threshold_slope,acceptable_outlier_percent,outlier_threshold_high,outlier_threshold_low,buffer_length)
         if len(rip_quality)==0:
             rip_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
         else:
