@@ -32,44 +32,44 @@ def classify_data_points(data:list,
                          threshold_slope: float,
                          outlier_threshold_high: float = .9769,
                          outlier_threshold_low: float = .004884,
-                         ADC_range: int = 4095)->list:
-    outlier_counts = [0]*3
-    outlier_counts[1]= data[0].sample
-    outlier_counts[2]= data[0].sample
+                         ADC_range: int = 4095):
+    no_of_outliers = 0
+    max_value= data[0].sample
+    min_value= data[0].sample
     for i,item in enumerate(data):
-        im = (len(data)-1) if i==0 else i-1
-        ip = 0 if (i==len(data)-1) else i+1
-        stuck =(item.sample==data[im].sample) and (item.sample==data[ip].sample)
-        flip = abs(item.sample-data[im].sample)> outlier_threshold_high*ADC_range  or abs(item.sample-data[ip].sample)> outlier_threshold_high*ADC_range
+        previous_index = (len(data)-1) if i==0 else i-1
+        next_index = 0 if (i==len(data)-1) else i+1
+        stuck =(item.sample==data[previous_index].sample) and (item.sample==data[next_index].sample)
+        flip = abs(item.sample-data[previous_index].sample)> outlier_threshold_high*ADC_range  or abs(item.sample-data[next_index].sample)> outlier_threshold_high*ADC_range
         if ecg_or_rip=="ecg":
-            disc = abs(item.sample-data[im].sample)> threshold_slope*ADC_range  and abs(item.sample-data[ip].sample)> threshold_slope*ADC_range
+            disc = abs(item.sample-data[previous_index].sample)> threshold_slope*ADC_range  and abs(item.sample-data[next_index].sample)> threshold_slope*ADC_range
         else:
-            disc = abs(item.sample-data[im].sample)> threshold_slope*ADC_range  or abs(item.sample-data[ip].sample)> threshold_slope*ADC_range
+            disc = abs(item.sample-data[previous_index].sample)> threshold_slope*ADC_range  or abs(item.sample-data[next_index].sample)> threshold_slope*ADC_range
 
         if disc:
-            outlier_counts[0]+=1
+            no_of_outliers+=1
         elif stuck:
-            outlier_counts[0]+=1
+            no_of_outliers+=1
         elif flip:
-            outlier_counts[0]+=1
+            no_of_outliers+=1
         elif item.sample >= outlier_threshold_high*ADC_range:
-            outlier_counts[0]+=1
+            no_of_outliers+=1
         elif item.sample <= outlier_threshold_low*ADC_range:
-            outlier_counts[0]+=1
+            no_of_outliers+=1
         else:
-            if item.sample > outlier_counts[1]:
-                outlier_counts[1] = item.sample
-            if item.sample < outlier_counts[2]:
-                outlier_counts[2]= item.sample
-    return outlier_counts
+            if item.sample > max_value:
+                max_value = item.sample
+            if item.sample < min_value:
+                min_value= item.sample
+    return no_of_outliers,max_value,min_value
 
 
 
 
 def classify_segment(data:list,
-                     outlier_counts:list,
+                     no_of_outliers:int,
                      acceptable_outlier_percent: float = .34)->int:
-    if outlier_counts[0] > acceptable_outlier_percent * len(data):
+    if no_of_outliers > acceptable_outlier_percent * len(data):
         return 1
     else:
         return 0
@@ -103,11 +103,11 @@ def compute_dataquality(data:list,
                         outlier_threshold_low: float = .004884,
                         buffer_length: int = 3,
                         ADC_range: int = 4095)->int:
-    outlier_counts = classify_data_points(data,ecg_or_rip,threshold_slope,outlier_threshold_high,outlier_threshold_low)
+    no_of_outliers,max_value,min_value = classify_data_points(data,ecg_or_rip,threshold_slope,outlier_threshold_high,outlier_threshold_low)
 
-    segment_class = classify_segment(data,outlier_counts,acceptable_outlier_percent)
+    segment_class = classify_segment(data,no_of_outliers,acceptable_outlier_percent)
 
-    ecg_range.append(DataPoint.from_tuple(data[0].start_time, outlier_counts[1]-outlier_counts[2]))
+    ecg_range.append(DataPoint.from_tuple(data[0].start_time, max_value-min_value))
 
     range_values = ecg_range[(-1)*buffer_length:]
     amplitude_small = classify_buffer(range_values, threshold_band_loose, buffer_length)
@@ -116,7 +116,7 @@ def compute_dataquality(data:list,
         return 1
     elif 2 * amplitude_small > buffer_length:
         return 1
-    elif (outlier_counts[1]-outlier_counts[2]) <= threshold_band_loose *ADC_range:
+    elif (max_value-min_value) <= threshold_band_loose *ADC_range:
         return 1
     return 0
 
