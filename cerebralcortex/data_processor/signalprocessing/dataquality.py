@@ -26,6 +26,11 @@
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
+from enum import Enum
+
+class Quality(Enum):
+    Acceptable = 1
+    Not_acceptable = 0
 
 def classify_data_points(data:list,
                          ecg_or_rip:object,
@@ -33,6 +38,21 @@ def classify_data_points(data:list,
                          outlier_threshold_high: float = .9769,
                          outlier_threshold_low: float = .004884,
                          ADC_range: int = 4095):
+    """
+
+    :param data: A list of Datapoints-current window
+    :param ecg_or_rip: The check for if the signal passed is respiration or ECG
+    :param threshold_slope: The Slope threshold of ECG/Respiration signal- No consecutive datapoints can have this
+    difference in values(expressed as percentage of ADC range)
+    :param outlier_threshold_high: The percentage of ADC range above which any value is considered an outlier
+    :param outlier_threshold_low: The percentage of ADC range below which any value is considered an outlier
+    :param ADC_range:  Maximum possible ADC value
+
+    :return:
+    no_of_outliers: The number of datapoints  in the current window assigned as outliers
+    max_value: The maximum non-outlier sample value in the window
+    min_value: The minimum non-outlier sample value in the window
+    """
     no_of_outliers = 0
     max_value= data[0].sample
     min_value= data[0].sample
@@ -66,13 +86,21 @@ def classify_data_points(data:list,
 
 
 
-def classify_segment(data:list,
-                     no_of_outliers:int,
-                     acceptable_outlier_percent: float = .34)->int:
+def classify_segment(data: list,
+                     no_of_outliers: int,
+                     acceptable_outlier_percent: float = .34)->object:
+    """
+
+    :param data: A list of Datapoints-current window
+    :param no_of_outliers: The number of datapoints  in the current window assigned as outliers
+    :param acceptable_outlier_percent: The acceptable outlier percentage in a window default is 34 percent
+
+    :return: The quality of the current window in terms of outliers
+    """
     if no_of_outliers > acceptable_outlier_percent * len(data):
-        return 1
+        return Quality.Not_acceptable
     else:
-        return 0
+        return Quality.Acceptable
 
 
 
@@ -80,6 +108,15 @@ def classify_buffer(range_values:list,
                     threshold_band_loose:float,
                     buffer_length:int = 3,
                     ADC_range: int = 4095)-> int:
+    """
+
+    :param range_values: The array containing the range of total number of windows equal to "buffer_length" including the current window
+    :param threshold_band_loose: The Band Loose Threshold for ECG/Respiration signal expressed in the percentage of ADC range
+    :param buffer_length: The number of windows having an active role in decision making for current window
+    :param ADC_range: Maximum possible ADC value
+
+    :return: returns the number of windows among "buffer_length" with non acceptable range
+    """
     amplitude_small = 0
     if len(range_values) < buffer_length:
         return amplitude_small
@@ -93,8 +130,8 @@ def classify_buffer(range_values:list,
 
 
 
-def compute_dataquality(data:list,
-                        ecg_range:list,
+def compute_dataquality(data: list,
+                        range_memory: list,
                         ecg_or_rip: object ,
                         threshold_band_loose: float,
                         threshold_slope: float,
@@ -102,23 +139,41 @@ def compute_dataquality(data:list,
                         outlier_threshold_high: float = .9769,
                         outlier_threshold_low: float = .004884,
                         buffer_length: int = 3,
-                        ADC_range: int = 4095)->int:
+                        ADC_range: int = 4095)->object:
+
+    """
+
+    :param data: A window of ECG/Respiration signal. An array of datapoints.
+    :param range_memory: The array containing the range of each window on a sequential basis
+    :param ecg_or_rip: The check for if the signal passed is respiration or ECG
+    :param threshold_band_loose: The Band Loose Threshold for ECG/Respiration signal expressed in the percentage of ADC range
+    :param threshold_slope: The Slope threshold of ECG/Respiration signal- No consecutive datapoints can have this
+    difference in values(expressed as percentage of ADC range)
+    :param acceptable_outlier_percent: The acceptable outlier percentage in a window default is 34 percent
+    :param outlier_threshold_high: The percentage of ADC range above which any value is considered an outlier
+    :param outlier_threshold_low: The percentage of ADC range below which any value is considered an outlier
+    :param buffer_length: This specifies the memory of the data quality computation. Meaning this number of past windows
+    will also have a role to decide the quality of the current window
+    :param ADC_range: The maximum ADC value possible in the system
+
+    :return: The data quality of the window passed to the method
+    """
     no_of_outliers,max_value,min_value = classify_data_points(data,ecg_or_rip,threshold_slope,outlier_threshold_high,outlier_threshold_low)
 
     segment_class = classify_segment(data,no_of_outliers,acceptable_outlier_percent)
 
-    ecg_range.append(DataPoint.from_tuple(data[0].start_time, max_value-min_value))
+    range_memory.append(DataPoint.from_tuple(data[0].start_time, max_value-min_value))
 
-    range_values = ecg_range[(-1)*buffer_length:]
+    range_values = range_memory[(-1)*buffer_length:]
     amplitude_small = classify_buffer(range_values, threshold_band_loose, buffer_length)
 
-    if segment_class == 1:
-        return 1
+    if segment_class == Quality.Not_acceptable:
+        return Quality.Not_acceptable
     elif 2 * amplitude_small > buffer_length:
-        return 1
+        return Quality.Not_acceptable
     elif (max_value-min_value) <= threshold_band_loose *ADC_range:
-        return 1
-    return 0
+        return Quality.Not_acceptable
+    return Quality.Acceptable
 
 
 
@@ -131,6 +186,21 @@ def ECGDataQuality(datastream: DataStream,
                    ecg_threshold_band_loose: float = .01148,
                    ecg_threshold_slope: float = .02443,
                    buffer_length: int = 3) -> DataStream:
+    """
+
+    :param datastream: Input ECG datastream
+    :param windowsize: Window size specifying the number of seconds the datastream is divided to check for data quality
+    :param acceptable_outlier_percent: The acceptable outlier percentage in a window default is 34 percent
+    :param outlier_threshold_high: The percentage of ADC range above which any value is considered an outlier
+    :param outlier_threshold_low: The percentage of ADC range below which any value is considered an outlier
+    :param ecg_threshold_band_loose: The Band Loose Threshold for ECG signal expressed in the percentage of ADC range
+    :param ecg_threshold_slope: The Slope threshold of ECG signal- No consecutive datapoints can have this
+    difference in values(expressed as percentage of ADC range)
+    :param buffer_length: This specifies the memory of the data quality computation. Meaning this number of past windows
+    will also have a role to decide the quality of the current window
+
+    :return: An Annotated Datastream of ECG Data quality specifying the time ranges when data quality was acceptable/non-acceptable
+    """
 
     ecg_quality_stream = DataStream.from_datastream(input_streams=[datastream])
     window_data = window(datastream.data, window_size=windowsize)
@@ -149,6 +219,7 @@ def ECGDataQuality(datastream: DataStream,
                 else:
                     ecg_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
 
+
     ecg_quality_stream.data = ecg_quality
 
     return ecg_quality_stream
@@ -163,6 +234,21 @@ def RIPDataQuality(datastream: DataStream,
                    rip_threshold_slope: float = .0733,
                    buffer_length: int = 3) -> DataStream:
 
+    """
+
+    :param datastream: Input Respiration datastream
+    :param windowsize: Window size specifying the number of seconds the datastream is divided to check for data quality
+    :param acceptable_outlier_percent: The acceptable outlier percentage in a window default is 34 percent
+    :param outlier_threshold_high: The percentage of ADC range above which any value is considered an outlier
+    :param outlier_threshold_low: The percentage of ADC range below which any value is considered an outlier
+    :param rip_threshold_band_loose: The Band Loose Threshold for Respiration signal expressed in the percentage of ADC range
+    :param rip_threshold_slope: The Slope threshold of Respiration signal- No consecutive datapoints can have this
+    difference in values(expressed as percentage of ADC range)
+    :param buffer_length: This specifies the memory of the data quality computation. Meaning this number of past windows
+    will also have a role to decide the quality of the current window
+
+    :return: An Annotated Datastream of Respiration Data quality specifying the time ranges when data quality was acceptable/non-acceptable
+    """
     rip_quality_stream = DataStream.from_datastream(input_streams=[datastream])
     window_data = window(datastream.data, window_size=windowsize)
 

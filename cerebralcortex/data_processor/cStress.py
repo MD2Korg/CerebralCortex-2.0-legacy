@@ -63,10 +63,10 @@ def cStress(rdd: RDD) -> RDD:
     ds['participant'], timestamp_correct(datastream=ds['accelz'], sampling_frequency=accel_sampling_frequency)))
 
     ecg_quality = ecg_corrected.map(lambda ds: (ds[0], ECGDataQuality(ds[1])))
-    ecg_quality.collect()
+    ecg_quality.take(1)
 
     rip_quality = rip_corrected.map(lambda ds: (ds[0], RIPDataQuality(ds[1])))
-    rip_quality.collect()
+    rip_quality.take(1)
 
     accel_group = accelx_corrected.join(accely_corrected).join(accelz_corrected).map(fix_two_joins)
     accel = accel_group.map(lambda ds: (ds[0], autosense_sequence_align(datastreams=[ds[1][0], ds[1][1], ds[1][2]],
@@ -81,7 +81,7 @@ def cStress(rdd: RDD) -> RDD:
 
     # r-peak datastream computation
     ecg_rr_rdd = ecg_corrected.map(lambda ds: (ds[0], compute_rr_intervals(ds[1], ecg_sampling_frequency)))
-    ecg_features = ecg_rr_rdd.map(lambda ds: (ds[0], ecg_feature_computation(ds[1], window_size=60, window_offset=60)))
+    # ecg_features = ecg_rr_rdd.map(lambda ds: (ds[0], ecg_feature_computation(ds[1], window_size=60, window_offset=60)))
 
     # return rip_features.join(ecg_features).join(accel_features).map(fix_two_joins)
-    return ecg_features
+    return ecg_rr_rdd
