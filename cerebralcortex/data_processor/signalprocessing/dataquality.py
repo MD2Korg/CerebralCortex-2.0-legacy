@@ -138,15 +138,16 @@ def ECGDataQuality(datastream: DataStream,
     ecg_quality = []
     ecg_range = []
     for key, data in window_data.items():
-        result = compute_dataquality(data,ecg_range,"ecg",ecg_threshold_band_loose,ecg_threshold_slope,acceptable_outlier_percent,outlier_threshold_high,outlier_threshold_low,buffer_length)
-        if len(ecg_quality)==0:
-            ecg_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
-        else:
-            if ecg_quality[-1].sample == result:
-                new_point = DataPoint.from_tuple(ecg_quality[-1].start_time, result, data[-1].start_time)
-                ecg_quality[-1] = new_point
-            else:
+        if len(data) > 0 :
+            result = compute_dataquality(data,ecg_range,"ecg",ecg_threshold_band_loose,ecg_threshold_slope,acceptable_outlier_percent,outlier_threshold_high,outlier_threshold_low,buffer_length)
+            if len(ecg_quality)==0:
                 ecg_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
+            else:
+                if ecg_quality[-1].sample == result:
+                    new_point = DataPoint.from_tuple(ecg_quality[-1].start_time, result, data[-1].start_time)
+                    ecg_quality[-1] = new_point
+                else:
+                    ecg_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
 
     ecg_quality_stream.data = ecg_quality
 
@@ -168,15 +169,16 @@ def RIPDataQuality(datastream: DataStream,
     rip_quality = []
     rip_range = []
     for key, data in window_data.items():
-        result = compute_dataquality(data,rip_range,"rip",rip_threshold_band_loose,rip_threshold_slope,acceptable_outlier_percent,outlier_threshold_high,outlier_threshold_low,buffer_length)
-        if len(rip_quality)==0:
-            rip_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
-        else:
-            if rip_quality[-1].sample == result:
-                new_point = DataPoint.from_tuple(rip_quality[-1].start_time, result, data[-1].start_time)
-                rip_quality[-1] = new_point
-            else:
+        if len(data)>0:
+            result = compute_dataquality(data,rip_range,"rip",rip_threshold_band_loose,rip_threshold_slope,acceptable_outlier_percent,outlier_threshold_high,outlier_threshold_low,buffer_length)
+            if len(rip_quality)==0:
                 rip_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
+            else:
+                if rip_quality[-1].sample == result:
+                    new_point = DataPoint.from_tuple(rip_quality[-1].start_time, result, data[-1].start_time)
+                    rip_quality[-1] = new_point
+                else:
+                    rip_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
 
     rip_quality_stream.data = rip_quality
 
