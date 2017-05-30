@@ -41,7 +41,6 @@ def ECGDataQuality(datastream: DataStream,
                    buffer_length: int = 3) -> DataStream:
 
     ecg_quality_stream = DataStream.from_datastream(input_streams=[datastream])
-    print(len(datastream.data))
     window_data = window(datastream.data, window_size=windowsize)
 
     ecg_quality = []

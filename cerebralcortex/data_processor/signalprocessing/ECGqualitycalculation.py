@@ -33,27 +33,27 @@ def classify_data_points(data:list,
     outlier_counts = [0]*3
     outlier_counts[1]= data[0].sample
     outlier_counts[2]= data[0].sample
-    for i in range(len(data)):
+    for i,item in enumerate(data):
         im = (len(data)-1) if i==0 else i-1
         ip = 0 if (i==len(data)-1) else i+1
-        stuck =(data[i].sample==data[im].sample) and (data[i].sample==data[ip].sample)
-        flip = abs(data[i].sample-data[im].sample)> outlier_threshold_high*ADC_range  or abs(data[i].sample-data[ip].sample)> outlier_threshold_high*ADC_range
-        disc = abs(data[i].sample-data[im].sample)> ecg_threshold_slope*ADC_range  and abs(data[i].sample-data[ip].sample)> ecg_threshold_slope*ADC_range
+        stuck =(item.sample==data[im].sample) and (item.sample==data[ip].sample)
+        flip = abs(item.sample-data[im].sample)> outlier_threshold_high*ADC_range  or abs(item.sample-data[ip].sample)> outlier_threshold_high*ADC_range
+        disc = abs(item.sample-data[im].sample)> ecg_threshold_slope*ADC_range  and abs(item.sample-data[ip].sample)> ecg_threshold_slope*ADC_range
         if disc:
             outlier_counts[0]+=1
         elif stuck:
             outlier_counts[0]+=1
         elif flip:
             outlier_counts[0]+=1
-        elif data[i].sample >= outlier_threshold_high*ADC_range:
+        elif item.sample >= outlier_threshold_high*ADC_range:
             outlier_counts[0]+=1
-        elif data[i].sample <= outlier_threshold_low*ADC_range:
+        elif item.sample <= outlier_threshold_low*ADC_range:
             outlier_counts[0]+=1
         else:
-            if data[i].sample > outlier_counts[1]:
-                outlier_counts[1] = data[i].sample
-            if data[i].sample < outlier_counts[2]:
-                outlier_counts[2]= data[i].sample
+            if item.sample > outlier_counts[1]:
+                outlier_counts[1] = item.sample
+            if item.sample < outlier_counts[2]:
+                outlier_counts[2]= item.sample
     return outlier_counts
 
 
@@ -77,8 +77,8 @@ def classify_buffer(range_values:list,
     if len(range_values) < buffer_length:
         return amplitude_small
     else:
-        for i in range(len(range_values)):
-            if range_values[i].sample < ecg_threshold_band_loose*ADC_range:
+        for item in range_values:
+            if item.sample < ecg_threshold_band_loose*ADC_range:
                 amplitude_small+=1
         return amplitude_small
 
