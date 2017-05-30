@@ -28,6 +28,7 @@ from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 import matplotlib.pyplot as plt
 
+
 def classify_data_points(data:list,
                          outlier_threshold_high: float = .9769,
                          outlier_threshold_low: float = .004884,
@@ -65,7 +66,6 @@ def classify_data_points(data:list,
 def classify_segment(data:list,
                      outlier_counts:list,
                      acceptable_outlier_percent: float = .34)->int:
-    print(outlier_counts[0]/len(data))
     if outlier_counts[0] > acceptable_outlier_percent * len(data):
         return 1
     else:
@@ -128,6 +128,7 @@ def ECGDataQuality(datastream: DataStream,
                    buffer_length: int = 3) -> DataStream:
 
     quality_stream = DataStream.from_datastream(input_streams=[datastream])
+    print(len(datastream.data))
     window_data = window(datastream.data, window_size=windowsize)
 
     ecg_quality = []
@@ -144,10 +145,10 @@ def ECGDataQuality(datastream: DataStream,
                 ecg_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
         x=[i.start_time for i in data]
         y=[i.sample for i in data]
-        if result == 0:
-            plt.figure()
-            plt.plot(x, y)
-            plt.show()
+        # if result == 0:
+        # plt.figure()
+        # plt.plot(x, y)
+        # plt.show()
     quality_stream.data = ecg_quality
 
     return quality_stream
