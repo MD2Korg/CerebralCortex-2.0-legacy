@@ -207,9 +207,9 @@ def ECGDataQuality(datastream: DataStream,
     ecg_quality = []
     ecg_range = []
     for key, data in window_data.items():
-        if len(data) > 0 :
+        if len(data) > 0:
             result = compute_dataquality(data,ecg_range,True,ecg_threshold_band_loose,ecg_threshold_slope,acceptable_outlier_percent,outlier_threshold_high,outlier_threshold_low,buffer_length)
-            if len(ecg_quality)==0:
+            if not ecg_quality:
                 ecg_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
             else:
                 if ecg_quality[-1].sample == result:
@@ -256,7 +256,7 @@ def RIPDataQuality(datastream: DataStream,
     for key, data in window_data.items():
         if len(data) > 0:
             result = compute_dataquality(data,rip_range,False,rip_threshold_band_loose,rip_threshold_slope,acceptable_outlier_percent,outlier_threshold_high,outlier_threshold_low,buffer_length)
-            if len(rip_quality)==0:
+            if not rip_quality:
                 rip_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
             else:
                 if rip_quality[-1].sample == result:
