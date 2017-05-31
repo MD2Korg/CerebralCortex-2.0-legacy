@@ -171,7 +171,8 @@ def compute_dataquality(data: list,
         return Quality.UNACCEPTABLE
     elif (max_value-min_value) <= threshold_band_loose *ADC_range:
         return Quality.UNACCEPTABLE
-    return Quality.ACCEPTABLE
+    else:
+        return Quality.ACCEPTABLE
 
 
 
