@@ -37,7 +37,7 @@ def classify_data_points(data: list,
                          threshold_slope: float,
                          outlier_threshold_high: float = .9769,
                          outlier_threshold_low: float = .004884,
-                         ADC_range: int = 4095):
+                         ADC_range: int = 4095)->[int, int, int]:
     """
 
     :param data: A list of Datapoints-current window
