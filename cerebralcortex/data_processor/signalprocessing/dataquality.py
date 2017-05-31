@@ -33,7 +33,7 @@ class Quality(Enum):
     UNACCEPTABLE = 0
 
 def classify_data_points(data: list,
-                         ecg_or_rip: bool,
+                         signal_type: bool,
                          threshold_slope: float,
                          outlier_threshold_high: float = .9769,
                          outlier_threshold_low: float = .004884,
@@ -41,7 +41,7 @@ def classify_data_points(data: list,
     """
 
     :param data: A list of Datapoints-current window
-    :param ecg_or_rip: The check for if the signal passed is respiration or ECG
+    :param signal_type: The check for if the signal passed is respiration or ECG. True for ECG, False for Respiration
     :param threshold_slope: The Slope threshold of ECG/Respiration signal- No consecutive datapoints can have this
     difference in values(expressed as percentage of ADC range)
     :param outlier_threshold_high: The percentage of ADC range above which any value is considered an outlier
@@ -61,7 +61,7 @@ def classify_data_points(data: list,
         next_index = 0 if (i == len(data)-1) else i+1
         stuck =(item.sample == data[previous_index].sample) and (item.sample == data[next_index].sample)
         flip = abs(item.sample-data[previous_index].sample) > outlier_threshold_high*ADC_range or abs(item.sample-data[next_index].sample)> outlier_threshold_high*ADC_range
-        if ecg_or_rip:
+        if signal_type:
             disc = abs(item.sample-data[previous_index].sample) > threshold_slope*ADC_range and abs(item.sample-data[next_index].sample)> threshold_slope*ADC_range
         else:
             disc = abs(item.sample-data[previous_index].sample) > threshold_slope*ADC_range or abs(item.sample-data[next_index].sample)> threshold_slope*ADC_range
@@ -130,20 +130,20 @@ def classify_buffer(range_values: list,
 
 def compute_dataquality(data: list,
                         range_memory: list,
-                        ecg_or_rip: bool,
+                        signal_type: bool,
                         threshold_band_loose: float,
                         threshold_slope: float,
                         acceptable_outlier_percent: float = .34,
                         outlier_threshold_high: float = .9769,
                         outlier_threshold_low: float = .004884,
                         buffer_length: int = 3,
-                        ADC_range: int = 4095 )->object:
+                        ADC_range: int = 4095)->object:
 
     """
 
     :param data: A window of ECG/Respiration signal. An array of datapoints.
     :param range_memory: The array containing the range of each window on a sequential basis
-    :param ecg_or_rip: The check for if the signal passed is respiration or ECG
+    :param signal_type: The check for if the signal passed is respiration or ECG
     :param threshold_band_loose: The Band Loose Threshold for ECG/Respiration signal expressed in the percentage of ADC range
     :param threshold_slope: The Slope threshold of ECG/Respiration signal- No consecutive datapoints can have this
     difference in values(expressed as percentage of ADC range)
@@ -156,9 +156,9 @@ def compute_dataquality(data: list,
 
     :return: The data quality of the window passed to the method
     """
-    no_of_outliers,max_value,min_value = classify_data_points(data,ecg_or_rip,threshold_slope,outlier_threshold_high,outlier_threshold_low)
+    no_of_outliers, max_value, min_value = classify_data_points(data, signal_type, threshold_slope, outlier_threshold_high, outlier_threshold_low)
 
-    segment_class = classify_segment(data,no_of_outliers,acceptable_outlier_percent)
+    segment_class = classify_segment(data, no_of_outliers, acceptable_outlier_percent)
 
     range_memory.append(DataPoint.from_tuple(data[0].start_time, max_value-min_value))
 
@@ -169,7 +169,7 @@ def compute_dataquality(data: list,
         return Quality.UNACCEPTABLE
     elif 2 * amplitude_small > buffer_length:
         return Quality.UNACCEPTABLE
-    elif (max_value-min_value) <= threshold_band_loose *ADC_range:
+    elif (max_value-min_value) <= threshold_band_loose*ADC_range:
         return Quality.UNACCEPTABLE
     else:
         return Quality.ACCEPTABLE
@@ -255,7 +255,7 @@ def RIPDataQuality(datastream: DataStream,
     rip_range = []
     for key, data in window_data.items():
         if len(data) > 0:
-            result = compute_dataquality(data,rip_range,False,rip_threshold_band_loose,rip_threshold_slope,acceptable_outlier_percent,outlier_threshold_high,outlier_threshold_low,buffer_length)
+            result = compute_dataquality(data, rip_range, False, rip_threshold_band_loose, rip_threshold_slope, acceptable_outlier_percent, outlier_threshold_high, outlier_threshold_low, buffer_length)
             if not rip_quality:
                 rip_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
             else:
