@@ -29,9 +29,40 @@ import numpy as np
 from cerebralcortex.data_processor.signalprocessing.vector import smooth, moving_average_curve
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
+from cerebralcortex.data_processor.signalprocessing.dataquality import Quality
+
+def filter_bad_rip(rip: DataStream,
+                   rip_quality: DataStream) -> DataStream:
+    """
+    This function combines the raw rip and rip data quality datastream and only keeps those datapoints that are assigned acceptable in data quality
+
+    :param rip: raw respiration datastream
+    :param rip_quality: respiration quality datastream
+
+    :return:  filtered respiration datastream
+    """
+    rip_filtered = DataStream.from_datastream([rip])
+    rip_quality_array = rip_quality.data
+    rip_raw_timestamp_array = np.array([i.start_time.timestamp() for i in rip.data])
+    rip_filtered_array = []
+
+    initial_index = 0
+    for item in rip_quality_array:
+        if item.sample == Quality.ACCEPTABLE:
+            final_index = initial_index
+            for i in range(initial_index, len(rip.data)):
+                if rip_raw_timestamp_array[i] <= item.end_time.timestamp() and rip_raw_timestamp_array[i] >= item.start_time.timestamp():
+                    rip_filtered_array.append(rip.data[i])
+                    final_index = i
+            initial_index = final_index
+
+    rip_filtered.data = rip_filtered_array
+
+    return rip_filtered
 
 
 def compute_peak_valley(rip: DataStream,
+                        rip_quality: DataStream,
                         fs: float = 21.33,
                         smoothing_factor: int = 5,
                         time_window: int = 8,
@@ -49,6 +80,7 @@ def compute_peak_valley(rip: DataStream,
     :param smoothing_factor:
     :return peak_datastream, valley_datastream:
     :param rip:
+    :param rip_quality:
     :param fs:
     :param time_window:
     :param expiration_amplitude_threshold_perc:
@@ -57,7 +89,9 @@ def compute_peak_valley(rip: DataStream,
     :param min_neg_slope_count_peak_correction:
     """
 
-    data_smooth = smooth(data=rip.data, span=smoothing_factor)
+    rip_filtered = filter_bad_rip(rip=rip,rip_quality=rip_quality)
+
+    data_smooth = smooth(data=rip_filtered.data, span=smoothing_factor)
     window_length = int(round(time_window * fs))
     data_mac = moving_average_curve(data_smooth, window_length=window_length)
 

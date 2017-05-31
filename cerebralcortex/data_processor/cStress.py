@@ -75,15 +75,19 @@ def cStress(rdd: RDD) -> RDD:
     # Accelerometer Feature Computation
     accel_features = accel.map(lambda ds: (ds[0], accelerometer_features(ds[1], window_length=10.0)))
 
+    rip_corrected_and_quality = rip_corrected.join(rip_quality)
+
+
     # rip features
-    peak_valley = rip_corrected.map(lambda ds: (ds[0], rip.compute_peak_valley(rip=ds[1])))
+    peak_valley = rip_corrected_and_quality.map(lambda ds: (ds[0], rip.compute_peak_valley(rip=ds[1][0],rip_quality=ds[1][1])))
+    peak_valley.take(1)
     rip_features = peak_valley.map(lambda ds: (ds[0], rip_feature_computation(ds[1][0], ds[1][1])))
 
     ecg_corrected_and_quality = ecg_corrected.join(ecg_quality)
 
     # r-peak datastream computation
     ecg_rr_rdd = ecg_corrected_and_quality.map(lambda ds:
-                                               (ds[0], compute_rr_intervals(ds[1][0], ds[1][1], ecg_sampling_frequency)))
+                                               (ds[0], compute_rr_intervals(ecg=ds[1][0], ecg_quality=ds[1][1], fs=ecg_sampling_frequency)))
     # ecg_features = ecg_rr_rdd.map(lambda ds: (ds[0], ecg_feature_computation(ds[1], window_size=60, window_offset=60)))
 
     # return rip_features.join(ecg_features).join(accel_features).map(fix_two_joins)

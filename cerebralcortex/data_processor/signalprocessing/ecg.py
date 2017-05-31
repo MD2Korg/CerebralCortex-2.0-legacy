@@ -34,9 +34,8 @@ from cerebralcortex.data_processor.signalprocessing.dataquality import Quality
 def filter_bad_ecg(ecg: DataStream,
                    ecg_quality: DataStream) -> DataStream:
     """
-    This function splits the ecg array into non overlapping windows of specified seconds
-    and assigns a binary decision on them returns a filtered ecg array which contains
-    only the windows to be kept
+    This function combines the raw ecg and ecg data quality datastream and only keeps those datapoints that are assigned acceptable in data quality
+
     :param ecg: raw ecg datastream
     :param ecg_quality: ecg quality datastream
 
@@ -47,10 +46,15 @@ def filter_bad_ecg(ecg: DataStream,
     ecg_raw_timestamp_array = np.array([i.start_time.timestamp() for i in ecg.data])
     ecg_filtered_array = []
 
+    initial_index = 0
     for item in ecg_quality_array:
         if item.sample==Quality.ACCEPTABLE:
-            ecg_filtered_array.extend([ecg.data[i] for i,element in enumerate(ecg_raw_timestamp_array)
-                                       if element <= item.end_time.timestamp() and element >= item.start_time.timestamp()])
+            final_index = initial_index
+            for i in range(initial_index,len(ecg.data)):
+                if ecg_raw_timestamp_array[i] <= item.end_time.timestamp() and ecg_raw_timestamp_array[i] >= item.start_time.timestamp():
+                    ecg_filtered_array.append(ecg.data[i])
+                    final_index = i
+            initial_index = final_index
 
     ecg_filtered.data = ecg_filtered_array
 
