@@ -48,7 +48,7 @@ def filter_bad_ecg(ecg: DataStream,
     ecg_filtered_array = []
 
     for item in ecg_quality_array:
-        if item.sample==Quality.Acceptable:
+        if item.sample==Quality.ACCEPTABLE:
             ecg_filtered_array.extend([ecg.data[i] for i,element in enumerate(ecg_raw_timestamp_array)
                                        if element <= item.end_time.timestamp() and element >= item.start_time.timestamp()])
 

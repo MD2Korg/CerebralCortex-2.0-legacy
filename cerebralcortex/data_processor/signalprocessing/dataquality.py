@@ -29,11 +29,11 @@ from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from enum import Enum
 
 class Quality(Enum):
-    Acceptable = 1
-    Not_acceptable = 0
+    ACCEPTABLE = 1
+    UNACCEPTABLE = 0
 
-def classify_data_points(data:list,
-                         ecg_or_rip:object,
+def classify_data_points(data: list,
+                         ecg_or_rip: bool,
                          threshold_slope: float,
                          outlier_threshold_high: float = .9769,
                          outlier_threshold_low: float = .004884,
@@ -54,43 +54,41 @@ def classify_data_points(data:list,
     min_value: The minimum non-outlier sample value in the window
     """
     no_of_outliers = 0
-    max_value= data[0].sample
-    min_value= data[0].sample
+    max_value = data[0].sample
+    min_value = data[0].sample
     for i,item in enumerate(data):
-        previous_index = (len(data)-1) if i==0 else i-1
-        next_index = 0 if (i==len(data)-1) else i+1
-        stuck =(item.sample==data[previous_index].sample) and (item.sample==data[next_index].sample)
-        flip = abs(item.sample-data[previous_index].sample)> outlier_threshold_high*ADC_range  or abs(item.sample-data[next_index].sample)> outlier_threshold_high*ADC_range
-        if ecg_or_rip=="ecg":
-            disc = abs(item.sample-data[previous_index].sample)> threshold_slope*ADC_range  and abs(item.sample-data[next_index].sample)> threshold_slope*ADC_range
+        previous_index = (len(data)-1) if i == 0 else i-1
+        next_index = 0 if (i == len(data)-1) else i+1
+        stuck =(item.sample == data[previous_index].sample) and (item.sample == data[next_index].sample)
+        flip = abs(item.sample-data[previous_index].sample) > outlier_threshold_high*ADC_range or abs(item.sample-data[next_index].sample)> outlier_threshold_high*ADC_range
+        if ecg_or_rip:
+            disc = abs(item.sample-data[previous_index].sample) > threshold_slope*ADC_range and abs(item.sample-data[next_index].sample)> threshold_slope*ADC_range
         else:
-            disc = abs(item.sample-data[previous_index].sample)> threshold_slope*ADC_range  or abs(item.sample-data[next_index].sample)> threshold_slope*ADC_range
+            disc = abs(item.sample-data[previous_index].sample) > threshold_slope*ADC_range or abs(item.sample-data[next_index].sample)> threshold_slope*ADC_range
 
         if disc:
-            no_of_outliers+=1
+            no_of_outliers += 1
         elif stuck:
-            no_of_outliers+=1
+            no_of_outliers += 1
         elif flip:
-            no_of_outliers+=1
+            no_of_outliers += 1
         elif item.sample >= outlier_threshold_high*ADC_range:
-            no_of_outliers+=1
+            no_of_outliers += 1
         elif item.sample <= outlier_threshold_low*ADC_range:
-            no_of_outliers+=1
+            no_of_outliers += 1
         else:
             if item.sample > max_value:
                 max_value = item.sample
             if item.sample < min_value:
-                min_value= item.sample
-    return no_of_outliers,max_value,min_value
+                min_value = item.sample
+    return no_of_outliers, max_value, min_value
 
 
 
 
-def classify_segment(data: list,
-                     no_of_outliers: int,
-                     acceptable_outlier_percent: float = .34)->object:
+def classify_segment(data:list,no_of_outliers: int, acceptable_outlier_percent: float = .34)->object:
+
     """
-
     :param data: A list of Datapoints-current window
     :param no_of_outliers: The number of datapoints  in the current window assigned as outliers
     :param acceptable_outlier_percent: The acceptable outlier percentage in a window default is 34 percent
@@ -98,15 +96,15 @@ def classify_segment(data: list,
     :return: The quality of the current window in terms of outliers
     """
     if no_of_outliers > acceptable_outlier_percent * len(data):
-        return Quality.Not_acceptable
+        return Quality.UNACCEPTABLE
     else:
-        return Quality.Acceptable
+        return Quality.ACCEPTABLE
 
 
 
-def classify_buffer(range_values:list,
-                    threshold_band_loose:float,
-                    buffer_length:int = 3,
+def classify_buffer(range_values: list,
+                    threshold_band_loose: float,
+                    buffer_length: int = 3,
                     ADC_range: int = 4095)-> int:
     """
 
@@ -123,7 +121,7 @@ def classify_buffer(range_values:list,
     else:
         for item in range_values:
             if item.sample < threshold_band_loose*ADC_range:
-                amplitude_small+=1
+                amplitude_small += 1
         return amplitude_small
 
 
@@ -132,14 +130,14 @@ def classify_buffer(range_values:list,
 
 def compute_dataquality(data: list,
                         range_memory: list,
-                        ecg_or_rip: object ,
+                        ecg_or_rip: bool,
                         threshold_band_loose: float,
                         threshold_slope: float,
                         acceptable_outlier_percent: float = .34,
                         outlier_threshold_high: float = .9769,
                         outlier_threshold_low: float = .004884,
                         buffer_length: int = 3,
-                        ADC_range: int = 4095)->object:
+                        ADC_range: int = 4095 )->object:
 
     """
 
@@ -167,13 +165,13 @@ def compute_dataquality(data: list,
     range_values = range_memory[(-1)*buffer_length:]
     amplitude_small = classify_buffer(range_values, threshold_band_loose, buffer_length)
 
-    if segment_class == Quality.Not_acceptable:
-        return Quality.Not_acceptable
+    if segment_class == Quality.UNACCEPTABLE:
+        return Quality.UNACCEPTABLE
     elif 2 * amplitude_small > buffer_length:
-        return Quality.Not_acceptable
+        return Quality.UNACCEPTABLE
     elif (max_value-min_value) <= threshold_band_loose *ADC_range:
-        return Quality.Not_acceptable
-    return Quality.Acceptable
+        return Quality.UNACCEPTABLE
+    return Quality.ACCEPTABLE
 
 
 
@@ -209,7 +207,7 @@ def ECGDataQuality(datastream: DataStream,
     ecg_range = []
     for key, data in window_data.items():
         if len(data) > 0 :
-            result = compute_dataquality(data,ecg_range,"ecg",ecg_threshold_band_loose,ecg_threshold_slope,acceptable_outlier_percent,outlier_threshold_high,outlier_threshold_low,buffer_length)
+            result = compute_dataquality(data,ecg_range,True,ecg_threshold_band_loose,ecg_threshold_slope,acceptable_outlier_percent,outlier_threshold_high,outlier_threshold_low,buffer_length)
             if len(ecg_quality)==0:
                 ecg_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
             else:
@@ -255,8 +253,8 @@ def RIPDataQuality(datastream: DataStream,
     rip_quality = []
     rip_range = []
     for key, data in window_data.items():
-        if len(data)>0:
-            result = compute_dataquality(data,rip_range,"rip",rip_threshold_band_loose,rip_threshold_slope,acceptable_outlier_percent,outlier_threshold_high,outlier_threshold_low,buffer_length)
+        if len(data) > 0:
+            result = compute_dataquality(data,rip_range,False,rip_threshold_band_loose,rip_threshold_slope,acceptable_outlier_percent,outlier_threshold_high,outlier_threshold_low,buffer_length)
             if len(rip_quality)==0:
                 rip_quality.append(DataPoint.from_tuple(data[0].start_time, result, data[-1].start_time))
             else:
