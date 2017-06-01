@@ -27,10 +27,110 @@ from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from enum import Enum
+import numpy as np
+from scipy.stats import iqr
 
 class Quality(Enum):
     ACCEPTABLE = 1
     UNACCEPTABLE = 0
+
+def outlier_computation(valid_rr_interval_time: list,
+                        valid_rr_interval_sample: list,
+                        criterion_beat_difference: float):
+
+    """
+    This function implements the rr interval outlier calculation through comparison with the criterion
+    beat difference and consecutive differences with the previous and next sample
+
+    :param valid_rr_interval_time: A python array of rr interval time
+    :param valid_rr_interval_sample: A python array of rr interval samples
+    :param criterion_beat_difference: A threshold calculated from the RR interval data passed
+
+    yields: The quality of each data point in the RR interval array
+    """
+    standard_rr_interval_sample = valid_rr_interval_sample[0]
+    previous_rr_interval_quality = Quality.ACCEPTABLE
+
+    for i in range(1, len(valid_rr_interval_sample)-1):
+
+        rr_interval_diff_with_last_good = abs(standard_rr_interval_sample - valid_rr_interval_sample[i])
+        rr_interval_diff_with_prev_sample = abs(valid_rr_interval_sample[i - 1] - valid_rr_interval_sample[i])
+        rr_interval_diff_with_next_sample = abs(valid_rr_interval_sample[i] - valid_rr_interval_sample[i + 1])
+
+        if previous_rr_interval_quality == Quality.UNACCEPTABLE and rr_interval_diff_with_last_good < criterion_beat_difference:
+            yield DataPoint.from_tuple(valid_rr_interval_time[i], Quality.ACCEPTABLE, valid_rr_interval_time[i])
+            previous_rr_interval_quality = Quality.ACCEPTABLE
+            standard_rr_interval_sample = valid_rr_interval_sample[i]
+
+        elif previous_rr_interval_quality == Quality.UNACCEPTABLE and rr_interval_diff_with_last_good > criterion_beat_difference and rr_interval_diff_with_prev_sample <= criterion_beat_difference and rr_interval_diff_with_next_sample <= criterion_beat_difference:
+            yield DataPoint.from_tuple(valid_rr_interval_time[i], Quality.ACCEPTABLE, valid_rr_interval_time[i])
+            previous_rr_interval_quality = Quality.ACCEPTABLE
+            standard_rr_interval_sample = valid_rr_interval_sample[i]
+
+        elif previous_rr_interval_quality == Quality.UNACCEPTABLE and rr_interval_diff_with_last_good > criterion_beat_difference and (rr_interval_diff_with_prev_sample > criterion_beat_difference or rr_interval_diff_with_next_sample > criterion_beat_difference):
+            yield DataPoint.from_tuple(valid_rr_interval_time[i], Quality.UNACCEPTABLE, valid_rr_interval_time[i])
+            previous_rr_interval_quality = Quality.UNACCEPTABLE
+
+        elif previous_rr_interval_quality == Quality.ACCEPTABLE and rr_interval_diff_with_prev_sample <= criterion_beat_difference:
+            yield DataPoint.from_tuple(valid_rr_interval_time[i], Quality.ACCEPTABLE, valid_rr_interval_time[i])
+            previous_rr_interval_quality = Quality.ACCEPTABLE
+            standard_rr_interval_sample = valid_rr_interval_sample[i]
+
+        elif previous_rr_interval_quality == Quality.ACCEPTABLE and rr_interval_diff_with_prev_sample > criterion_beat_difference:
+            yield DataPoint.from_tuple(valid_rr_interval_time[i], Quality.UNACCEPTABLE, valid_rr_interval_time[i])
+            previous_rr_interval_quality = Quality.UNACCEPTABLE
+
+        else:
+            yield DataPoint.from_tuple(valid_rr_interval_time[i], Quality.UNACCEPTABLE, valid_rr_interval_time[i])
+
+
+
+
+
+
+def compute_outlier_ecg(ecg_rr: DataStream)-> DataStream:
+    """
+    Reference - Berntson, Gary G., et al. "An approach to artifact identification: Application to heart period data." Psychophysiology 27.5 (1990): 586-598.
+
+    :param ecg_rr: RR interval datastream
+
+    :return: An annotated datastream specifying when the ECG RR interval datastream is acceptable
+    """
+
+    ecg_rr_outlier_stream = DataStream.from_datastream(input_streams=[ecg_rr])
+    if not ecg_rr.data:
+        ecg_rr_outlier_stream.data = []
+        return ecg_rr_outlier_stream
+
+    valid_rr_interval_sample = [i.sample for i in ecg_rr.data if i.sample >.3 and i.sample < 2]
+    valid_rr_interval_time = [i.start_time for i in ecg_rr.data if i.sample >.3 and i.sample < 2]
+    valid_rr_interval_difference = abs(np.diff(valid_rr_interval_sample))
+
+    # Maximum Expected Difference(MED)= 3.32* Quartile Deviation
+    maximum_expected_difference = 4.5*0.5*iqr(valid_rr_interval_difference)
+
+    # Shortest Expected Beat(SEB) = Median Beat – 2.9 * Quartile Deviation
+    # Minimal Artifact Difference(MAD) = SEB/ 3
+    maximum_artifact_difference = (np.median(valid_rr_interval_sample)-2.9*.5*iqr(valid_rr_interval_difference))/3
+
+    # Midway between MED and MAD is considered
+    criterion_beat_difference = (maximum_expected_difference+maximum_artifact_difference)/2
+    if criterion_beat_difference < .2:
+        criterion_beat_difference = .2
+
+    ecg_rr_quality_array = []
+    ecg_rr_quality_array.append(DataPoint.from_tuple(valid_rr_interval_time[0], Quality.ACCEPTABLE, valid_rr_interval_time[0]))
+
+    for data in outlier_computation(valid_rr_interval_time, valid_rr_interval_sample, criterion_beat_difference):
+        if ecg_rr_quality_array[-1].sample == data.sample:
+            new_point = DataPoint.from_tuple(ecg_rr_quality_array[-1].start_time, data.sample, data.start_time)
+            ecg_rr_quality_array[-1] = new_point
+        else:
+            ecg_rr_quality_array.append(data)
+
+    ecg_rr_outlier_stream.data = ecg_rr_quality_array
+    return ecg_rr_outlier_stream
+
 
 def classify_data_points(data: list,
                          signal_type: bool,
@@ -137,7 +237,7 @@ def compute_dataquality(data: list,
                         outlier_threshold_high: float = .9769,
                         outlier_threshold_low: float = .004884,
                         buffer_length: int = 3,
-                        ADC_range: int = 4095)->object:
+                        ADC_range: int = 4095)-> Quality:
 
     """
 
@@ -268,6 +368,3 @@ def RIPDataQuality(datastream: DataStream,
     rip_quality_stream.data = rip_quality
 
     return rip_quality_stream
-
-
-

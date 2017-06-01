@@ -31,7 +31,7 @@ from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_c
 from cerebralcortex.data_processor.signalprocessing.ecg import compute_rr_intervals
 from cerebralcortex.data_processor.signalprocessing.dataquality import ECGDataQuality
 from cerebralcortex.data_processor.signalprocessing.dataquality import RIPDataQuality
-
+from cerebralcortex.data_processor.signalprocessing.dataquality import compute_outlier_ecg
 
 def fix_two_joins(nested_data):
     key = nested_data[0]
@@ -88,6 +88,10 @@ def cStress(rdd: RDD) -> RDD:
     # r-peak datastream computation
     ecg_rr_rdd = ecg_corrected_and_quality.map(lambda ds:
                                                (ds[0], compute_rr_intervals(ecg=ds[1][0], ecg_quality=ds[1][1], fs=ecg_sampling_frequency)))
+
+
+    ecg_rr_quality = ecg_rr_rdd.map(lambda ds: (ds[0],compute_outlier_ecg(ds[1])))
+
     # ecg_features = ecg_rr_rdd.map(lambda ds: (ds[0], ecg_feature_computation(ds[1], window_size=60, window_offset=60)))
 
     # return rip_features.join(ecg_features).join(accel_features).map(fix_two_joins)
