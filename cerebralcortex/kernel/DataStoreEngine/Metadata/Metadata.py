@@ -40,6 +40,10 @@ class Metadata(LoadMetadata, StoreMetadata):
         self.dbUser = self.configuration['mysql']['db_user']
         self.dbPassword = self.configuration['mysql']['db_pass']
         self.datastreamTable = self.configuration['mysql']['datastream_table']
-        self.dbConnection = mysql.connector.connect(user=self.dbUser, password=self.dbPassword, database=self.database)
 
+        self.dbConnection = mysql.connector.connect(user=self.dbUser, password=self.dbPassword, database=self.database)
         self.cursor = self.dbConnection.cursor(dictionary=True)
+
+    def __del__(self):
+        if self.dbConnection:
+            self.dbConnection.close()

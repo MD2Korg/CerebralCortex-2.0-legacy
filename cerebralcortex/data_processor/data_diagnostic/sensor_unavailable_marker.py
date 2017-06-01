@@ -33,7 +33,6 @@ from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.data_processor.data_diagnostic.post_processing import store
 from cerebralcortex.data_processor.data_diagnostic.util import merge_consective_windows
 from cerebralcortex.data_processor.signalprocessing.vector import magnitude
-from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 
 
@@ -79,21 +78,21 @@ def wireless_disconnection(stream_id: uuid, CC_obj: CerebralCortex, config: dict
 
     if battery_off_data:
         if name == config["sensor_types"]["motionsense_accel"]:
-            motionsense_accel_stream_id = Metadata(CC_obj).get_stream_id_by_owner_id(owner_id,
-                                                                                     config[
-                                                                                         "sensor_types"][
-                                                                                         "motionsense_accel"],
-                                                                                     "id")
+            motionsense_accel_stream_id = CC_obj.get_stream_id_by_owner_id(owner_id,
+                                                                           config[
+                                                                               "sensor_types"][
+                                                                               "motionsense_accel"],
+                                                                           "id")
             input_streams = [{"id": str(stream_id), "name": str(stream_name)},
                              {"id": str(motionsense_accel_stream_id),
                               "name": config["sensor_types"]["motionsense_accel"]}]
         else:
-            x = Metadata(CC_obj).get_stream_id_by_owner_id(owner_id,
-                                                           config["sensor_types"]["autosense_accel_x"])
-            y = Metadata(CC_obj).get_stream_id_by_owner_id(owner_id,
-                                                           config["sensor_types"]["autosense_accel_y"])
-            z = Metadata(CC_obj).get_stream_id_by_owner_id(owner_id,
-                                                           config["sensor_types"]["autosense_accel_z"])
+            x = CC_obj.get_stream_id_by_owner_id(owner_id,
+                                                 config["sensor_types"]["autosense_accel_x"])
+            y = CC_obj.get_stream_id_by_owner_id(owner_id,
+                                                 config["sensor_types"]["autosense_accel_y"])
+            z = CC_obj.get_stream_id_by_owner_id(owner_id,
+                                                 config["sensor_types"]["autosense_accel_z"])
             input_streams = [{"id": str(stream_id), "name": stream_name},
                              {"id": str(x), "name": config["sensor_types"]["autosense_accel_x"]},
                              {"id": str(y), "name": config["sensor_types"]["autosense_accel_y"]},

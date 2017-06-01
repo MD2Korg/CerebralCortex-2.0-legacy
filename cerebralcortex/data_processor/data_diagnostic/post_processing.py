@@ -23,7 +23,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import json
-import uuid
 from collections import OrderedDict
 
 from cerebralcortex.CerebralCortex import CerebralCortex
@@ -45,7 +44,6 @@ def store(input_streams: dict, data: OrderedDict, CC_obj: CerebralCortex, config
     parent_stream_id = input_streams[0]["id"]
     stream_name = input_streams[0]["name"]
 
-    stream_uuid = uuid.uuid4()
     result = process_data(stream_name, input_streams, algo_type, config)
 
     data_descriptor = json.loads(result["dd"])
@@ -179,7 +177,6 @@ def sensor_unavailable(sensor_type: str, input_streams: dict, config: dict) -> d
     else:
         raise ValueError("Incorrect sensor type")
 
-    #output_stream = {"name": name, "id": str(generated_stream_id)};
     algo_description = config["description"]["sensor_unavailable_marker"]
     method = 'cerebralcortex.data_processor.data_diagnostic.packet_loss_marker'
 
@@ -214,7 +211,6 @@ def packet_loss(sensor_type: str, input_streams: dict, config: dict) -> dict:
     else:
         raise ValueError("Incorrect sensor type")
 
-    #output_stream = {"name": name, "id": str(generated_stream_id)};
     algo_description = config["description"]["packet_loss_marker"]
     method = 'cerebralcortex.data_processor.data_diagnostic.packet_loss_marker'
 
@@ -260,7 +256,6 @@ def get_data_descriptor(algo_type: str, config: dict) -> dict:
     return json.dumps(data_descriptor.get_data_descriptor("label", "window", dd))
 
 
-
 def get_execution_context(name: str, input_param: dict, input_streams: dict, method: str,
                           algo_description: str, config: dict) -> dict:
     """
@@ -272,22 +267,17 @@ def get_execution_context(name: str, input_param: dict, input_streams: dict, met
     :param config:
     :return:
     """
-    author = [{"name":"Ali", "email": "nasir.ali08@gmail.com"}]
+
+    author = [{"name": "Ali", "email": "nasir.ali08@gmail.com"}]
     version = '0.0.1'
     ref = {"url": "http://www.cs.memphis.edu/~santosh/Papers/Continuous-Stress-BCB-2014.pdf"}
 
-    processing_module = {"name": name,
-                         "description": config["description"]["data_diagnostic"],
-                         "input_parameters": input_param,
-                         "input_streams": input_streams}
-    algorithm = [{"method": method,
-                 "description": algo_description,
-                 "authors": author,
-                 "version": version,
-                 "reference": ref}]
+    processing_module = execution_context().processing_module_schema(name, config["description"]["data_diagnostic"],
+                                                                     input_param, input_streams)
+    algorithm = execution_context().algorithm_schema(method, algo_description, author, version, ref)
 
     ec = execution_context().get_execution_context(processing_module, algorithm)
-    return json.dumps(ec)
+    return ec
 
 
 def get_annotations() -> dict:

@@ -1,0 +1,33 @@
+{
+  "execution_context": {
+    "processing_module": {
+      "name": "autosense battery diagnostics",
+      "description": "Data-diagnostic module helps to identify the causes of missing or poor quality data.",
+      "input_streams": [
+        {
+          "id": "6fef5f5d-9f6d-42ec-b324-521f553c2345",
+          "name": "autosense_battery"
+        }
+      ],
+      "input_parameters": {
+        "window_size": 60,
+        "autosense_powered_off_threshold": 0,
+        "autosense_battery_down_threshold": 0.5
+      }
+    },
+    "algorithm": {
+      "method": "cerebralcortex.data_processor.data_diagnostic.BatteryDataMarker",
+      "authors": [
+        {
+          "name": "Ali",
+          "email": "nasir.ali08@gmail.com"
+        }
+      ],
+      "version": "0.0.1",
+      "reference": {
+        "url": "http://www.cs.memphis.edu/~santosh/Papers/Continuous-Stress-BCB-2014.pdf"
+      },
+      "description": "Battery data marker uses battery levels to determine whether the battery was down or device was powered off."
+    }
+  }
+}

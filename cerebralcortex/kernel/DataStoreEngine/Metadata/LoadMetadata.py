@@ -24,6 +24,7 @@
 
 import datetime
 import uuid
+from typing import List
 
 
 class LoadMetadata:
@@ -131,57 +132,90 @@ class LoadMetadata:
         """
         self.cursor.execute(qry)
         rows = self.cursor.fetchall()
-        self.cursor.close()
-        self.dbConnection.close()
+
         if len(rows) == 0:
             raise ValueError("No record found.")
         else:
             return rows
 
-    def get_stream_id_by_owner_id(self, owner_id: uuid, stream_name: str, start_time=None, end_time=None) -> str:
-        """
-        returns a stream id of an owner
-        :param owner_id:
-        :param stream_name:
-        :param data_type:
-        :return:
-        """
-        if start_time != None and end_time != None:
-            qry = "SELECT identifier from " + self.datastreamTable + " where owner=%s and name=%s"
-            vals = owner_id, stream_name
-        else:
-            qry = "SELECT * from " + self.datastreamTable + " where owner=%s and name=%s"
-            vals = owner_id, stream_name
-
-        self.cursor.execute(qry, vals)
-        rows = self.cursor.fetchall()
-        if rows:
-            return rows[0]["identifier"]
-        else:
-            return False
-
     def get_stream_ids_of_owner(self, owner_id: uuid, stream_name: str = None, start_time: datetime = None,
-                                end_time: datetime = None) -> str:
+                                end_time: datetime = None) -> List:
         """
         It returns all the stream ids that an owner owns
         :param owner_id:
         :return:
         """
-
-        if start_time != None and end_time != None:
+        if start_time != None and end_time == None:
             if stream_name != None:
-                qry = "SELECT identifier, name from " + self.datastreamTable + " where owner=%s and name=%s and start_time<=%s and end_time>=%s"
-                self.cursor.execute(qry, (owner_id, stream_name, start_time, end_time))
+                qry = "SELECT identifier from " + self.datastreamTable + " where owner=%s and name=%s and start_time<=%s"
+                vals = owner_id, stream_name, start_time
             else:
-                qry = "SELECT identifier, name from " + self.datastreamTable + " where owner=%s and start_time<=%s and end_time>=%s"
-                self.cursor.execute(qry, (owner_id, start_time, end_time))
+                qry = "SELECT identifier from " + self.datastreamTable + " where owner=%s and start_time<=%s"
+                vals = owner_id, start_time
+        elif start_time == None and end_time != None:
+            if stream_name != None:
+                qry = "SELECT identifier from " + self.datastreamTable + " where owner=%s and name=%s and end_time>=%s"
+                vals = owner_id, stream_name, end_time
+            else:
+                qry = "SELECT identifier from " + self.datastreamTable + " where owner=%s and end_time>=%s"
+                vals = owner_id, end_time
+        elif start_time != None and end_time != None:
+            if stream_name != None:
+                qry = "SELECT identifier from " + self.datastreamTable + " where owner=%s and name=%s and start_time<=%s and end_time>=%s"
+                vals = owner_id, stream_name, start_time, end_time
+            else:
+                qry = "SELECT identifier from " + self.datastreamTable + " where owner=%s and start_time<=%s and end_time>=%s"
+                vals = owner_id, start_time, end_time
         else:
             if stream_name != None:
-                qry = "SELECT * from " + self.datastreamTable + " where owner=%s and name=%s"
-                self.cursor.execute(qry, (owner_id, stream_name))
+                qry = "SELECT identifier from " + self.datastreamTable + " where owner=%s and name=%s"
+                vals = owner_id, stream_name
             else:
-                qry = "SELECT identifier, name from " + self.datastreamTable + " where owner=%s"
-                self.cursor.execute(qry, (owner_id))
+                qry = "SELECT identifier from " + self.datastreamTable + " where owner=%(owner)s"
+                vals = {'owner': str(owner_id)}
 
-        rows = self.cursor.fetchall()
-        return rows[0]["identifier"]
+        self.cursor.execute(qry, vals)
+        stream_ids = [item['identifier'] for item in self.cursor.fetchall()]
+        return stream_ids
+
+    def get_stream_ids_by_name(self, stream_name: str, owner_id: uuid = None, start_time: datetime = None,
+                               end_time: datetime = None) -> List:
+        """
+        It returns a list of all the stream ids that match the name provided in the argument
+        :param owner_id:
+        :return:
+        """
+
+        if start_time != None and end_time == None:
+            if owner_id != None:
+                qry = "SELECT identifier, owner from " + self.datastreamTable + " where owner=%s and name=%s and start_time<=%s"
+                vals = owner_id, stream_name, start_time
+            else:
+                qry = "SELECT identifier, owner from " + self.datastreamTable + " where name=%s and start_time<=%s"
+                vals = owner_id, stream_name
+        elif start_time == None and end_time != None:
+            if owner_id != None:
+                qry = "SELECT identifier, owner from " + self.datastreamTable + " where owner=%s and name=%s and end_time>=%s"
+                vals = owner_id, stream_name, end_time
+            else:
+                qry = "SELECT identifier, owner from " + self.datastreamTable + " where name=%s and end_time>=%s"
+                vals = owner_id, end_time
+        elif start_time != None and end_time != None:
+            if owner_id != None:
+                qry = "SELECT identifier, owner from " + self.datastreamTable + " where owner=%s and name=%s and start_time<=%s and end_time>=%s"
+                vals = owner_id, stream_name, start_time, end_time
+            else:
+                qry = "SELECT identifier, owner from " + self.datastreamTable + " where name=%s and start_time<=%s and end_time>=%s"
+                vals = owner_id, stream_name, end_time
+        else:
+            if owner_id != None:
+                qry = "SELECT identifier, owner from " + self.datastreamTable + " where owner=%s and name=%s"
+                vals = owner_id, stream_name
+            else:
+                qry = "SELECT identifier, owner from " + self.datastreamTable + " where name=%(name)s"
+                vals = {'name': str(stream_name)}
+
+        self.cursor.execute(qry, vals)
+        stream_ids = [item['identifier'] for item in self.cursor.fetchall()]
+
+        return stream_ids

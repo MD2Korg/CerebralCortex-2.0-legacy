@@ -140,7 +140,6 @@ class Stream:
         result = "Stream(" + ', '.join(map(str, [self.identifier,
                                                  self.owner,
                                                  self.name,
-                                                 self.description,
                                                  self.data_descriptor,
                                                  self.datastream_type,
                                                  self.execution_context,

@@ -1,0 +1,12 @@
+{
+  "data_descriptor": [
+    {
+      "type": "label",
+      "unit": "window",
+      "labels": {
+        "phone_powered_off": 20,
+        "phone_battery_down": 16
+      }
+    }
+  ]
+}

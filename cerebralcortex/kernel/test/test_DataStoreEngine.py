@@ -24,6 +24,7 @@
 import os
 import unittest
 import datetime
+import json
 from pytz import timezone
 
 from cerebralcortex.CerebralCortex import CerebralCortex
@@ -33,37 +34,44 @@ from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 
 class TestDataStoreEngine(unittest.TestCase):
-    def setUp(self):
-        self.testConfigFile = os.path.join(os.path.dirname(__file__), 'res/test_configuration.yml')
 
-        self.CC = CerebralCortex(self.testConfigFile, master="local[*]", name="Cerebral Cortex DataStoreEngine Tests", time_zone="US/Central")
+    testConfigFile = os.path.join(os.path.dirname(__file__), 'res/test_configuration.yml')
+    CC = CerebralCortex(testConfigFile, master="local[*]", name="Cerebral Cortex DataStoreEngine Tests", time_zone="US/Central")
+    configuration = CC.configuration
+    meta_obj = Metadata(CC)
 
-        self.configuration = self.CC.configuration
-        self.test_store_stream()
-        self.test_get_stream_id_name()
-        self.test_get_stream_info()
-        self.test_append_annotations()
-        self.test_store_stream()
-        # TODO: populate databases with sample information for these tests
 
-    def test_store_stream_info(self):
+    def test_01_setup_data(self):
         data_descriptor = {}
-        execution_context = {}
+        execution_context = json.loads('{"execution_context": {"algorithm": {"method": "cerebralcortex.data_processor.data_diagnostic.BatteryDataMarker"}}}')
         annotations = {}
         stream_type = "datastream"
         start_time = datetime.datetime(2017, 4, 24, 0, 0, 1)
         end_time = datetime.datetime(2017, 4, 24, 0, 0, 2)
 
+
+        result = Metadata(self.CC).is_id_created("06634264-56bc-4c92-abd7-377dbbad79dd", "data-diagnostic-test", execution_context)
+
+        if result["status"]=="new":
+            stream_identifier = "6db98dfb-d6e8-4b27-8d55-95b20fa0f754"
+        else:
+            stream_identifier = result["id"]
+
+        self.assertEqual(stream_identifier, "6db98dfb-d6e8-4b27-8d55-95b20fa0f754")
+
+        Metadata(self.CC).store_stream_info(stream_identifier,
+                                                       "06634264-56bc-4c92-abd7-377dbbad79dd", "data-diagnostic-test",
+                                        data_descriptor, execution_context,
+                                        annotations,
+                                        stream_type, start_time, end_time, result["status"])
+
+    def test_02_get_stream_info(self):
         Metadata(self.CC).store_stream_info("6db98dfb-d6e8-4b27-8d55-95b20fa0f754",
                                                        "06634264-56bc-4c92-abd7-377dbbad79dd", "data-diagnostic-test",
                                                        data_descriptor, execution_context,
                                                        annotations,
                                                        stream_type, start_time, end_time, "new")
 
-    def test_get_stream_id_name(self):
-        stream_id = Metadata(self.CC).get_stream_id_by_owner_id("06634264-56bc-4c92-abd7-377dbbad79dd",
-                                                                    "data-diagnostic-test")
-        self.assertEqual(stream_id, "6db98dfb-d6e8-4b27-8d55-95b20fa0f754")
 
     def test_get_stream_info(self):
 
@@ -73,11 +81,11 @@ class TestDataStoreEngine(unittest.TestCase):
         self.assertEqual(stream_info[0]["owner"], "06634264-56bc-4c92-abd7-377dbbad79dd")
         self.assertEqual(stream_info[0]["name"], "data-diagnostic-test")
         self.assertEqual(stream_info[0]["data_descriptor"], "{}")
-        self.assertEqual(stream_info[0]["execution_context"], "{}")
+        self.assertEqual(stream_info[0]["execution_context"], '{"execution_context": {"algorithm": {"method": "cerebralcortex.data_processor.data_diagnostic.BatteryDataMarker"}}}')
         self.assertEqual(stream_info[0]["annotations"], "{}")
         self.assertEqual(stream_info[0]["type"], "datastream")
 
-    def test_append_annotations(self):
+    def test_03_append_annotations(self):
         self.assertRaises(Exception, Metadata(self.CC).append_annotations, "6db98dfb-d6e8-4b27-8d55-95b20fa0f754",
                           "06634264-56bc-4c92-abd7-377dbbad79dd",
                           "data-diagnostic-test", {}, {}, {}, "datastream1")
@@ -96,18 +104,59 @@ class TestDataStoreEngine(unittest.TestCase):
 
         annotations_unchanged = Metadata(self.CC).append_annotations("6db98dfb-d6e8-4b27-8d55-95b20fa0f754",
                                                                                 "06634264-56bc-4c92-abd7-377dbbad79dd",
-                                                                                "data-diagnostic-test", {}, {}, {}, "datastream")
+                                                                                "data-diagnostic-test", {}, json.loads('{"execution_context": {"algorithm": {"method": "cerebralcortex.data_processor.data_diagnostic.BatteryDataMarker"}}}'), {}, "datastream")
         self.assertEqual(annotations_unchanged, "unchanged")
 
 
 
+    def test_04_get_stream_ids_by_name(self):
+        start_time = datetime.datetime(2017, 4, 24, 0, 0, 1)
+        end_time = datetime.datetime(2017, 4, 24, 0, 0, 2)
 
-    def test_store_stream(self):
+        by_name = Metadata(self.CC).get_stream_ids_by_name("data-diagnostic-test")
+        self.assertIsInstance(by_name, list)
+        self.assertEqual(by_name[0], "6db98dfb-d6e8-4b27-8d55-95b20fa0f754")
+
+        by_name_id = Metadata(self.CC).get_stream_ids_by_name("data-diagnostic-test", "06634264-56bc-4c92-abd7-377dbbad79dd")
+        self.assertIsInstance(by_name_id, list)
+        self.assertEqual(by_name_id[0], "6db98dfb-d6e8-4b27-8d55-95b20fa0f754")
+
+        by_name_id_start_time = Metadata(self.CC).get_stream_ids_by_name("data-diagnostic-test","06634264-56bc-4c92-abd7-377dbbad79dd",  start_time)
+        self.assertIsInstance(by_name_id_start_time, list)
+        self.assertEqual(by_name_id_start_time[0], "6db98dfb-d6e8-4b27-8d55-95b20fa0f754")
+
+        by_name_id_start_time_end_time = Metadata(self.CC).get_stream_ids_by_name("data-diagnostic-test","06634264-56bc-4c92-abd7-377dbbad79dd", start_time, end_time)
+        self.assertIsInstance(by_name_id_start_time_end_time, list)
+        self.assertEqual(by_name_id_start_time_end_time[0], "6db98dfb-d6e8-4b27-8d55-95b20fa0f754")
+
+
+    def test_05_get_stream_ids_of_owner(self):
+        start_time = datetime.datetime(2017, 4, 24, 0, 0, 1)
+        end_time = datetime.datetime(2017, 4, 24, 0, 0, 2)
+
+        by_id = Metadata(self.CC).get_stream_ids_of_owner("06634264-56bc-4c92-abd7-377dbbad79dd")
+        self.assertIsInstance(by_id, list)
+        self.assertEqual(by_id[0], "6db98dfb-d6e8-4b27-8d55-95b20fa0f754")
+
+        by_name_id = Metadata(self.CC).get_stream_ids_of_owner("06634264-56bc-4c92-abd7-377dbbad79dd", "data-diagnostic-test")
+        self.assertIsInstance(by_name_id, list)
+        self.assertEqual(by_name_id[0], "6db98dfb-d6e8-4b27-8d55-95b20fa0f754")
+
+        by_name_id_start_time = Metadata(self.CC).get_stream_ids_of_owner("06634264-56bc-4c92-abd7-377dbbad79dd", "data-diagnostic-test", start_time)
+        self.assertIsInstance(by_name_id_start_time, list)
+        self.assertEqual(by_name_id_start_time[0], "6db98dfb-d6e8-4b27-8d55-95b20fa0f754")
+
+        by_name_id_start_time_end_time = Metadata(self.CC).get_stream_ids_of_owner("06634264-56bc-4c92-abd7-377dbbad79dd", "data-diagnostic-test", start_time, end_time)
+        self.assertIsInstance(by_name_id_start_time_end_time, list)
+        self.assertEqual(by_name_id_start_time_end_time[0], "6db98dfb-d6e8-4b27-8d55-95b20fa0f754")
+
+
+    def test_06_store_stream(self):
         identifier = "6db98dfb-d6e8-4b27-8d55-95b20fa0f754"
         owner = "06634264-56bc-4c92-abd7-377dbbad79dd"
         name = "data-diagnostic-test"
         data_descriptor = {}
-        execution_context = {}
+        execution_context = json.loads('{"execution_context": {"algorithm": {"method": "cerebralcortex.data_processor.data_diagnostic.BatteryDataMarker"}}}')
         annotations = {}
         datapoints = []
         stream_type = "datastream"
@@ -139,7 +188,6 @@ class TestDataStoreEngine(unittest.TestCase):
         self.assertEqual(stream.data[0].start_time, start_time)
         self.assertEqual(stream.data[0].end_time, end_time)
         self.assertEqual(stream.data[0].sample, sample)
-
 
 
 if __name__ == '__main__':
