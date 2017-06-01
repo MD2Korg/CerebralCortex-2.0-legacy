@@ -49,36 +49,36 @@ def outlier_computation(valid_rr_interval_time: list,
     yields: The quality of each data point in the RR interval array
     """
     standard_rr_interval_sample = valid_rr_interval_sample[0]
-    previous_rr_int_quality = Quality.ACCEPTABLE
+    previous_rr_interval_quality = Quality.ACCEPTABLE
 
     for i in range(1, len(valid_rr_interval_sample)-1):
 
-        rr_int_diff_last_good = abs(standard_rr_interval_sample - valid_rr_interval_sample[i])
-        rr_int_diff_prev_sample = abs(valid_rr_interval_sample[i - 1] - valid_rr_interval_sample[i])
-        rr_int_diff_next_sample = abs(valid_rr_interval_sample[i] - valid_rr_interval_sample[i + 1])
+        rr_interval_diff_with_last_good = abs(standard_rr_interval_sample - valid_rr_interval_sample[i])
+        rr_interval_diff_with_prev_sample = abs(valid_rr_interval_sample[i - 1] - valid_rr_interval_sample[i])
+        rr_interval_diff_with_next_sample = abs(valid_rr_interval_sample[i] - valid_rr_interval_sample[i + 1])
 
-        if previous_rr_int_quality == Quality.UNACCEPTABLE and rr_int_diff_last_good < criterion_beat_difference:
+        if previous_rr_interval_quality == Quality.UNACCEPTABLE and rr_interval_diff_with_last_good < criterion_beat_difference:
             yield DataPoint.from_tuple(valid_rr_interval_time[i], Quality.ACCEPTABLE, valid_rr_interval_time[i])
-            previous_rr_int_quality = Quality.ACCEPTABLE
+            previous_rr_interval_quality = Quality.ACCEPTABLE
             standard_rr_interval_sample = valid_rr_interval_sample[i]
 
-        elif previous_rr_int_quality == Quality.UNACCEPTABLE and rr_int_diff_last_good > criterion_beat_difference and rr_int_diff_prev_sample <= criterion_beat_difference and rr_int_diff_next_sample <= criterion_beat_difference:
+        elif previous_rr_interval_quality == Quality.UNACCEPTABLE and rr_interval_diff_with_last_good > criterion_beat_difference and rr_interval_diff_with_prev_sample <= criterion_beat_difference and rr_interval_diff_with_next_sample <= criterion_beat_difference:
             yield DataPoint.from_tuple(valid_rr_interval_time[i], Quality.ACCEPTABLE, valid_rr_interval_time[i])
-            previous_rr_int_quality = Quality.ACCEPTABLE
+            previous_rr_interval_quality = Quality.ACCEPTABLE
             standard_rr_interval_sample = valid_rr_interval_sample[i]
 
-        elif previous_rr_int_quality == Quality.UNACCEPTABLE and rr_int_diff_last_good > criterion_beat_difference and (rr_int_diff_prev_sample > criterion_beat_difference or rr_int_diff_next_sample > criterion_beat_difference):
+        elif previous_rr_interval_quality == Quality.UNACCEPTABLE and rr_interval_diff_with_last_good > criterion_beat_difference and (rr_interval_diff_with_prev_sample > criterion_beat_difference or rr_interval_diff_with_next_sample > criterion_beat_difference):
             yield DataPoint.from_tuple(valid_rr_interval_time[i], Quality.UNACCEPTABLE, valid_rr_interval_time[i])
-            previous_rr_int_quality = Quality.UNACCEPTABLE
+            previous_rr_interval_quality = Quality.UNACCEPTABLE
 
-        elif previous_rr_int_quality == Quality.ACCEPTABLE and rr_int_diff_prev_sample <= criterion_beat_difference:
+        elif previous_rr_interval_quality == Quality.ACCEPTABLE and rr_interval_diff_with_prev_sample <= criterion_beat_difference:
             yield DataPoint.from_tuple(valid_rr_interval_time[i], Quality.ACCEPTABLE, valid_rr_interval_time[i])
-            previous_rr_int_quality = Quality.ACCEPTABLE
+            previous_rr_interval_quality = Quality.ACCEPTABLE
             standard_rr_interval_sample = valid_rr_interval_sample[i]
 
-        elif previous_rr_int_quality == Quality.ACCEPTABLE and rr_int_diff_prev_sample > criterion_beat_difference:
+        elif previous_rr_interval_quality == Quality.ACCEPTABLE and rr_interval_diff_with_prev_sample > criterion_beat_difference:
             yield DataPoint.from_tuple(valid_rr_interval_time[i], Quality.UNACCEPTABLE, valid_rr_interval_time[i])
-            previous_rr_int_quality = Quality.UNACCEPTABLE
+            previous_rr_interval_quality = Quality.UNACCEPTABLE
 
         else:
             yield DataPoint.from_tuple(valid_rr_interval_time[i], Quality.UNACCEPTABLE, valid_rr_interval_time[i])
@@ -90,7 +90,7 @@ def outlier_computation(valid_rr_interval_time: list,
 
 def compute_outlier_ecg(ecg_rr: DataStream)-> DataStream:
     """
-    Implementation of Berntson, Gary G., et al. "An approach to artifact identification: Application to heart period data." Psychophysiology 27.5 (1990): 586-598.
+    Reference - Berntson, Gary G., et al. "An approach to artifact identification: Application to heart period data." Psychophysiology 27.5 (1990): 586-598.
 
     :param ecg_rr: RR interval datastream
 
@@ -106,8 +106,14 @@ def compute_outlier_ecg(ecg_rr: DataStream)-> DataStream:
     valid_rr_interval_time = [i.start_time for i in ecg_rr.data if i.sample >.3 and i.sample < 2]
     valid_rr_interval_difference = abs(np.diff(valid_rr_interval_sample))
 
+    # Maximum Expected Difference(MED)= 3.32* Quartile Deviation
     maximum_expected_difference = 4.5*0.5*iqr(valid_rr_interval_difference)
+
+    # Shortest Expected Beat(SEB) = Median Beat – 2.9 * Quartile Deviation
+    # Minimal Artifact Difference(MAD) = SEB/ 3
     maximum_artifact_difference = (np.median(valid_rr_interval_sample)-2.9*.5*iqr(valid_rr_interval_difference))/3
+
+    # Midway between MED and MAD is considered
     criterion_beat_difference = (maximum_expected_difference+maximum_artifact_difference)/2
     if criterion_beat_difference < .2:
         criterion_beat_difference = .2
@@ -124,6 +130,7 @@ def compute_outlier_ecg(ecg_rr: DataStream)-> DataStream:
 
     ecg_rr_outlier_stream.data = ecg_rr_quality_array
     return ecg_rr_outlier_stream
+
 
 def classify_data_points(data: list,
                          signal_type: bool,
@@ -230,7 +237,7 @@ def compute_dataquality(data: list,
                         outlier_threshold_high: float = .9769,
                         outlier_threshold_low: float = .004884,
                         buffer_length: int = 3,
-                        ADC_range: int = 4095)->object:
+                        ADC_range: int = 4095)-> Quality:
 
     """
 
