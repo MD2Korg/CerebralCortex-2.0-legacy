@@ -31,7 +31,6 @@ from cerebralcortex.kernel.datatypes.datastream import DataStream
 class StoreData:
     def store_stream(self, datastream: DataStream):
         """
-
         :param datastream:
         """
 
@@ -52,7 +51,8 @@ class StoreData:
                 new_start_time = data.start_time
                 new_end_time = data.start_time
 
-            result = Metadata(self.CC_obj).is_id_created2(ownerID, name, data_descriptor, execution_context)
+
+            result = Metadata(self.CC_obj).is_id_created(ownerID, name, execution_context)
 
             stream_identifier = result["id"]
             Metadata(self.CC_obj).store_stream_info(stream_identifier, ownerID, name,

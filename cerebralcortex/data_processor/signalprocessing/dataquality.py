@@ -361,6 +361,3 @@ def RIPDataQuality(datastream: DataStream,
     rip_quality_stream.data = rip_quality
 
     return rip_quality_stream
-
-
-
