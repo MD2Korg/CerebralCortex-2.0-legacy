@@ -27,10 +27,81 @@ from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from enum import Enum
+import numpy as np
+from scipy.stats import iqr
 
 class Quality(Enum):
     ACCEPTABLE = 1
     UNACCEPTABLE = 0
+
+def outlier_computation(valid_timestamp: list,
+                        valid_rrInterval: list,
+                        CBD: float):
+    standard_rrInterval=valid_rrInterval[0]
+    prev_beat_bad=Quality.ACCEPTABLE
+    for i in range(1,len(valid_rrInterval)-1):
+        ref=valid_rrInterval[i]
+        beat_diff_prevGood=abs(standard_rrInterval-valid_rrInterval[i])
+        beat_diff_pre=abs(valid_rrInterval[i-1]-valid_rrInterval[i])
+        beat_diff_post=abs(valid_rrInterval[i]-valid_rrInterval[i+1])
+        if prev_beat_bad==Quality.UNACCEPTABLE and beat_diff_prevGood<CBD:
+            yield DataPoint.from_tuple(valid_timestamp[i],Quality.ACCEPTABLE,valid_timestamp[i])
+            prev_beat_bad=Quality.ACCEPTABLE
+            standard_rrInterval=valid_rrInterval[i]
+        elif prev_beat_bad == Quality.UNACCEPTABLE and beat_diff_prevGood > CBD and beat_diff_pre <= CBD and beat_diff_post <= CBD:
+            yield DataPoint.from_tuple(valid_timestamp[i],Quality.ACCEPTABLE,valid_timestamp[i])
+            prev_beat_bad=Quality.ACCEPTABLE
+            standard_rrInterval=valid_rrInterval[i]
+        elif prev_beat_bad == Quality.UNACCEPTABLE and beat_diff_prevGood > CBD and (beat_diff_pre > CBD or beat_diff_post>CBD):
+            yield DataPoint.from_tuple(valid_timestamp[i],Quality.UNACCEPTABLE,valid_timestamp[i])
+            prev_beat_bad=Quality.UNACCEPTABLE
+        elif prev_beat_bad == Quality.ACCEPTABLE and beat_diff_pre <= CBD:
+            yield DataPoint.from_tuple(valid_timestamp[i],Quality.ACCEPTABLE,valid_timestamp[i])
+            prev_beat_bad=Quality.ACCEPTABLE
+            standard_rrInterval=valid_rrInterval[i]
+        elif prev_beat_bad ==Quality.ACCEPTABLE and beat_diff_pre > CBD:
+            yield DataPoint.from_tuple(valid_timestamp[i],Quality.UNACCEPTABLE,valid_timestamp[i])
+            prev_beat_bad=Quality.UNACCEPTABLE
+        else:
+            yield DataPoint.from_tuple(valid_timestamp[i],Quality.UNACCEPTABLE,valid_timestamp[i])
+
+
+
+
+
+
+def compute_outlier_ecg(ecg_rr: DataStream)-> DataStream:
+    """
+
+    :param ecg_rr: RR interval datastream
+
+    :return: An annotated datastream containing which RR datapoint is acceptable and which is not
+    """
+
+    ecg_rr_outlier_stream = DataStream.from_datastream(input_streams=[ecg_rr])
+    if not ecg_rr.data:
+        ecg_rr_outlier_stream.data = []
+        return ecg_rr_outlier_stream
+    valid_rrInterval = [i.sample for i in ecg_rr.data if i.sample > .3 and i.sample < 2]
+    valid_timestamp = [i.start_time for i in ecg_rr.data if i.sample > .3 and i.sample < 2]
+    diff_rrInterval = abs(np.diff(valid_rrInterval))
+    MED = 4.5*0.5*iqr(diff_rrInterval)
+    MAD = (np.median(valid_rrInterval)-2.9*.5*iqr(diff_rrInterval))/3
+    CBD = (MED+MAD)/2
+    if CBD < .2:
+        CBD = .2
+    ecg_rr_quality_array = []
+    ecg_rr_quality_array.append(DataPoint.from_tuple(valid_timestamp[0],Quality.ACCEPTABLE,valid_timestamp[0]))
+
+    for data in outlier_computation(valid_timestamp,valid_rrInterval,CBD):
+        if ecg_rr_quality_array[-1].sample == data.sample:
+            new_point = DataPoint.from_tuple(ecg_rr_quality_array[-1].start_time, data.sample, data.start_time)
+            ecg_rr_quality_array[-1] = new_point
+        else:
+            ecg_rr_quality_array.append(data)
+
+    ecg_rr_outlier_stream.data = ecg_rr_quality_array
+    return ecg_rr_outlier_stream
 
 def classify_data_points(data: list,
                          signal_type: bool,
