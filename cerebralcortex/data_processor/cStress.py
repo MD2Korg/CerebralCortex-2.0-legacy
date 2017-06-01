@@ -29,6 +29,8 @@ from cerebralcortex.data_processor.signalprocessing import rip
 from cerebralcortex.data_processor.signalprocessing.accelerometer import accelerometer_features
 from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_correct, autosense_sequence_align
 from cerebralcortex.data_processor.signalprocessing.ecg import compute_rr_intervals
+from cerebralcortex.data_processor.signalprocessing.dataquality import ECGDataQuality
+from cerebralcortex.data_processor.signalprocessing.dataquality import RIPDataQuality
 
 
 def fix_two_joins(nested_data):
@@ -46,6 +48,7 @@ def cStress(rdd: RDD) -> RDD:
     accel_sampling_frequency = 64.0 / 6.0
 
 
+
     # Timestamp correct datastreams
     ecg_corrected = rdd.map(lambda ds: (
     ds['participant'], timestamp_correct(datastream=ds['ecg'], sampling_frequency=ecg_sampling_frequency)))
@@ -59,6 +62,12 @@ def cStress(rdd: RDD) -> RDD:
     accelz_corrected = rdd.map(lambda ds: (
     ds['participant'], timestamp_correct(datastream=ds['accelz'], sampling_frequency=accel_sampling_frequency)))
 
+    ecg_quality = ecg_corrected.map(lambda ds: (ds[0], ECGDataQuality(ds[1])))
+    ecg_quality.take(1)
+
+    rip_quality = rip_corrected.map(lambda ds: (ds[0], RIPDataQuality(ds[1])))
+    rip_quality.take(1)
+
     accel_group = accelx_corrected.join(accely_corrected).join(accelz_corrected).map(fix_two_joins)
     accel = accel_group.map(lambda ds: (ds[0], autosense_sequence_align(datastreams=[ds[1][0], ds[1][1], ds[1][2]],
                                                                         sampling_frequency=accel_sampling_frequency)))
@@ -66,13 +75,20 @@ def cStress(rdd: RDD) -> RDD:
     # Accelerometer Feature Computation
     accel_features = accel.map(lambda ds: (ds[0], accelerometer_features(ds[1], window_length=10.0)))
 
+    rip_corrected_and_quality = rip_corrected.join(rip_quality)
+
+
     # rip features
-    peak_valley = rip_corrected.map(lambda ds: (ds[0], rip.compute_peak_valley(rip=ds[1])))
+    peak_valley = rip_corrected_and_quality.map(lambda ds: (ds[0], rip.compute_peak_valley(rip=ds[1][0],rip_quality=ds[1][1])))
+    peak_valley.take(1)
     rip_features = peak_valley.map(lambda ds: (ds[0], rip_feature_computation(ds[1][0], ds[1][1])))
 
+    ecg_corrected_and_quality = ecg_corrected.join(ecg_quality)
+
     # r-peak datastream computation
-    ecg_rr_rdd = ecg_corrected.map(lambda ds: (ds[0], compute_rr_intervals(ds[1], ecg_sampling_frequency)))
-    ecg_features = ecg_rr_rdd.map(lambda ds: (ds[0], ecg_feature_computation(ds[1], window_size=60, window_offset=60)))
+    ecg_rr_rdd = ecg_corrected_and_quality.map(lambda ds:
+                                               (ds[0], compute_rr_intervals(ecg=ds[1][0], ecg_quality=ds[1][1], fs=ecg_sampling_frequency)))
+    # ecg_features = ecg_rr_rdd.map(lambda ds: (ds[0], ecg_feature_computation(ds[1], window_size=60, window_offset=60)))
 
     # return rip_features.join(ecg_features).join(accel_features).map(fix_two_joins)
-    return ecg_features
+    return ecg_rr_rdd

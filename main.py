@@ -58,7 +58,7 @@ def readfile(filename):
             if isinstance(dp, DataPoint):
                 data.append(dp)
                 count += 1
-            if count > 5000:
+            if count > 50000:
                 break
     return data
 
@@ -95,7 +95,7 @@ def loader(identifier: int):
 
 
 start_time = time.time()
-ids = CC.sparkSession.sparkContext.parallelize([i for i in range(1, 25)])
+ids = CC.sparkSession.sparkContext.parallelize([i for i in range(3, 4)])
 
 data = ids.map(lambda i: loader(i)).filter(lambda x: 'participant' in x)
 

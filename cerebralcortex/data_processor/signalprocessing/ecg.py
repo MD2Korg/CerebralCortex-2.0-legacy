@@ -26,60 +26,35 @@ from typing import List
 import numpy as np
 from scipy import signal
 
-from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-
-
-def classify_ecg_window(data: List[DataPoint],
-                        range_threshold: int = 200,
-                        slope_threshold: int = 50,
-                        maximum_value: int = 4000) -> bool:
-    """
-    :param data: window of raw ecg datapoints.
-    :param range_threshold: range of the window ( since ecg sample value can be from 0-4096,
-    the morphology of ECG signal dictates that the range should be greater than 200)
-    :param slope_threshold: median slope of the window (here slope is the consecutive difference
-    among the ECG sample values. The median of the absolute value of consecutive difference is
-    parameterized)
-    :param maximum_value: maximum value of the ecg sample array. An amplitude of greater than 4000 is
-    considered an spurious value. so the window is discarded.
-    :return: True/False decision based on the three parameters
-    """
-
-    values = np.array([i.sample for i in data])
-    if max(values) - min(values) < range_threshold:
-        return False
-    if max(values) > maximum_value:
-        return False
-    if np.median(np.abs(np.diff(values))) > slope_threshold:
-        return False
-    return True
+from cerebralcortex.data_processor.signalprocessing.dataquality import Quality
 
 
 def filter_bad_ecg(ecg: DataStream,
-                   fs: float,
-                   no_of_secs: int = 2) -> DataStream:
+                   ecg_quality: DataStream) -> DataStream:
     """
-    This function splits the ecg array into non overlapping windows of specified seconds
-    and assigns a binary decision on them returns a filtered ecg array which contains
-    only the windows to be kept
+    This function combines the raw ecg and ecg data quality datastream and only keeps those datapoints that are assigned acceptable in data quality
+
     :param ecg: raw ecg datastream
-    :param fs: sampling frequency
-    :param no_of_secs : no of seconds is the length of the window by which the ecg datastream is
-     divided and checked.
+    :param ecg_quality: ecg quality datastream
+
     :return:  filtered ecg datastream
     """
-
-    window_length = int(no_of_secs * fs)
-    window_data = window(ecg.data, window_size=window_length)
-
     ecg_filtered = DataStream.from_datastream([ecg])
+    ecg_quality_array = ecg_quality.data
+    ecg_raw_timestamp_array = np.array([i.start_time.timestamp() for i in ecg.data])
     ecg_filtered_array = []
 
-    for key, data in window_data.items():
-        if classify_ecg_window(data, range_threshold=200, slope_threshold=50, maximum_value=4000):
-            ecg_filtered_array.extend(data)
+    initial_index = 0
+    for item in ecg_quality_array:
+        if item.sample==Quality.ACCEPTABLE:
+            final_index = initial_index
+            for i in range(initial_index,len(ecg.data)):
+                if ecg_raw_timestamp_array[i] <= item.end_time.timestamp() and ecg_raw_timestamp_array[i] >= item.start_time.timestamp():
+                    ecg_filtered_array.append(ecg.data[i])
+                    final_index = i
+            initial_index = final_index
 
     ecg_filtered.data = ecg_filtered_array
 
@@ -87,15 +62,17 @@ def filter_bad_ecg(ecg: DataStream,
 
 
 def compute_rr_intervals(ecg: DataStream,
+                         ecg_quality: DataStream,
                          fs: float) -> DataStream:
     """
     filter ecg datastream first and compute rr-interval datastream from the ecg datastream
     :param ecg:ecg datastream
+    :param ecg_quality : ecg quality annotated datastream
     :param fs: sampling frequency
 
     :return: rr-interval datastream
     """
-    ecg_filtered = filter_bad_ecg(ecg, fs)
+    ecg_filtered = filter_bad_ecg(ecg, ecg_quality)
 
     # compute the r-peak array
     ecg_rpeak = detect_rpeak(ecg_filtered, fs)
@@ -208,7 +185,7 @@ def compute_r_peaks(threshold_1: float,
     :param mov_win_int_signal: signal sample array
     :param peak_tuple_array: A tuple array containing location and values of the simple peaks detected in the process before
 
-    :param rpeak_array_indices: The location of the R peaks in the signal sample array once found this is returned
+    :returns rpeak_array_indices: The location of the R peaks in the signal sample array once found this is returned
 
 
     """
@@ -375,7 +352,10 @@ def detect_rpeak(ecg: DataStream,
     """
 
     data = ecg.data
-
+    result = DataStream.from_datastream([ecg])
+    if len(data)==0:
+        result.data = []
+        return result
     sample = np.array([i.sample for i in data])
     timestamp = np.array([i.start_time for i in data])
 
@@ -403,7 +383,7 @@ def detect_rpeak(ecg: DataStream,
             DataPoint.from_tuple(rpeak_timestamp[k], rpeak_value[k].seconds + rpeak_value[k].microseconds / 1e6))
 
     # Create resulting datastream to be returned
-    result = DataStream.from_datastream([ecg])
+
     result.data = result_data
 
     return result
