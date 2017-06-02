@@ -39,6 +39,20 @@ def fix_two_joins(nested_data):
     new_value = (nested_data[1][1],)
     return key, base_value + new_value
 
+def join_feature_vector(*argsrdd):
+    """
+
+    :param argsrdd: Input feature dataStreams
+    :return: Joined feature vector
+    """
+
+    frdd=argsrdd[0]
+    if len(argsrdd) > 1:
+        for erdd in range(len(argsrdd)-1):
+            frdd = frdd.join(argsrdd[erdd+1])
+        return frdd
+    else:
+        return frdd
 
 def cStress(rdd: RDD) -> RDD:
 
@@ -94,5 +108,7 @@ def cStress(rdd: RDD) -> RDD:
 
     # ecg_features = ecg_rr_rdd.map(lambda ds: (ds[0], ecg_feature_computation(ds[1], window_size=60, window_offset=60)))
 
-    # return rip_features.join(ecg_features).join(accel_features).map(fix_two_joins)
-    return ecg_rr_rdd
+
+    #computer cStress feature vector
+    f_vector = join_feature_vector(ecg_features, rip_features, accel_features)
+    return f_vector
