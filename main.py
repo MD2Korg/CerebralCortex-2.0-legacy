@@ -24,10 +24,11 @@
 
 import argparse
 import gzip
-import os
 import time
 import uuid
 from pprint import pprint
+
+import os
 
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.data_processor.cStress import cStress
@@ -58,7 +59,7 @@ def readfile(filename):
             if isinstance(dp, DataPoint):
                 data.append(dp)
                 count += 1
-            if count > 50000:
+            if count > 100000:
                 break
     return data
 
