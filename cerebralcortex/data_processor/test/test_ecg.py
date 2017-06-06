@@ -24,10 +24,10 @@
 
 import datetime
 import gzip
-import os
 import unittest
 
 import numpy as np
+import os
 import pytz
 
 from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_correct
@@ -120,8 +120,8 @@ class TestRPeakDetect(unittest.TestCase):
 
     def test_ecgprocessing_timestamp_correction(self):
         ecg_corrected = timestamp_correct(self.ecg_datastream, self._fs)
-        rr_datastream_from_raw = compute_rr_intervals(self.ecg_datastream, self._fs)
-        rr_datastream_from_corrected = compute_rr_intervals(ecg_corrected, self._fs)
+        rr_datastream_from_raw = compute_rr_intervals(self.ecg_datastream, fs=self._fs)
+        rr_datastream_from_corrected = compute_rr_intervals(ecg_corrected, fs=self._fs)
         test_result = (len(rr_datastream_from_corrected.data) * 100) / len(rr_datastream_from_raw.data)
         self.assertGreaterEqual(test_result, 99)
 

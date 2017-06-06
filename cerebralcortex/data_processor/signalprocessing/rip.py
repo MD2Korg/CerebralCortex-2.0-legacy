@@ -26,10 +26,11 @@ from typing import List
 
 import numpy as np
 
+from cerebralcortex.data_processor.signalprocessing.dataquality import Quality
 from cerebralcortex.data_processor.signalprocessing.vector import smooth, moving_average_curve
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-from cerebralcortex.data_processor.signalprocessing.dataquality import Quality
+
 
 def filter_bad_rip(rip: DataStream,
                    rip_quality: DataStream) -> DataStream:
@@ -51,7 +52,7 @@ def filter_bad_rip(rip: DataStream,
         if item.sample == Quality.ACCEPTABLE:
             final_index = initial_index
             for i in range(initial_index, len(rip.data)):
-                if rip_raw_timestamp_array[i] <= item.end_time.timestamp() and rip_raw_timestamp_array[i] >= item.start_time.timestamp():
+                if item.start_time.timestamp() <= rip_raw_timestamp_array[i] <= item.end_time.timestamp():
                     rip_filtered_array.append(rip.data[i])
                     final_index = i
             initial_index = final_index
@@ -313,7 +314,7 @@ def correct_peak_position(peaks: List[DataPoint],
                         raise Exception("New peak to valley distance is equal to zero. "
                                         "This will encounter divide by zero exception.")
                     else:
-                        amplitude_change = (valley_peak_dist_prev - valley_peak_dist_new) / valley_peak_dist_new * 100
+                        amplitude_change = (valley_peak_dist_prev - valley_peak_dist_new) / valley_peak_dist_new * 100.0
 
                         if len(indices_neg_slope) >= min_neg_slope_count_peak_correction:
                             if amplitude_change <= max_amplitude_change_peak_correction:

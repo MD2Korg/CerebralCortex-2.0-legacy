@@ -26,9 +26,9 @@ from typing import List
 import numpy as np
 from scipy import signal
 
+from cerebralcortex.data_processor.signalprocessing.dataquality import Quality
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-from cerebralcortex.data_processor.signalprocessing.dataquality import Quality
 
 
 def filter_bad_ecg(ecg: DataStream,
@@ -48,10 +48,10 @@ def filter_bad_ecg(ecg: DataStream,
 
     initial_index = 0
     for item in ecg_quality_array:
-        if item.sample==Quality.ACCEPTABLE:
+        if item.sample == Quality.ACCEPTABLE:
             final_index = initial_index
-            for i in range(initial_index,len(ecg.data)):
-                if ecg_raw_timestamp_array[i] <= item.end_time.timestamp() and ecg_raw_timestamp_array[i] >= item.start_time.timestamp():
+            for i in range(initial_index, len(ecg.data)):
+                if item.start_time.timestamp() <= ecg_raw_timestamp_array[i] <= item.end_time.timestamp():
                     ecg_filtered_array.append(ecg.data[i])
                     final_index = i
             initial_index = final_index
@@ -89,19 +89,19 @@ def rr_interval_update(rpeak_temp1: List[DataPoint],
    :param rr_ave: previous rr-interval average
    :return: the new rr-interval average of the previously detected 8 R peak locations
    """
-    peak_interval = np.diff([0] + rpeak_temp1)
+    peak_interval = np.diff([0] + rpeak_temp1)  # TODO: rpeak_temp1 is a datapoint, what should this be converted to?
     return rr_ave if len(peak_interval) < min_size else np.sum(peak_interval[-min_size:]) / min_size
 
 
 def compute_moving_window_int(sample: np.ndarray,
                               fs: float,
-                              blackmanWinlen: int,
+                              blackman_win_length: int,
                               filter_length: int = 257,
                               delta: float = .02) -> np.ndarray:
     """
     :param sample: ecg sample array
     :param fs: sampling frequency
-    :param blackmanWinlen: length of the blackman window on which to compute the moving window integration
+    :param blackman_win_length: length of the blackman window on which to compute the moving window integration
     :param filter_length: length of the FIR bandpass filter on which filtering is done on ecg sample array
     :param delta: to compute the weights of each band in FIR filter
     :return: the Moving window integration of the sample array
@@ -134,7 +134,7 @@ def compute_moving_window_int(sample: np.ndarray,
     derivative_squared_signal /= np.percentile(derivative_squared_signal, 90)
 
     # blackman window
-    blackman_window = np.blackman(blackmanWinlen)
+    blackman_window = np.blackman(blackman_win_length)
     # moving window Integration of squared derivative signal
     mov_win_int_signal = signal.convolve(derivative_squared_signal, blackman_window, 'same')
     mov_win_int_signal /= np.percentile(mov_win_int_signal, 90)
@@ -269,6 +269,7 @@ def remove_close_peaks(rpeak_temp1: list,
     This function removes one of two peaks from two consecutive R peaks
     if difference among them is less than the minimum possible
 
+    :param min_range:
     :param rpeak_temp1: R peak array containing the index of the R peaks
     :param sample: sample array
     :param fs: sampling frequency
@@ -278,7 +279,7 @@ def remove_close_peaks(rpeak_temp1: list,
     difference = 0
     rpeak_temp2 = rpeak_temp1
     while difference != 1:
-        length_Rpeak_temp2 = len(rpeak_temp2)
+        length_rpeak_temp2 = len(rpeak_temp2)
         temp = np.diff(rpeak_temp2)
         comp_index1 = [rpeak_temp2[i] for i in range(len(temp)) if temp[i] < min_range * fs]
         comp_index2 = [rpeak_temp2[i + 1] for i in range(len(temp)) if temp[i] < min_range * fs]
@@ -293,7 +294,7 @@ def remove_close_peaks(rpeak_temp1: list,
         for i in temp_ind:
             rpeak_temp2.remove(rpeak_temp2[i - count])
             count = count + 1
-        difference = length_Rpeak_temp2 - len(rpeak_temp2) + 1
+        difference = length_rpeak_temp2 - len(rpeak_temp2) + 1
     return rpeak_temp2
 
 
@@ -329,7 +330,7 @@ def confirm_peaks(rpeak_temp1: list,
 def detect_rpeak(ecg: DataStream,
                  fs: float = 64,
                  threshold: float = 0.5,
-                 blackman_win_len_range: float = 1 / 5) -> DataStream:
+                 blackman_win_len_range: float = 0.2) -> DataStream:
     """
     This program implements the Pan Tomkins algorithm on ECG signal to detect the R peaks
 
@@ -353,7 +354,7 @@ def detect_rpeak(ecg: DataStream,
 
     data = ecg.data
     result = DataStream.from_datastream([ecg])
-    if len(data)==0:
+    if len(data) == 0:
         result.data = []
         return result
     sample = np.array([i.sample for i in data])

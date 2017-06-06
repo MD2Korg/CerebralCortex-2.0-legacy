@@ -24,9 +24,9 @@
 
 import datetime
 import gzip
-import os
 import unittest
 
+import os
 import pytz
 
 from cerebralcortex.data_processor.feature.ecg import ecg_feature_computation, lomb, heart_rate_power
@@ -52,7 +52,7 @@ class TestECGFeatures(unittest.TestCase):
         ecg_ds = DataStream(None, None)
         ecg_ds.data = ecg
 
-        cls.rr_intervals = compute_rr_intervals(ecg_ds, ecg_sampling_frequency)
+        cls.rr_intervals = compute_rr_intervals(ecg_ds, fs=ecg_sampling_frequency)
 
     def test_lomb(self):
         window_data = window_sliding(self.rr_intervals.data, window_size=120, window_offset=60)

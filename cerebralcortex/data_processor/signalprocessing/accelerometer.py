@@ -21,6 +21,7 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from typing import Tuple
 
 import numpy as np
 
@@ -34,7 +35,7 @@ def accelerometer_features(accel: DataStream,
                            window_length: float = 10.0,
                            activity_threshold: float = 0.21,
                            percentile_low: int = 1,
-                           percentile_high: int = 99):
+                           percentile_high: int = 99) -> Tuple[DataStream, DataStream, DataStream]:
     """
 
     References:
