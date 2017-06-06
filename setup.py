@@ -55,7 +55,7 @@ setup(
                       'sklearn',
                       'py4j',
                       'pytz',
-                      'mysql-connector-python',
+                      'mysql-connector-python==2.0.4',
                       'PyYAML',
                       'matplotlib',
                       'fastdtw'],
