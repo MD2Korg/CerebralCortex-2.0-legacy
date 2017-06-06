@@ -20,15 +20,18 @@
       },
       "input_streams": [
         {
-          "name": "stress_likelihood"
+          "name": "stress_likelihood",
+          "identifier": "31a84a5d-549b-480b-8b6d-9faa898894f0"
         },
         {
-          "name": "stress_label"
+          "name": "stress_label",
+          "identifier": "31a84a5d-549b-480b-8b6d-9faa898894f0"
         }
       ],
       "output_streams": [
         {
-          "name": "stress_episodes"
+          "name": "stress_episodes",
+          "identifier": "31a84a5d-549b-480b-8b6d-9faa898894f0"
         }
       ],
       "algorithm": [
