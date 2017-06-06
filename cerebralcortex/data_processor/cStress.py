@@ -109,5 +109,8 @@ def cStress(rdd: RDD) -> RDD:
     ecg_features = ecg_rr_rdd.map(lambda ds: (ds[0], ecg_feature_computation(ds[1], window_size=60, window_offset=60)))
 
     # computer cStress feature vector
-    f_vector = join_feature_vector(ecg_features, rip_features, accel_features)
-    return ecg_quality
+    features = join_feature_vector(ecg_features, rip_features, accel_features)
+
+    feature_vector = features.map(lambda ds: (ds[0], assemble_feature_vector(rdds=ds[1])))
+
+    return f_vector

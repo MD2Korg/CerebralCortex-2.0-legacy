@@ -21,7 +21,7 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from typing import Dict
+from typing import Tuple
 
 import numpy as np
 
@@ -35,7 +35,7 @@ def accelerometer_features(accel: DataStream,
                            window_length: float = 10.0,
                            activity_threshold: float = 0.21,
                            percentile_low: int = 1,
-                           percentile_high: int = 99) -> Dict:
+                           percentile_high: int = 99) -> Tuple[DataStream, DataStream, DataStream]:
     """
 
     References:
@@ -70,8 +70,4 @@ def accelerometer_features(accel: DataStream,
     accel_activity = DataStream.from_datastream([accel])
     accel_activity.data = accel_activity_data
 
-    return {
-        "accelerometer_magnitude": accelerometer_magnitude,
-        "accelerometer_win_mag_deviations": accelerometer_win_mag_deviations,
-        "accel_activity": accel_activity
-    }
+    return accelerometer_magnitude, accelerometer_win_mag_deviations, accel_activity

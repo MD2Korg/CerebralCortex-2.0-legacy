@@ -195,5 +195,6 @@ def ecg_feature_computation(datastream: DataStream,
     rr_20.data = rr_20percentile_data
     rr_heart_rate = DataStream.from_datastream([datastream])
     rr_heart_rate.data = rr_heart_rate_data
+
     return rr_variance, rr_vlf, rr_hf, rr_lf, rr_lf_hf, rr_mean, rr_median, rr_quartile, rr_80, rr_20, rr_heart_rate
 
