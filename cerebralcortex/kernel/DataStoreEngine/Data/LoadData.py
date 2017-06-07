@@ -128,6 +128,9 @@ class LoadData:
         # TO-DO, replace .filter with .where() for performance
 
         dataframe = self.sqlContext.read.format("org.apache.spark.sql.cassandra"). \
+            option("spark.cassandra.connection.host", self.hostIP). \
+            option("spark.cassandra.auth.username", self.dbUser). \
+            option("spark.cassandra.auth.password", self.dbPassword). \
             options(table=table_name, keyspace=self.keyspaceName, pushdownss=True).load(). \
             select("start_time", "end_time", "sample"). \
             filter(where_clause). \

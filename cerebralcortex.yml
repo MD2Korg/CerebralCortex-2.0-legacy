@@ -1,4 +1,6 @@
 cassandra:
+  host: 127.0.0.1
+  port: 9142
   keyspace: cerebralcortex
   db_user: ""
   db_pass: ""
@@ -6,6 +8,8 @@ cassandra:
 
 
 mysql:
+  host: 127.0.0.1
+  port: 3306
   database: cerebralcortex
   db_user: root
   db_pass: pass

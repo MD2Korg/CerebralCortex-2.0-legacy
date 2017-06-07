@@ -51,7 +51,6 @@ class StoreData:
                 new_start_time = data.start_time
                 new_end_time = data.start_time
 
-
             result = Metadata(self.CC_obj).is_id_created(ownerID, name, execution_context)
 
             stream_identifier = result["id"]
@@ -77,6 +76,9 @@ class StoreData:
         dataframe_data.write.format("org.apache.spark.sql.cassandra") \
             .mode('append') \
             .options(table=table_name, keyspace=self.keyspaceName) \
+            .option("spark.cassandra.connection.host", self.hostIP) \
+            .option("spark.cassandra.auth.username", self.dbUser) \
+            .option("spark.cassandra.auth.password", self.dbPassword) \
             .save()
 
     def map_datapoint_to_dataframe(self, stream_id, datapoints):

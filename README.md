@@ -12,7 +12,7 @@ Environment Variables in Run Configuration
 
 * PYTHONPATH=/Users/hnat/Downloads/spark-2.0.2-bin-hadoop2.7/python:/Users/hnat/Downloads/spark-2.0.2-bin-hadoop2.7/python/lib/py4j-0.10.3-src.zip
 * SPARK_HOME=/Users/hnat/Downloads/spark-2.0.2-bin-hadoop2.7/
-* PYSPARK_SUBMIT_ARGS=--conf spark.cassandra.connection.host=127.0.0.1 --packages com.datastax.spark:spark-cassandra-connector_2.11:2.0.0-M3 pyspark-shell
+* PYSPARK_SUBMIT_ARGS=--packages com.datastax.spark:spark-cassandra-connector_2.11:2.0.1 pyspark-shell
 
 
 Add `pyspark.zip` to your project libraries:

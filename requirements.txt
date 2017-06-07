@@ -5,7 +5,7 @@ scipy
 sklearn
 py4j
 pytz==2017.2
-https://cdn.mysql.com/Downloads/Connector-Python/mysql-connector-python-2.0.4.tar.gz
+mysql-connector-python-rf==2.2.2
 PyYAML==3.12
 matplotlib
 fastdtw

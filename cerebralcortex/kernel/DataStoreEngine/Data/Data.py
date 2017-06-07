@@ -36,6 +36,8 @@ class Data(LoadData, StoreData):
         """
         self.CC_obj = CC_obj
         self.configuration = CC_obj.configuration
+        self.hostIP = self.configuration['cassandra']['host']
+        self.hostPort = self.configuration['cassandra']['port']
         self.keyspaceName = self.configuration['cassandra']['keyspace']
         self.dbUser = self.configuration['cassandra']['db_user']
         self.dbPassword = self.configuration['cassandra']['db_pass']

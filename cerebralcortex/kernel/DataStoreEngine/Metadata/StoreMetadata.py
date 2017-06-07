@@ -52,7 +52,6 @@ class StoreMetadata:
         """
         isQueryReady = 0
 
-
         if isIDCreated == "update":
 
             new_end_time = self.check_end_time(stream_identifier, end_time)

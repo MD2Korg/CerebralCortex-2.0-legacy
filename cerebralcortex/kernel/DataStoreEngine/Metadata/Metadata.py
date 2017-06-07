@@ -36,12 +36,15 @@ class Metadata(LoadMetadata, StoreMetadata):
         """
         self.CC_obj = CC_obj
         self.configuration = CC_obj.configuration
+        self.hostIP = self.configuration['mysql']['host']
+        self.hostPort = self.configuration['mysql']['port']
         self.database = self.configuration['mysql']['database']
         self.dbUser = self.configuration['mysql']['db_user']
         self.dbPassword = self.configuration['mysql']['db_pass']
         self.datastreamTable = self.configuration['mysql']['datastream_table']
 
-        self.dbConnection = mysql.connector.connect(user=self.dbUser, password=self.dbPassword, database=self.database)
+        self.dbConnection = mysql.connector.connect(host=self.hostIP, port=self.hostPort, user=self.dbUser,
+                                                    password=self.dbPassword, database=self.database)
         self.cursor = self.dbConnection.cursor(dictionary=True)
 
     def __del__(self):
