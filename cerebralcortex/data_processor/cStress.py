@@ -89,13 +89,22 @@ def cStress(rdd: RDD) -> RDD:
     # Accelerometer Feature Computation
     accel_features = accel.map(lambda ds: (ds[0], accelerometer_features(ds[1], window_length=10.0)))
 
+    windowed_accel_features = accel_features.map(lambda ds: (ds[0], window_accel(ds[1], window_size=60)))
+
+
     rip_corrected_and_quality = rip_corrected.join(rip_quality)
 
     # rip features
     peak_valley = rip_corrected_and_quality.map(
         lambda ds: (ds[0], rip.compute_peak_valley(rip=ds[1][0], rip_quality=ds[1][1])))
 
-    rip_features = peak_valley.map(lambda ds: (ds[0], rip_feature_computation(ds[1][0], ds[1][1])))
+    rip_cycle_features = peak_valley.map(lambda ds: (ds[0], rip_feature_computation(ds[1][0])))
+
+    windowed_rip_features = rip_cycle_features.map(lambda ds: (ds[0], window_rip(inspiration_duration=ds[1][0],
+                                                                                 expiration_duration=ds[1][1],
+                                                                                 ...,
+                                                                                 window_size=60)))
+
 
     ecg_corrected_and_quality = ecg_corrected.join(ecg_quality)
 
@@ -105,12 +114,23 @@ def cStress(rdd: RDD) -> RDD:
                                                                             fs=ecg_sampling_frequency)))
 
     ecg_rr_quality = ecg_rr_rdd.map(lambda ds: (ds[0], compute_outlier_ecg(ds[1])))
+    ecg_rr_and_quality = ecg_rr_rdd.join(ecg_rr_quality)
 
-    ecg_features = ecg_rr_rdd.map(lambda ds: (ds[0], ecg_feature_computation(ds[1], window_size=60, window_offset=60)))
+    windowed_ecg_features = ecg_rr_and_quality.map(
+        lambda ds: (ds[0], ecg_feature_computation(rr_intervals=ds[1][0], data_quality=ds[1][1], window_size=60)))
 
-    # computer cStress feature vector
-    features = join_feature_vector(ecg_features, rip_features, accel_features)
+    peak_valley_rr_int = peak_valley.join(ecg_rr_rdd)  # TODO: Add RR_Quality here?
 
-    feature_vector = features.map(lambda ds: (ds[0], assemble_feature_vector(rdds=ds[1])))
+    rsa_cycle_features = peak_valley_rr_int.map(
+        lambda ds: (ds[0], compute_rsa_cycle_feature(valleys=ds[1][1], rr_int=ds[1][2])))
+    windowed_rsa_features = rsa_cycle_features.map(lambda ds: (ds[0], window_rsa(ds[0][0], window_size=60)))
 
-    return f_vector
+    combined_features = windowed_accel_features.join(windowed_ecg_features).join(windowed_rip_features).join(
+        windowed_rsa_features)
+    # Fix joins here
+
+
+    feature_vector_ecg_rip = combined_features.map(
+        lambda ds: (ds[0], generate_cStress_feature_vector(accel=ds[1][0], ecg=ds[1][1], rip=ds[1][2], rsa=ds[1][3])))
+
+    return feature_vector_ecg_rip  # Data stream with data points (ST, ET, [...37 values...])
