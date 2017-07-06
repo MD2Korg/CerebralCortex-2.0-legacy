@@ -34,6 +34,6 @@ class Annotation(DataPoint):
                  end_time: datetime = None,
                  sample: Dict = None):
         super().__init__(
-                         start_time=start_time,
-                         end_time=end_time,
-                         sample=sample)
+            start_time=start_time,
+            end_time=end_time,
+            sample=sample)

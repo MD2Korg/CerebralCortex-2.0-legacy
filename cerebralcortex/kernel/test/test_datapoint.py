@@ -50,5 +50,6 @@ class TestDataPoint(unittest.TestCase):
         self.assertEqual(dp.end_time, ts)
         self.assertEqual(dp.sample, [1, 2, 3])
 
+
 if __name__ == '__main__':
     unittest.main()

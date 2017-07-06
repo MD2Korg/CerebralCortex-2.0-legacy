@@ -34,6 +34,7 @@ from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.kernel.datatypes.stream import Stream
 from cerebralcortex.kernel.DataStoreEngine.Data.Data import Data
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
+from cerebralcortex.kernel.datatypes.datastream import DataStream, DataPoint
 from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 
 
@@ -53,7 +54,7 @@ class CerebralCortex:
 
         self.configuration = Configuration(filepath=configuration_file).config
 
-        self.time_zone = time_zone;
+        self.time_zone = time_zone
 
     def get_datastream(self, stream_identifier: uuid, start_time: datetime = None, end_time: datetime = None,
                        data_type: enumerate = DataSet.COMPLETE) -> DataStream:
@@ -98,6 +99,21 @@ class CerebralCortex:
         """
         return Metadata(self).get_stream_ids_by_name(stream_name, owner_id, start_time, end_time)
 
+    def filter_stream(self, data_stream_id: uuid, annotation_stream_name: uuid, annotation: str, start_time: datetime=None, end_time: datetime=None) -> List[DataPoint]:
+        """
+        This method maps derived annotation stream to a data stream and returns a List of mapped Datapoints
+        :param data_stream_id:
+        :param annotation_stream_name:
+        :param annotation:
+        :param start_time:
+        :param end_time:
+        :return:
+        """
+        annotation_stream_id = Metadata(self).get_annotation_id(data_stream_id, annotation_stream_name)
+        return Data(self).get_annotation_stream(data_stream_id, annotation_stream_id, annotation, start_time, end_time)
+
+    def filter(self, stream_id):
+        pass
     def save_stream(self, stream: Stream):
         # Save the stream here
         pass
@@ -105,6 +121,8 @@ class CerebralCortex:
     def get_stream(self, identifier: uuid) -> DataStream:
 
         return DataStream(identifier, data=[])
+
+
 
     def update_or_create(self, stream: Stream):
         """
