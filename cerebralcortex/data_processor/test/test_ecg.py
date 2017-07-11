@@ -24,10 +24,10 @@
 
 import datetime
 import gzip
+import os
 import unittest
 
 import numpy as np
-import os
 import pytz
 
 from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_correct

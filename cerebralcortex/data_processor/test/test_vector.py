@@ -114,6 +114,5 @@ class TestVector(unittest.TestCase):
         self.assertEqual(len(m.data), 0)
 
 
-
 if __name__ == '__main__':
     unittest.main()

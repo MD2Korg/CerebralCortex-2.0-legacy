@@ -24,6 +24,7 @@
 
 from typing import Any, List, Dict
 
+
 class StreamReference:
     def __init__(self,
                  name: str = None,

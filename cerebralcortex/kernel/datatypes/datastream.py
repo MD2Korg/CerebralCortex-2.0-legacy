@@ -21,9 +21,9 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+import datetime
 from typing import List
 from uuid import UUID
-import datetime
 
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.stream import Stream
@@ -43,8 +43,7 @@ class DataStream(Stream):
                  start_time: datetime = None,
                  end_time: datetime = None,
                  data: List[DataPoint] = None):
-        super().__init__(identifier, owner, name, data_descriptor, execution_context, annotations, stream_type, start_time, end_time, data)
+        super().__init__(identifier, owner, name, data_descriptor, execution_context, annotations, stream_type,
+                         start_time, end_time, data)
 
-        #self._datastream_type = StreamTypes.DATASTREAM
-
-
+        # self._datastream_type = StreamTypes.DATASTREAM

@@ -80,8 +80,6 @@ def cStress(rdd: RDD) -> RDD:
     ecg_quality = ecg_corrected.map(lambda ds: (ds[0], ecg_data_quality(ds[1])))
     rip_quality = rip_corrected.map(lambda ds: (ds[0], rip_data_quality(ds[1])))
 
-
-
     accel_group = accelx_corrected.join(accely_corrected).join(accelz_corrected).map(fix_two_joins)
     accel = accel_group.map(lambda ds: (ds[0], autosense_sequence_align(datastreams=[ds[1][0], ds[1][1], ds[1][2]],
                                                                         sampling_frequency=accel_sampling_frequency)))

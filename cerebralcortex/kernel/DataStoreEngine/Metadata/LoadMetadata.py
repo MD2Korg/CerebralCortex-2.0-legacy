@@ -219,3 +219,20 @@ class LoadMetadata:
         stream_ids = [item['identifier'] for item in self.cursor.fetchall()]
 
         return stream_ids
+
+    def get_annotation_id(self, stream_id: uuid, annotation_stream_name: uuid) -> uuid:
+        """
+        It returns annotation stream id associated to a data-stream. This method will only return first annotation stream id if there are more than one matched
+        annotation stream ids
+        :param stream_id:
+        :return:
+        """
+        if annotation_stream_name == "":
+            raise ValueError("Annotation stream name cannot be empty.")
+
+        qry = "SELECT annotations->>\"$[0].identifier\" as id from " + self.datastreamTable + " where identifier=%s and json_contains(annotations->>\"$[*].name\", json_array(%s))"
+        vals = stream_id, annotation_stream_name
+
+        self.cursor.execute(qry, vals)
+        rows = self.cursor.fetchall()
+        return rows[0]["id"].decode("utf-8")

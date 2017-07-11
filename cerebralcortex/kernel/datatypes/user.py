@@ -23,6 +23,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from uuid import UUID
 
+
 class User:
     def __init__(self,
                  identifier: UUID):
