@@ -25,11 +25,12 @@ from typing import List
 
 import numpy as np
 import scipy.signal as signal
+import datetime
 
 from cerebralcortex.data_processor.signalprocessing.window import window_sliding
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-
+from cerebralcortex.data_processor.signalprocessing.dataquality import Quality
 
 def lomb(data: List[DataPoint],
          low_frequency: float,
@@ -67,8 +68,43 @@ def heart_rate_power(power: np.ndarray,
             result_power += value
     return result_power
 
+def check_ecg_rr_window_quality(quality_datastream_data:List[DataPoint],
+                                window_size: float,
+                                starttime: datetime,
+                                endtime: datetime,
+                                acceptable_ratio: float = .66):
+    """
+    Calculates the quality of RR interval in between the start time and end time of a window.
+    Renders a boolean decision if the window is usable for feature processing or not.
+
+    """
+    quality_datastream_data_reformed = quality_datastream_data
+    acceptable_seconds = 0
+    for dp in quality_datastream_data:
+
+        if dp.start_time >= starttime and dp.end_time <= endtime and dp.sample == Quality.ACCEPTABLE:
+            acceptable_seconds += (dp.end_time-dp.start_time).total_seconds()
+        elif starttime <= dp.start_time <= endtime and dp.end_time > endtime and dp.sample == Quality.ACCEPTABLE:
+            acceptable_seconds += (endtime-dp.start_time).total_seconds()
+
+        if dp.end_time <= starttime:
+            quality_datastream_data_reformed.remove(dp)
+        if dp.start_time > endtime:
+            break
+    if acceptable_seconds/window_size >= acceptable_ratio:
+        return True, quality_datastream_data_reformed
+    return False, quality_datastream_data_reformed
+
+
+
+
+
+
+
+
 
 def ecg_feature_computation(datastream: DataStream,
+                            quality_datastream: DataStream,
                             window_size: float,
                             window_offset: float,
                             low_frequency: float = 0.01,
@@ -123,55 +159,62 @@ def ecg_feature_computation(datastream: DataStream,
 
     # iterate over each window and calculate features
 
+    quality_datastream_data = quality_datastream.data
+
     for key, value in window_data.items():
+
         starttime, endtime = key
-        reference_data = np.array([i.sample for i in value])
 
-        rr_variance_data.append(DataPoint.from_tuple(start_time=starttime,
-                                                     end_time=endtime,
-                                                     sample=np.var(reference_data)))
+        window_quality, quality_datastream_data = check_ecg_rr_window_quality(quality_datastream_data=quality_datastream_data, window_size=window_size,
+                                                     starttime=starttime, endtime=endtime)
+        if window_quality:
+            reference_data = np.array([i.sample for i in value])
 
-        power, frequency = lomb(data=value, low_frequency=low_frequency, high_frequency=high_frequency)
+            rr_variance_data.append(DataPoint.from_tuple(start_time=starttime,
+                                                         end_time=endtime,
+                                                         sample=np.var(reference_data)))
 
-        rr_VLF_data.append(DataPoint.from_tuple(start_time=starttime,
-                                                end_time=endtime,
-                                                sample=heart_rate_power(power, frequency, low_rate_vlf, high_rate_vlf)))
+            power, frequency = lomb(data=value, low_frequency=low_frequency, high_frequency=high_frequency)
 
-        rr_HF_data.append(DataPoint.from_tuple(start_time=starttime,
-                                               end_time=endtime,
-                                               sample=heart_rate_power(power, frequency, low_rate_hf, high_rate_hf)))
+            rr_VLF_data.append(DataPoint.from_tuple(start_time=starttime,
+                                                    end_time=endtime,
+                                                    sample=heart_rate_power(power, frequency, low_rate_vlf, high_rate_vlf)))
 
-        rr_LF_data.append(DataPoint.from_tuple(start_time=starttime,
-                                               end_time=endtime,
-                                               sample=heart_rate_power(power,
-                                                                       frequency,
-                                                                       low_rate_lf,
-                                                                       high_rate_lf)))
-        if heart_rate_power(power, frequency, low_rate_hf, high_rate_hf) != 0:
-            lf_hf = float(heart_rate_power(power, frequency, low_rate_lf, high_rate_lf) / heart_rate_power(power,
-                                                                                                           frequency,
-                                                                                                           low_rate_hf,
-                                                                                                           high_rate_hf))
-            rr_LF_HF_data.append(DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=lf_hf))
-        else:
-            rr_LF_HF_data.append(DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=0))
+            rr_HF_data.append(DataPoint.from_tuple(start_time=starttime,
+                                                   end_time=endtime,
+                                                   sample=heart_rate_power(power, frequency, low_rate_hf, high_rate_hf)))
 
-        rr_mean_data.append(
-            DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=np.mean(reference_data)))
-        rr_median_data.append(
-            DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=np.median(reference_data)))
-        rr_quartile_deviation_data.append(DataPoint.from_tuple(start_time=starttime,
-                                                               end_time=endtime,
-                                                               sample=(0.5 * (
-                                                                   np.percentile(reference_data, 75) - np.percentile(
-                                                                       reference_data,
-                                                                       25)))))
-        rr_80percentile_data.append(
-            DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=np.percentile(reference_data, 80)))
-        rr_20percentile_data.append(
-            DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=np.percentile(reference_data, 20)))
-        rr_heart_rate_data.append(
-            DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=np.median(60 / reference_data)))
+            rr_LF_data.append(DataPoint.from_tuple(start_time=starttime,
+                                                   end_time=endtime,
+                                                   sample=heart_rate_power(power,
+                                                                           frequency,
+                                                                           low_rate_lf,
+                                                                           high_rate_lf)))
+            if heart_rate_power(power, frequency, low_rate_hf, high_rate_hf) != 0:
+                lf_hf = float(heart_rate_power(power, frequency, low_rate_lf, high_rate_lf) / heart_rate_power(power,
+                                                                                                               frequency,
+                                                                                                               low_rate_hf,
+                                                                                                               high_rate_hf))
+                rr_LF_HF_data.append(DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=lf_hf))
+            else:
+                rr_LF_HF_data.append(DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=0))
+
+            rr_mean_data.append(
+                DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=np.mean(reference_data)))
+            rr_median_data.append(
+                DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=np.median(reference_data)))
+            rr_quartile_deviation_data.append(DataPoint.from_tuple(start_time=starttime,
+                                                                   end_time=endtime,
+                                                                   sample=(0.5 * (
+                                                                       np.percentile(reference_data, 75) - np.percentile(
+                                                                           reference_data,
+                                                                           25)))))
+            rr_80percentile_data.append(
+                DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=np.percentile(reference_data, 80)))
+            rr_20percentile_data.append(
+                DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=np.percentile(reference_data, 20)))
+            rr_heart_rate_data.append(
+                DataPoint.from_tuple(start_time=starttime, end_time=endtime, sample=np.median(60 / reference_data)))
 
     rr_variance = DataStream.from_datastream([datastream])
     rr_variance.data = rr_variance_data

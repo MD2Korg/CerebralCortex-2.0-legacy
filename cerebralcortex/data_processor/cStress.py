@@ -87,7 +87,7 @@ def cStress(rdd: RDD) -> RDD:
     # Accelerometer Feature Computation
     accel_features = accel.map(lambda ds: (ds[0], accelerometer_features(ds[1], window_length=10.0)))
 
-    windowed_accel_features = accel_features.map(lambda ds: (ds[0], window_accel(ds[1], window_size=60)))
+    # windowed_accel_features = accel_features.map(lambda ds: (ds[0], window_accel(ds[1], window_size=60)))
 
 
     rip_corrected_and_quality = rip_corrected.join(rip_quality)
@@ -99,8 +99,7 @@ def cStress(rdd: RDD) -> RDD:
     rip_cycle_features = peak_valley.map(lambda ds: (ds[0], rip_feature_computation(ds[1][0])))
 
     windowed_rip_features = rip_cycle_features.map(lambda ds: (ds[0], window_rip(inspiration_duration=ds[1][0],
-                                                                                 expiration_duration=ds[1][1],
-                                                                                 ...,
+                                                                                 expiration_duration=ds[1][1],                                                                                 ...,
                                                                                  window_size=60)))
 
 
@@ -115,7 +114,8 @@ def cStress(rdd: RDD) -> RDD:
     ecg_rr_and_quality = ecg_rr_rdd.join(ecg_rr_quality)
 
     windowed_ecg_features = ecg_rr_and_quality.map(
-        lambda ds: (ds[0], ecg_feature_computation(rr_intervals=ds[1][0], data_quality=ds[1][1], window_size=60)))
+         lambda ds: (ds[0], ecg_feature_computation(datastream=ds[1][0], quality_datastream=ds[1][1],
+                                                    window_size=60, window_offset=60)))
 
     peak_valley_rr_int = peak_valley.join(ecg_rr_rdd)  # TODO: Add RR_Quality here?
 
