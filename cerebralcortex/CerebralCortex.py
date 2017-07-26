@@ -30,6 +30,7 @@ from pyspark.sql import SparkSession
 
 from cerebralcortex.configuration import Configuration
 from cerebralcortex.kernel.DataStoreEngine.Data.Data import Data
+from cerebralcortex.kernel.DataStoreEngine.Data.minio_storage import MinioStorage
 from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 from cerebralcortex.kernel.datatypes.datastream import DataStream, DataPoint
@@ -122,6 +123,37 @@ class CerebralCortex:
 
         return DataStream(identifier, data=[])
 
+    def login_user(self, user_name: str, password: str) -> bool:
+        """
+
+        :param user_name:
+        :param password:
+        :return:
+        """
+        return Metadata(self).login_user(user_name, password)
+
+    def update_auth_token(self, user_name: str, auth_token: str, auth_token_issued_time: datetime,
+                          auth_token_expiry_time: datetime):
+        """
+
+        :param user_name:
+        :param auth_token:
+        :param auth_token_issued_time:
+        :param auth_token_expiry_time:
+        :return:
+        """
+        return Metadata(self).update_auth_token(user_name, auth_token, auth_token_issued_time, auth_token_expiry_time)
+
+    def is_auth_token_valid(self, token_owner: str, auth_token: str, auth_token_expiry_time: datetime) -> bool:
+        """
+
+        :param token_owner:
+        :param auth_token:
+        :param auth_token_expiry_time:
+        :return:
+        """
+        return Metadata(self).is_auth_token_valid(token_owner, auth_token, auth_token_expiry_time)
+
     def update_or_create(self, stream: Stream):
         """
         This method should search the DBs to see if this stream object already exists.
@@ -147,3 +179,48 @@ class CerebralCortex:
             for l in f:
                 print(l)
         return
+
+    #################################################
+    #   Minio Storage Methods
+    #################################################
+
+    def list_buckets(self) -> dict:
+        """
+        Fetch all available buckets from Minio
+        :return:
+        """
+        return MinioStorage(self).list_buckets()
+
+    def list_objects_in_bucket(self, bucket_name: str) -> dict:
+        """
+        returns a list of all objects stored in the specified Minio bucket
+        :param bucket_name:
+        :return:
+        """
+        return MinioStorage(self).list_objects_in_bucket(bucket_name)
+
+    def get_object_stat(self, bucket_name: str, object_name: str) -> dict:
+        """
+        Returns properties (e.g., object type, last modified etc.) of an object stored in a specified bucket
+        :param bucket_name:
+        :param object_name:
+        :return:
+        """
+        return MinioStorage(self).get_object_stat(bucket_name, object_name)
+
+    def get_object(self, bucket_name: str, object_name: str) -> object:
+        """
+        Returns stored object (HttpResponse)
+        :param bucket_name:
+        :param object_name:
+        :return:
+        """
+        return MinioStorage(self).get_object(bucket_name, object_name)
+
+    def bucket_exist(self, bucket_name: str) -> bool:
+        """
+
+        :param bucket_name:
+        :return:
+        """
+        return MinioStorage(self).bucket_exist(bucket_name)

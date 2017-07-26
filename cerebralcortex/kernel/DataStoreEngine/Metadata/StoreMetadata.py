@@ -155,29 +155,13 @@ class StoreMetadata:
         else:
             return {"id": uuid.uuid4(), "status": "new"}
 
-    def is_id_created2(self, ownerID: uuid, name: str, data_descriptor: dict, execution_context: dict) -> dict:
-
+    def check_end_time(self, stream_id: uuid, end_time: datetime):
         """
-        if stream name, owner, data_descriptor, and execution context are same then return existing UUID
-        :param ownerID:
-        :param name:
-        :param data_descriptor:
-        :param execution_context:
+
+        :param stream_id:
+        :param end_time:
         :return:
         """
-        qry = "SELECT * from " + self.datastreamTable + " where owner=%s and name=%s"
-        vals = ownerID, name
-        self.cursor.execute(qry, vals)
-        rows = self.cursor.fetchall()
-        if len(rows) >= 2:
-            pass
-        else:
-            if rows:
-                return {"id": rows[0]["identifier"], "status": "update"}
-            else:
-                return {"id": uuid.uuid4(), "status": "new"}
-
-    def check_end_time(self, stream_id, end_time):
         localtz = timezone(self.CC_obj.time_zone)
 
         qry = "SELECT * from " + self.datastreamTable + " where identifier = %(identifier)s"
@@ -198,3 +182,21 @@ class StoreMetadata:
                 return "unchanged"
         else:
             raise ValueError("Stream has no start/end time.")
+
+    def update_auth_token(self, user_name: str, auth_token: str, auth_token_issued_time: datetime, auth_token_expiry_time: datetime):
+
+        """
+
+        :param user_name:
+        :param auth_token:
+        :param auth_token_issued_time:
+        :param auth_token_expiry_time:
+        """
+        if not auth_token and not auth_token_expiry_time and not auth_token_issued_time:
+            raise ValueError("Auth token and auth-token issue/expiry time cannot be null/empty.")
+
+        qry = "UPDATE " + self.userTable + " set token=%s, token_issued=%s, token_expiry=%s where user_name=%s"
+        vals = auth_token, auth_token_issued_time, auth_token_expiry_time, user_name
+
+        self.cursor.execute(qry, vals)
+        self.dbConnection.commit()

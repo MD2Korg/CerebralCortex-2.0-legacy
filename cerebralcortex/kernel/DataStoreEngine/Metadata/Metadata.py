@@ -42,6 +42,7 @@ class Metadata(LoadMetadata, StoreMetadata):
         self.dbUser = self.configuration['mysql']['db_user']
         self.dbPassword = self.configuration['mysql']['db_pass']
         self.datastreamTable = self.configuration['mysql']['datastream_table']
+        self.userTable = self.configuration['mysql']['user_table']
 
         self.dbConnection = mysql.connector.connect(host=self.hostIP, port=self.hostPort, user=self.dbUser,
                                                     password=self.dbPassword, database=self.database)

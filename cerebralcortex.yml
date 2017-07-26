@@ -18,3 +18,23 @@ mysql:
   user_table: user
   study_table: study
 
+minio:
+  host: 127.0.0.1
+  port: 9000
+  access_key: '1UFHXT9UXEBXJ9YZA4JV'
+  secret_key: 'VSUFrJaovzdurcbUWsPteLs0SO857pkw29FoHDjd'
+  secure: False #ssl
+
+apiserver:
+  host: 127.0.0.1
+  port: 5000
+  secret_key: 'super-secret'
+  token_expire_time: 400 #seconds
+
+
+routes:
+  auth: "auth"
+  stream: "stream"
+  object: "object"
+
+

@@ -135,6 +135,15 @@ class LoadData:
 
     def get_annotation_stream(self, input_stream_id: uuid, annotation_stream_id: uuid, annotation: str,
                               start_time: datetime = None, end_time: datetime = None) -> List[DataPoint]:
+        """
+
+        :param input_stream_id:
+        :param annotation_stream_id:
+        :param annotation:
+        :param start_time:
+        :param end_time:
+        :return:
+        """
         datapoints_list = []
 
         annotation_stream_dps = self.get_stream(annotation_stream_id, start_time=start_time,

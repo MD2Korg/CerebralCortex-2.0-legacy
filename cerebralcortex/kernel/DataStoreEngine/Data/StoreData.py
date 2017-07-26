@@ -23,9 +23,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import json
-
+import uuid
+from typing import List
 from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
-from cerebralcortex.kernel.datatypes.datastream import DataStream
+from cerebralcortex.kernel.datatypes.datastream import DataStream, DataPoint
 
 
 class StoreData:
@@ -81,8 +82,13 @@ class StoreData:
             .option("spark.cassandra.auth.password", self.dbPassword) \
             .save()
 
-    def map_datapoint_to_dataframe(self, stream_id, datapoints):
+    def map_datapoint_to_dataframe(self, stream_id: uuid, datapoints: DataPoint) -> List:
+        """
 
+        :param stream_id:
+        :param datapoints:
+        :return:
+        """
         temp = []
         no_end_time = 0
         for i in datapoints:

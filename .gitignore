@@ -73,3 +73,6 @@ fabric.properties
 /cerebralcortex/data_migrator/schema/
 !/cerebralcortex/data_migrator/tess/
 /cerebralcortex/data_migrator/tess/
+/build/
+/dist/
+/MD2K_Cerebral_Cortex.egg-info/
