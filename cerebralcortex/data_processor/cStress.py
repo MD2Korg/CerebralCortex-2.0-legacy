@@ -25,6 +25,7 @@
 from pyspark import RDD
 
 from cerebralcortex.data_processor.feature.ecg import ecg_feature_computation
+from cerebralcortex.data_processor.feature.feature_vector import generate_cStress_feature_vector
 from cerebralcortex.data_processor.feature.rip import rip_feature_computation
 from cerebralcortex.data_processor.signalprocessing import rip
 from cerebralcortex.data_processor.signalprocessing.accelerometer import accelerometer_features
@@ -33,6 +34,7 @@ from cerebralcortex.data_processor.signalprocessing.dataquality import compute_o
 from cerebralcortex.data_processor.signalprocessing.dataquality import ecg_data_quality
 from cerebralcortex.data_processor.signalprocessing.dataquality import rip_data_quality
 from cerebralcortex.data_processor.signalprocessing.ecg import compute_rr_intervals
+from cerebralcortex.model_development.model_development import analyze_events_with_features
 
 
 def fix_two_joins(nested_data):
@@ -98,9 +100,9 @@ def cStress(rdd: RDD) -> RDD:
 
     rip_cycle_features = peak_valley.map(lambda ds: (ds[0], rip_feature_computation(ds[1][0])))
 
-    windowed_rip_features = rip_cycle_features.map(lambda ds: (ds[0], window_rip(inspiration_duration=ds[1][0],
-                                                                                 expiration_duration=ds[1][1],                                                                                 ...,
-                                                                                 window_size=60)))
+    # windowed_rip_features = rip_cycle_features.map(lambda ds: (ds[0], window_rip(inspiration_duration=ds[1][0],
+    #                                                                              expiration_duration=ds[1][1],                                                                                 ...,
+    #                                                                              window_size=60)))
 
 
     ecg_corrected_and_quality = ecg_corrected.join(ecg_quality)
@@ -119,16 +121,21 @@ def cStress(rdd: RDD) -> RDD:
 
     peak_valley_rr_int = peak_valley.join(ecg_rr_rdd)  # TODO: Add RR_Quality here?
 
-    rsa_cycle_features = peak_valley_rr_int.map(
-        lambda ds: (ds[0], compute_rsa_cycle_feature(valleys=ds[1][1], rr_int=ds[1][2])))
-    windowed_rsa_features = rsa_cycle_features.map(lambda ds: (ds[0], window_rsa(ds[0][0], window_size=60)))
-
-    combined_features = windowed_accel_features.join(windowed_ecg_features).join(windowed_rip_features).join(
-        windowed_rsa_features)
+    # rsa_cycle_features = peak_valley_rr_int.map(
+    #     lambda ds: (ds[0], compute_rsa_cycle_feature(valleys=ds[1][1], rr_int=ds[1][2])))
+    # windowed_rsa_features = rsa_cycle_features.map(lambda ds: (ds[0], window_rsa(ds[0][0], window_size=60)))
+    #
+    # combined_features = windowed_accel_features.join(windowed_ecg_features).join(windowed_rip_features).join(
+    #     windowed_rsa_features)
     # Fix joins here
 
+    feature_vector_ecg_rip = windowed_ecg_features.map(lambda ds: (ds[0], generate_cStress_feature_vector(ds[1])))
 
-    feature_vector_ecg_rip = combined_features.map(
-        lambda ds: (ds[0], generate_cStress_feature_vector(accel=ds[1][0], ecg=ds[1][1], rip=ds[1][2], rsa=ds[1][3])))
+    stress_ground_truth = rdd.map(lambda ds:(ds['participant'],ds['stress_marks']))
 
-    return feature_vector_ecg_rip  # Data stream with data points (ST, ET, [...37 values...])
+    feature_vector_with_ground_truth = feature_vector_ecg_rip.join(stress_ground_truth)
+
+    train_data_with_ground_truth_and_subjects = feature_vector_with_ground_truth.map(lambda ds: analyze_events_with_features(participant=ds[0],stress_mark_stream=ds[1][1],feature_stream=ds[1][0]))
+
+
+    return train_data_with_ground_truth_and_subjects  # Data stream with data points (ST, ET, [...37 values...])

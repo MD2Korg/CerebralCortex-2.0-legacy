@@ -26,16 +26,18 @@ import argparse
 import gzip
 import time
 import uuid
-from pprint import pprint
+
 
 import os
-
+import copy
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.data_processor.cStress import cStress
 from cerebralcortex.data_processor.preprocessor import parser
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
 from cerebralcortex.legacy import find
+from cerebralcortex.model_development.model_development import cstress_model
+
 
 argparser = argparse.ArgumentParser(description="Cerebral Cortex Test Application")
 argparser.add_argument('--base_directory')
@@ -59,10 +61,20 @@ def readfile(filename):
             if isinstance(dp, DataPoint):
                 data.append(dp)
                 count += 1
-            if count > 100000:
+            if count > 200000:
                 break
     return data
 
+def readfile_ground_truth(filename):
+    data = []
+    with gzip.open(filename, 'rt') as f:
+        count = 0
+        for l in f:
+            dp = parser.ground_truth_data_processor(l)
+            if isinstance(dp, DataPoint):
+                data.append(dp)
+
+    return data
 
 def loader(identifier: int):
     participant = "SI%02d" % identifier
@@ -85,8 +97,12 @@ def loader(identifier: int):
         accelz = DataStream(None, participant_uuid)
         accelz.data = readfile(find(basedir, {"participant": participant, "datasource": "accelz"}))
 
+        stress_marks = DataStream(None, participant_uuid)
+        stress_marks.data = readfile_ground_truth(find(basedir, {"participant": participant, "datasource": "stress_marks"}))
+
         return {"participant": participant, "ecg": ecg, "rip": rip, "accelx": accelx, "accely": accely,
-                "accelz": accelz}
+                "accelz": accelz, "stress_marks": stress_marks}
+
     except Exception as e:
         print("File missing for %s" % participant)
 
@@ -96,14 +112,18 @@ def loader(identifier: int):
 
 
 start_time = time.time()
-ids = CC.sparkSession.sparkContext.parallelize([i for i in range(3, 4)])
+
+ids = CC.sparkSession.sparkContext.parallelize([i for i in range(3, 5)])
 
 data = ids.map(lambda i: loader(i)).filter(lambda x: 'participant' in x)
 
 cstress_feature_vector = cStress(data)
 
-pprint(cstress_feature_vector.collect())
+features = cstress_feature_vector.collect()
 
+features1 = copy.deepcopy(features)
+
+cstress_model = cstress_model(features=features2)
 
 # results = ids.map(loader)
 # pprint(results.collect())
