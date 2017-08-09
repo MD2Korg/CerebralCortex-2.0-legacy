@@ -26,7 +26,7 @@ from kafka import KafkaConsumer
 
 
 class Consumer:
-    def __init__(self, CC_obj: object, auto_offset_reset: str):
+    def __init__(self, CC_obj: object, auto_offset_reset: str="largest"):
         """
 
         :param CC_obj:
@@ -36,7 +36,7 @@ class Consumer:
         self.hostIP = self.configuration['kafkaserver']['host']
         self.hostPort = self.configuration['kafkaserver']['port']
 
-        self.consumer = KafkaConsumer(bootstrap_servers=self.hostIP+":"+self.hostPort,
+        self.consumer = KafkaConsumer(bootstrap_servers=str(self.hostIP)+":"+str(self.hostPort), api_version=(0,10),
                                       auto_offset_reset=auto_offset_reset)
 
     def subscribe_to_topic(self, topic: str):
@@ -44,7 +44,6 @@ class Consumer:
 
         :param topic:
         """
-        topic = topic.strip()
 
         if not topic:
             raise ValueError("Topic parameter is missing.")

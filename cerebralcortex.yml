@@ -29,16 +29,6 @@ kafkaserver:
   host: 127.0.0.1
   port: 9092
 
-apiserver:
-  host: 127.0.0.1
-  port: 5000
-  secret_key: 'super-secret'
-  token_expire_time: 400 #seconds
 
-
-routes:
-  auth: "auth"
-  stream: "stream"
-  object: "object"
 
 
