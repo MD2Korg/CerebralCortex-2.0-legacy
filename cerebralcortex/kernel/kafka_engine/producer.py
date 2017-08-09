@@ -47,6 +47,12 @@ class Producer:
         :param topic:
         :param msg:
         """
+        topic = topic.strip()
+        msg = msg.strip()
+
+        if not topic and not msg:
+            raise ValueError("Topic and Message are required parameters.")
+
         while True:
             self.producer.send(topic, msg)
             time.sleep(1)

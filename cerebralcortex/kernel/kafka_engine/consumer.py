@@ -44,6 +44,10 @@ class Consumer:
 
         :param topic:
         """
+        topic = topic.strip()
+
+        if not topic:
+            raise ValueError("Topic parameter is missing.")
 
         self.consumer.subscribe(topic)
         for message in self.consumer:
