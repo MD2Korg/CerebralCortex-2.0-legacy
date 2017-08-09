@@ -239,7 +239,7 @@ class CerebralCortex:
         """
         Producer(self).produce_message(topic, msg)
 
-    def kafka_subscribe_to_topic(self, topic: str, auto_offset_reset: str):
+    def kafka_subscribe_to_topic(self, topic: str, auto_offset_reset: str="largest"):
         """
 
         :param topic:

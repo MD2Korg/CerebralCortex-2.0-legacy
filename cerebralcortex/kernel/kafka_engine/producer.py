@@ -38,7 +38,7 @@ class Producer:
         self.hostIP = self.configuration['kafkaserver']['host']
         self.hostPort = self.configuration['kafkaserver']['port']
 
-        self.producer = KafkaProducer(bootstrap_servers=self.hostIP+":"+self.hostPort,
+        self.producer = KafkaProducer(bootstrap_servers=str(self.hostIP)+":"+str(self.hostPort), api_version=(0,10),
                                       value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
     def produce_message(self, topic: str, msg: str):
@@ -47,12 +47,9 @@ class Producer:
         :param topic:
         :param msg:
         """
-        topic = topic.strip()
-        msg = msg.strip()
 
         if not topic and not msg:
             raise ValueError("Topic and Message are required parameters.")
 
-        while True:
-            self.producer.send(topic, msg)
-            time.sleep(1)
+        self.producer.send(topic, msg)
+        time.sleep(1)
