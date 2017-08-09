@@ -35,6 +35,8 @@ from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 from cerebralcortex.kernel.datatypes.datastream import DataStream, DataPoint
 from cerebralcortex.kernel.datatypes.stream import Stream
+from cerebralcortex.kernel.kafka_engine.producer import Producer
+from cerebralcortex.kernel.kafka_engine.consumer import Consumer
 
 
 class CerebralCortex:
@@ -224,3 +226,24 @@ class CerebralCortex:
         :return:
         """
         return MinioStorage(self).bucket_exist(bucket_name)
+
+    #################################################
+    #   Kafka consumer producer
+    #################################################
+
+    def kafka_produce_message(self, topic: str, msg: str):
+        """
+
+        :param topic:
+        :param msg:
+        """
+        Producer(self).produce_message(topic, msg)
+
+    def kafka_subscribe_to_topic(self, topic: str, auto_offset_reset: str):
+        """
+
+        :param topic:
+        :param auto_offset_reset:
+        """
+        Consumer(self, auto_offset_reset).subscribe_to_topic(topic)
+
