@@ -51,5 +51,5 @@ class Consumer:
         self.consumer.subscribe(topic)
         for message in self.consumer:
             # json.loads(message.value.decode('utf8').replace("'", '"'))
-            print(message)
+            return message
 
