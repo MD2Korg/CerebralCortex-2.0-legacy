@@ -245,5 +245,5 @@ class CerebralCortex:
         :param topic:
         :param auto_offset_reset:
         """
-        Consumer(self, auto_offset_reset).subscribe_to_topic(topic)
+        return Consumer(self, auto_offset_reset).subscribe_to_topic(topic)
 
