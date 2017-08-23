@@ -25,8 +25,7 @@ import datetime
 import uuid
 from typing import List
 
-from pyspark.sql import SQLContext
-from pyspark.sql import SparkSession
+
 
 from cerebralcortex.configuration import Configuration
 from cerebralcortex.kernel.DataStoreEngine.Data.Data import Data
@@ -40,7 +39,7 @@ from cerebralcortex.kernel.kafka_engine.consumer import Consumer
 
 
 class CerebralCortex:
-    def __init__(self, configuration_file, master=None, name=None, time_zone=None, load_spark=False):
+    def __init__(self, configuration_file, master=None, name=None, time_zone=None, load_spark=True):
 
         """
         
@@ -51,6 +50,9 @@ class CerebralCortex:
         :param load_spark: load only when required 
         """
         if load_spark:
+            from pyspark.sql import SQLContext
+            from pyspark.sql import SparkSession
+
             ss = SparkSession.builder
             if name:
                 ss.appName(name)
