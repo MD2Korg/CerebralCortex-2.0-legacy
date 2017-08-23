@@ -39,7 +39,7 @@ from cerebralcortex.kernel.datatypes.datastream import DataStream
 class TestDataStoreEngine(unittest.TestCase):
     testConfigFile = os.path.join(os.path.dirname(__file__), 'res/test_configuration.yml')
     CC = CerebralCortex(testConfigFile, master="local[*]", name="Cerebral Cortex DataStoreEngine Tests",
-                        time_zone="US/Central")
+                        time_zone="US/Central", load_spark=True)
     configuration = CC.configuration
     meta_obj = Metadata(CC)
 

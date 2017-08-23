@@ -41,7 +41,7 @@ def migrate(folder_path: str, data_block_size):
     """
 
     configuration_file = os.path.join(os.path.dirname(__file__), '../../cerebralcortex.yml')
-    CC = CerebralCortex(configuration_file, master="local[*]", name="Data Migrator API", time_zone="US/Central")
+    CC = CerebralCortex(configuration_file, master="local[*]", name="Data Migrator API", time_zone="US/Central", load_spark=True)
 
     if not folder_path:
         raise ValueError("Path to the data directory cannot be empty.")

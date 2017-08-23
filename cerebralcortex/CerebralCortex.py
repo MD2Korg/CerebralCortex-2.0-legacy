@@ -40,18 +40,28 @@ from cerebralcortex.kernel.kafka_engine.consumer import Consumer
 
 
 class CerebralCortex:
-    def __init__(self, configuration_file, master=None, name=None, time_zone=None):
-        ss = SparkSession.builder
-        if name:
-            ss.appName(name)
-        if master:
-            ss.master(master)
+    def __init__(self, configuration_file, master=None, name=None, time_zone=None, load_spark=False):
 
-        self.sparkSession = ss.getOrCreate()
+        """
+        
+        :param configuration_file: 
+        :param master: 
+        :param name: 
+        :param time_zone: 
+        :param load_spark: load only when required 
+        """
+        if load_spark:
+            ss = SparkSession.builder
+            if name:
+                ss.appName(name)
+            if master:
+                ss.master(master)
 
-        self.sc = self.sparkSession.sparkContext
+            self.sparkSession = ss.getOrCreate()
 
-        self.sqlContext = SQLContext(self.sc)  # TODO: This may need to become a sparkSession
+            self.sc = self.sparkSession.sparkContext
+
+            self.sqlContext = SQLContext(self.sc)  # TODO: This may need to become a sparkSession
 
         self.configuration = Configuration(filepath=configuration_file).config
 
