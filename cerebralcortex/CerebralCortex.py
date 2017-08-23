@@ -1,4 +1,4 @@
-# Copyright (c) 2016, MD2K Center of Excellence
+# Copyright (c) 2017, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,8 +25,7 @@ import datetime
 import uuid
 from typing import List
 
-from pyspark.sql import SQLContext
-from pyspark.sql import SparkSession
+
 
 from cerebralcortex.configuration import Configuration
 from cerebralcortex.kernel.DataStoreEngine.Data.Data import Data
@@ -35,21 +34,36 @@ from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 from cerebralcortex.kernel.datatypes.datastream import DataStream, DataPoint
 from cerebralcortex.kernel.datatypes.stream import Stream
+from cerebralcortex.kernel.kafka_engine.producer import Producer
+from cerebralcortex.kernel.kafka_engine.consumer import Consumer
 
 
 class CerebralCortex:
-    def __init__(self, configuration_file, master=None, name=None, time_zone=None):
-        ss = SparkSession.builder
-        if name:
-            ss.appName(name)
-        if master:
-            ss.master(master)
+    def __init__(self, configuration_file, master=None, name=None, time_zone=None, load_spark=True):
 
-        self.sparkSession = ss.getOrCreate()
+        """
+        
+        :param configuration_file: 
+        :param master: 
+        :param name: 
+        :param time_zone: 
+        :param load_spark: load only when required 
+        """
+        if load_spark:
+            from pyspark.sql import SQLContext
+            from pyspark.sql import SparkSession
 
-        self.sc = self.sparkSession.sparkContext
+            ss = SparkSession.builder
+            if name:
+                ss.appName(name)
+            if master:
+                ss.master(master)
 
-        self.sqlContext = SQLContext(self.sc)  # TODO: This may need to become a sparkSession
+            self.sparkSession = ss.getOrCreate()
+
+            self.sc = self.sparkSession.sparkContext
+
+            self.sqlContext = SQLContext(self.sc)  # TODO: This may need to become a sparkSession
 
         self.configuration = Configuration(filepath=configuration_file).config
 
@@ -224,3 +238,24 @@ class CerebralCortex:
         :return:
         """
         return MinioStorage(self).bucket_exist(bucket_name)
+
+    #################################################
+    #   Kafka consumer producer
+    #################################################
+
+    def kafka_produce_message(self, topic: str, msg: str):
+        """
+
+        :param topic:
+        :param msg:
+        """
+        Producer(self).produce_message(topic, msg)
+
+    def kafka_subscribe_to_topic(self, topic: str, auto_offset_reset: str="largest"):
+        """
+
+        :param topic:
+        :param auto_offset_reset:
+        """
+        return Consumer(self, auto_offset_reset).subscribe_to_topic(topic)
+
