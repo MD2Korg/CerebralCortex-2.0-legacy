@@ -39,7 +39,8 @@ class Producer:
         self.hostPort = self.configuration['kafkaserver']['port']
 
         self.producer = KafkaProducer(bootstrap_servers=str(self.hostIP)+":"+str(self.hostPort), api_version=(0,10),
-                                      value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+                                      value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+                                      compression_type='gzip')
 
     def produce_message(self, topic: str, msg: str):
         """
