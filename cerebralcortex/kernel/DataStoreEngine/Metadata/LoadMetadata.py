@@ -276,13 +276,14 @@ class LoadMetadata:
         self.cursor.execute(qry, vals)
         rows = self.cursor.fetchall()
 
-        token_expiry_time = rows[0]["token_expiry"]
-        localtz = timezone(self.CC_obj.time_zone)
-        token_expiry_time = localtz.localize(token_expiry_time)
-
         if len(rows) == 0:
             return False
-        elif token_expiry_time < auth_token_expiry_time:
-            return False
         else:
-            return True
+            token_expiry_time = rows[0]["token_expiry"]
+            localtz = timezone(self.CC_obj.time_zone)
+            token_expiry_time = localtz.localize(token_expiry_time)
+
+            if token_expiry_time < auth_token_expiry_time:
+                return False
+            else:
+                return True
