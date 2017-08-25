@@ -53,3 +53,4 @@ class Producer:
             raise ValueError("Topic and Message are required parameters.")
 
         self.producer.send(topic, msg)
+        self.producer.flush()
