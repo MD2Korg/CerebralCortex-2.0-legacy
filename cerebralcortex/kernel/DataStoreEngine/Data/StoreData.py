@@ -46,15 +46,28 @@ class StoreData:
         if data:
             if isinstance(data, list):
                 total_dp = len(data) - 1
-                new_start_time = data[0].start_time
-                new_end_time = data[total_dp].start_time
+                if not datastream._start_time:
+                    new_start_time = data[0].start_time
+                else:
+                    new_start_time = datastream._start_time
+                if not datastream._end_time:
+                    new_end_time = data[total_dp].start_time
+                else:
+                    new_end_time =datastream._end_time
             else:
-                new_start_time = data.start_time
-                new_end_time = data.start_time
+                if not datastream._start_time:
+                    new_start_time = data.start_time
+                else:
+                    new_start_time = datastream._start_time
+                if not datastream._end_time:
+                    new_end_time = data.start_time
+                else:
+                    new_end_time =datastream._end_time
 
-            result = Metadata(self.CC_obj).is_id_created(ownerID, name, execution_context)
+            stream_identifier = datastream.identifier
+            result = Metadata(self.CC_obj).is_id_created(stream_identifier)
 
-            stream_identifier = result["id"]
+
             Metadata(self.CC_obj).store_stream_info(stream_identifier, ownerID, name,
                                                     data_descriptor, execution_context,
                                                     annotations,
