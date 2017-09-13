@@ -25,23 +25,23 @@
 import json
 import uuid
 from typing import List
+
 from dateutil.parser import parse
+
 from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 from cerebralcortex.kernel.datatypes.datastream import DataStream, DataPoint
 
+
 class StoreData:
-
-
-
     def store_stream(self, datastream: DataStream, type):
         """
         :param datastream:
         :param type: support types are formatted json object or CC Datastream objects
         """
-        if(type=="json"):
+        if (type == "json"):
             datastream = self.json_to_datastream(datastream)
-        elif (type!="json" or type!="datastream"):
-            raise ValueError(type+" is not supported data type")
+        elif (type != "json" or type != "datastream"):
+            raise ValueError(type + " is not supported data type")
 
         ownerID = datastream.owner
         name = datastream.name
@@ -61,7 +61,7 @@ class StoreData:
                 if not datastream._end_time:
                     new_end_time = data[total_dp].start_time
                 else:
-                    new_end_time =datastream._end_time
+                    new_end_time = datastream._end_time
             else:
                 if not datastream._start_time:
                     new_start_time = data.start_time
@@ -70,11 +70,10 @@ class StoreData:
                 if not datastream._end_time:
                     new_end_time = data.start_time
                 else:
-                    new_end_time =datastream._end_time
+                    new_end_time = datastream._end_time
 
             stream_identifier = datastream.identifier
             result = Metadata(self.CC_obj).is_id_created(stream_identifier)
-
 
             Metadata(self.CC_obj).store_stream_info(stream_identifier, ownerID, name,
                                                     data_descriptor, execution_context,
@@ -132,11 +131,13 @@ class StoreData:
         temp_RDD = self.CC_obj.getOrCreateSC(type="sparkContext").parallelize(temp)
         if (no_end_time == 1):
             df = self.CC_obj.getOrCreateSC(type="sqlContext").createDataFrame(temp_RDD,
-                                                 schema=["identifier", "day", "start_time", "sample"]).coalesce(400)
+                                                                              schema=["identifier", "day", "start_time",
+                                                                                      "sample"]).coalesce(400)
         else:
             df = self.CC_obj.getOrCreateSC(type="sqlContext").createDataFrame(temp_RDD,
-                                                 schema=["identifier", "day", "start_time", "end_time",
-                                                         "sample"]).coalesce(400)
+                                                                              schema=["identifier", "day", "start_time",
+                                                                                      "end_time",
+                                                                                      "sample"]).coalesce(400)
         return df
 
     #################################################################
@@ -150,11 +151,10 @@ class StoreData:
             sample = json.dumps(json_obj["value"])
         start_time = parse(json_obj["starttime"])
 
-        if "endtime" in json_obj: #Test-code, this if will not be executed
+        if "endtime" in json_obj:  # Test-code, this if will not be executed
             return DataPoint(start_time=start_time, end_time=json_obj["endtime"], sample=sample)
         else:
             return DataPoint(start_time=start_time, sample=sample)
-
 
     def json_to_datastream(self, json_obj):
 
@@ -166,9 +166,9 @@ class StoreData:
         data_descriptor = metadata["data_descriptor"]
         execution_context = metadata["execution_context"]
         annotations = metadata["annotations"]
-        stream_type = "ds" #TODO: it must be defined in json object
+        stream_type = "ds"  # TODO: it must be defined in json object
         start_time = parse(data[0]["starttime"])
-        end_time = parse(data[len(data)-1]["starttime"])
+        end_time = parse(data[len(data) - 1]["starttime"])
         datapoints = list(map(self.json_to_datapoints, data))
 
         return DataStream(identifier,
