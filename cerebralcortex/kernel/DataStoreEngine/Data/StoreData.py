@@ -25,12 +25,10 @@
 import json
 import uuid
 from typing import List
-
 from dateutil.parser import parse
 
 from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 from cerebralcortex.kernel.datatypes.datastream import DataStream, DataPoint
-
 
 class StoreData:
     def store_stream(self, datastream: DataStream, type):
@@ -151,7 +149,7 @@ class StoreData:
             sample = json.dumps(json_obj["value"])
         start_time = parse(json_obj["starttime"])
 
-        if "endtime" in json_obj:  # Test-code, this if will not be executed
+        if "endtime" in json_obj:
             return DataPoint(start_time=start_time, end_time=json_obj["endtime"], sample=sample)
         else:
             return DataPoint(start_time=start_time, sample=sample)
