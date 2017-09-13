@@ -66,6 +66,7 @@ class CerebralCortex:
     #######################################################################
     #   SPARK: sparkContext, sqlContext, sparkSession, SparkSessionBuilder
     #######################################################################
+
     def getOrCreateSC(self,type="sparkContext", master=None, name=None):
         from pyspark.sql import SQLContext
         from pyspark.sql import SparkSession
@@ -104,13 +105,18 @@ class CerebralCortex:
         """
         return Data(self).get_stream(stream_identifier, start_time, end_time, data_type)
 
-    def save_datastream(self, datastream: DataStream):
+    def save_datastream(self, datastream: DataStream, type):
         """
         Save Datastream to appropriate datastores
         :param datastream:
         """
-        #Data(self).store_stream(datastream)
-        Data(self).kafka_to_db(datastream)
+        st = datetime.datetime.now()
+        Data(self).store_stream(datastream, type)
+        et = datetime.datetime.now()
+
+        delta =et-st
+        print("Time took to process and insert data "+str(int(delta.total_seconds() * 1000))+ " (Milliseconds)")
+
 
 
     def get_stream_ids_of_owner(self, owner_id: uuid, stream_name: str = None, start_time: datetime = None,

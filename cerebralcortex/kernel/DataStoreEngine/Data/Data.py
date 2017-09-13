@@ -24,9 +24,8 @@
 
 from cerebralcortex.kernel.DataStoreEngine.Data.LoadData import LoadData
 from cerebralcortex.kernel.DataStoreEngine.Data.StoreData import StoreData
-from cerebralcortex.kernel.DataStoreEngine.Data.ztore import ztore
 
-class Data(LoadData, StoreData, ztore):
+class Data(LoadData, StoreData):
     def __init__(self, CC_obj):
         """
         :param sparkContext:
