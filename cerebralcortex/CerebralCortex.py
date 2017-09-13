@@ -51,7 +51,7 @@ class CerebralCortex:
         """
         if load_spark:
 
-            ss = self.getOrCreateSC(self,type="SparkSessionBuilder", master=master, name=name)
+            self.ssBuilder = self.getOrCreateSC(self,type="SparkSessionBuilder", master=master, name=name)
 
             self.sparkSession = self.getOrCreateSC(self,type="sparkSession")
 
@@ -66,8 +66,8 @@ class CerebralCortex:
     #######################################################################
     #   SPARK: sparkContext, sqlContext, sparkSession, SparkSessionBuilder
     #######################################################################
-
-    def getOrCreateSC(self,type="sparkContext", master=None, name=None):
+    @classmethod
+    def getOrCreateSC(cls,type="sparkContext", master=None, name=None):
         from pyspark.sql import SQLContext
         from pyspark.sql import SparkSession
 
