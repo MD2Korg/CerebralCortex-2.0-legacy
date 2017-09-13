@@ -25,6 +25,7 @@
 from cerebralcortex.kernel.DataStoreEngine.Data.LoadData import LoadData
 from cerebralcortex.kernel.DataStoreEngine.Data.StoreData import StoreData
 
+
 class Data(LoadData, StoreData):
     def __init__(self, CC_obj):
         """
