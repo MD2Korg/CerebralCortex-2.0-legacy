@@ -47,27 +47,51 @@ class CerebralCortex:
         :param master: 
         :param name: 
         :param time_zone: 
-        :param load_spark: load only when required 
+        :param load_spark: Do not use load_spark=True if CC object needs to be processed using Spark. For more information, see SPARK-5063
         """
         if load_spark:
-            from pyspark.sql import SQLContext
-            from pyspark.sql import SparkSession
 
-            ss = SparkSession.builder
-            if name:
-                ss.appName(name)
-            if master:
-                ss.master(master)
+            ss = self.getOrCreateSC(self,type="SparkSessionBuilder", master=master, name=name)
 
-            self.sparkSession = ss.getOrCreate()
+            self.sparkSession = self.getOrCreateSC(self,type="sparkSession")
 
-            self.sc = self.sparkSession.sparkContext
+            self.sc = self.getOrCreateSC(self,type="sqlContext")
 
-            self.sqlContext = SQLContext(self.sc)  # TODO: This may need to become a sparkSession
+            self.sqlContext = self.getOrCreateSC(self,type="sparkContext")  # TODO: This may need to become a sparkSession
 
         self.configuration = Configuration(filepath=configuration_file).config
 
         self.time_zone = time_zone
+
+    #######################################################################
+    #   SPARK: sparkContext, sqlContext, sparkSession, SparkSessionBuilder
+    #######################################################################
+
+    def getOrCreateSC(self,type="sparkContext", master=None, name=None):
+        from pyspark.sql import SQLContext
+        from pyspark.sql import SparkSession
+
+        ss = SparkSession.builder
+        if name:
+            ss.appName(name)
+        if master:
+            ss.master(master)
+
+        sparkSession = ss.getOrCreate()
+
+        sc = sparkSession.sparkContext
+
+        sqlContext = SQLContext(sc)
+        if type=="SparkSessionBuilder":
+            return sc
+        elif type=="sparkContext":
+            return sc
+        elif type=="sparkSession":
+            return ss
+        elif type=="sqlContext":
+            return sqlContext
+        else:
+            raise ValueError("Unknown type.")
 
     def get_datastream(self, stream_identifier: uuid, start_time: datetime = None, end_time: datetime = None,
                        data_type: enumerate = DataSet.COMPLETE) -> DataStream:
@@ -81,12 +105,19 @@ class CerebralCortex:
         """
         return Data(self).get_stream(stream_identifier, start_time, end_time, data_type)
 
-    def save_datastream(self, datastream: DataStream):
+    def save_datastream(self, datastream: DataStream, type):
         """
         Save Datastream to appropriate datastores
         :param datastream:
         """
-        Data(self).store_stream(datastream)
+        st = datetime.datetime.now()
+        Data(self).store_stream(datastream, type)
+        et = datetime.datetime.now()
+
+        delta =et-st
+        print("Time took to process and insert data "+str(int(delta.total_seconds() * 1000))+ " (Milliseconds)")
+
+
 
     def get_stream_ids_of_owner(self, owner_id: uuid, stream_name: str = None, start_time: datetime = None,
                                 end_time: datetime = None) -> List:
