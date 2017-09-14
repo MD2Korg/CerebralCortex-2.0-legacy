@@ -14,6 +14,7 @@ mysql:
   db_user: root
   db_pass: pass
   datastream_table: stream
+  kafka_offsets_table: kafka_offsets
   processing_module_table: processing_module
   user_table: user
   study_table: study
