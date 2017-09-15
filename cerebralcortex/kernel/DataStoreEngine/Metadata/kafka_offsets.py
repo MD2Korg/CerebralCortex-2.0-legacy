@@ -22,14 +22,9 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import json
-import uuid
-from datetime import datetime
 
-from pytz import timezone
 
 class KafkaOffsetsManager:
-
-
     def store_or_update_Kafka_offset(self, topic: str, topic_partition: str, offset_start: str, offset_until: str):
 
         """
@@ -46,7 +41,6 @@ class KafkaOffsetsManager:
         self.cursor.execute(qry, vals)
         self.dbConnection.commit()
 
-
     def get_kafka_offsets(self, topic: str) -> dict:
         """
         :param topic:
@@ -61,7 +55,8 @@ class KafkaOffsetsManager:
         rows = self.cursor.fetchall()
 
         if rows:
-            return {"topic": rows[0]["topic"], "topic_partition": rows[0]["topic_partition"], "offset_start": rows[0]["offset_start"], "offset_until": rows[0]["offset_until"], "offset_update_time": rows[0]["offset_update_time"]}
+            return {"topic": rows[0]["topic"], "topic_partition": rows[0]["topic_partition"],
+                    "offset_start": rows[0]["offset_start"], "offset_until": rows[0]["offset_until"],
+                    "offset_update_time": rows[0]["offset_update_time"]}
         else:
             return {}
-
