@@ -51,7 +51,6 @@ class CerebralCortex:
         """
         if load_spark:
 
-
             self.ssBuilder = self.getOrCreateSC(type="SparkSessionBuilder", master=master, name=name)
 
             self.sparkSession = self.getOrCreateSC(type="sparkSession")
