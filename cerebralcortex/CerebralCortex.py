@@ -292,3 +292,21 @@ class CerebralCortex:
         """
         return Consumer(self, auto_offset_reset).subscribe_to_topic(topic)
 
+    def get_kafka_offsets(self, topic: str) -> dict:
+        """
+        :param topic:
+        :return:
+        """
+        return Metadata(self).get_kafka_offsets(topic)
+
+    def store_or_update_Kafka_offset(self, topic: str, topic_partition: str, offset_start: str, offset_until: str):
+
+        """
+        :param topic:
+        :param topic_partition:
+        :param offset_start:
+        :param offset_until:
+        """
+        Metadata(self).store_or_update_Kafka_offset(topic, topic_partition, offset_start, offset_until)
+
+
