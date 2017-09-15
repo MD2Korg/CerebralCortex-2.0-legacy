@@ -52,13 +52,13 @@ class CerebralCortex:
         if load_spark:
 
 
-            self.ssBuilder = self.getOrCreateSC(self,type="SparkSessionBuilder", master=master, name=name)
+            self.ssBuilder = self.getOrCreateSC(type="SparkSessionBuilder", master=master, name=name)
 
-            self.sparkSession = self.getOrCreateSC(self,type="sparkSession")
+            self.sparkSession = self.getOrCreateSC(type="sparkSession")
 
-            self.sc = self.getOrCreateSC(self,type="sqlContext")
+            self.sc = self.getOrCreateSC(type="sqlContext")
 
-            self.sqlContext = self.getOrCreateSC(self,type="sparkContext")  # TODO: This may need to become a sparkSession
+            self.sqlContext = self.getOrCreateSC(type="sparkContext")  # TODO: This may need to become a sparkSession
 
         self.configuration = Configuration(filepath=configuration_file).config
 
