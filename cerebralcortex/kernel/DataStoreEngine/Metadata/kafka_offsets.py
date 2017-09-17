@@ -49,14 +49,12 @@ class KafkaOffsetsManager:
         if not topic:
             raise ValueError("Topic name cannot be empty")
 
-        qry = "SELECT * from " + self.kafkaOffsetsTable + " where topic = %(topic)s"
+        qry = "SELECT * from " + self.kafkaOffsetsTable + " where topic = %(topic)s  order by id DESC"
         vals = {'topic': str(topic)}
         self.cursor.execute(qry, vals)
         rows = self.cursor.fetchall()
 
         if rows:
-            return {"topic": rows[0]["topic"], "topic_partition": rows[0]["topic_partition"],
-                    "offset_start": rows[0]["offset_start"], "offset_until": rows[0]["offset_until"],
-                    "offset_update_time": rows[0]["offset_update_time"]}
+            return rows
         else:
             return {}
