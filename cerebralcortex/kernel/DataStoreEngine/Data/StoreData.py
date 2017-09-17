@@ -163,7 +163,12 @@ class StoreData:
         name = metadata["name"]
         data_descriptor = metadata["data_descriptor"]
         execution_context = metadata["execution_context"]
-        annotations = metadata["annotations"]
+
+
+        if "annotations" in metadata:
+            annotations = metadata["annotations"]
+        else:
+            annotations={}
         stream_type = "ds"  # TODO: it must be defined in json object
         start_time = parse(data[0]["starttime"])
         end_time = parse(data[len(data) - 1]["starttime"])
