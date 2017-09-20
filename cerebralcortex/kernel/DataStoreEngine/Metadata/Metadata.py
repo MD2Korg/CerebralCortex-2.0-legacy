@@ -26,9 +26,10 @@ import mysql.connector
 
 from cerebralcortex.kernel.DataStoreEngine.Metadata.LoadMetadata import LoadMetadata
 from cerebralcortex.kernel.DataStoreEngine.Metadata.StoreMetadata import StoreMetadata
+from cerebralcortex.kernel.DataStoreEngine.Metadata.kafka_offsets import KafkaOffsetsManager
 
 
-class Metadata(LoadMetadata, StoreMetadata):
+class Metadata(LoadMetadata, StoreMetadata, KafkaOffsetsManager):
     def __init__(self, CC_obj):
         """
         Constructor
@@ -42,6 +43,7 @@ class Metadata(LoadMetadata, StoreMetadata):
         self.dbUser = self.configuration['mysql']['db_user']
         self.dbPassword = self.configuration['mysql']['db_pass']
         self.datastreamTable = self.configuration['mysql']['datastream_table']
+        self.kafkaOffsetsTable = self.configuration['mysql']['kafka_offsets_table']
         self.userTable = self.configuration['mysql']['user_table']
 
         self.dbConnection = mysql.connector.connect(host=self.hostIP, port=self.hostPort, user=self.dbUser,

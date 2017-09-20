@@ -51,13 +51,13 @@ class CerebralCortex:
         """
         if load_spark:
 
-            self.ssBuilder = self.getOrCreateSC(self,type="SparkSessionBuilder", master=master, name=name)
+            self.ssBuilder = self.getOrCreateSC(type="SparkSessionBuilder", master=master, name=name)
 
-            self.sparkSession = self.getOrCreateSC(self,type="sparkSession")
+            self.sparkSession = self.getOrCreateSC(type="sparkSession")
 
-            self.sc = self.getOrCreateSC(self,type="sqlContext")
+            self.sc = self.getOrCreateSC(type="sqlContext")
 
-            self.sqlContext = self.getOrCreateSC(self,type="sparkContext")  # TODO: This may need to become a sparkSession
+            self.sqlContext = self.getOrCreateSC(type="sparkContext")  # TODO: This may need to become a sparkSession
 
         self.configuration = Configuration(filepath=configuration_file).config
 
@@ -66,6 +66,7 @@ class CerebralCortex:
     #######################################################################
     #   SPARK: sparkContext, sqlContext, sparkSession, SparkSessionBuilder
     #######################################################################
+
     @classmethod
     def getOrCreateSC(cls,type="sparkContext", master=None, name=None):
         from pyspark.sql import SQLContext
@@ -289,4 +290,22 @@ class CerebralCortex:
         :param auto_offset_reset:
         """
         return Consumer(self, auto_offset_reset).subscribe_to_topic(topic)
+
+    def get_kafka_offsets(self, topic: str) -> dict:
+        """
+        :param topic:
+        :return:
+        """
+        return Metadata(self).get_kafka_offsets(topic)
+
+    def store_or_update_Kafka_offset(self, topic: str, topic_partition: str, offset_start: str, offset_until: str):
+
+        """
+        :param topic:
+        :param topic_partition:
+        :param offset_start:
+        :param offset_until:
+        """
+        Metadata(self).store_or_update_Kafka_offset(topic, topic_partition, offset_start, offset_until)
+
 

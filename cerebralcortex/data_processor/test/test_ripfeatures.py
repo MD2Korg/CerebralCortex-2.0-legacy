@@ -29,7 +29,8 @@ import unittest
 
 import pytz
 
-from cerebralcortex.data_processor.feature.rip import rip_feature_computation
+from cerebralcortex.data_processor.feature.rip import rip_cycle_feature_computation
+from cerebralcortex.data_processor.feature.rip import window_rip
 from cerebralcortex.data_processor.signalprocessing.rip import compute_peak_valley
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.kernel.datatypes.datastream import DataStream
@@ -57,9 +58,9 @@ class TestRIPFeatures(unittest.TestCase):
         print("peak size = ", len(self.peak.data))
         print("valley size = ", len(self.valley.data))
 
-        insp_datastream, expr_datastream, resp_datastream, ieRatio_datastream, stretch_datastream, uStretch_datastream, lStretch_datastream, \
+        peaks_ds, valleys_ds, insp_datastream, expr_datastream, resp_datastream, ieRatio_datastream, stretch_datastream, uStretch_datastream, lStretch_datastream, \
         bd_insp_datastream, bd_expr_datastream, bd_resp_datastream, bd_stretch_datastream, fd_insp_datastream, fd_expr_datastream, \
-        fd_resp_datastream, fd_stretch_datastream, d5_expr_datastream, d5_stretch_datastream = rip_feature_computation(
+        fd_resp_datastream, fd_stretch_datastream, d5_expr_datastream, d5_stretch_datastream = rip_cycle_feature_computation(
             self.peak, self.valley)
 
         # test all are DataStream
@@ -80,6 +81,20 @@ class TestRIPFeatures(unittest.TestCase):
         self.assertIsInstance(fd_stretch_datastream, DataStream)
         self.assertIsInstance(d5_expr_datastream, DataStream)
         self.assertIsInstance(d5_stretch_datastream, DataStream)
+
+        datastream_breath_rates, datastream_minuteVentilation, \
+        inspiration_duration_mean, inspiration_duration_median, inspiration_duration_quartile_deviation, inspiration_duration_80percentile, \
+        expiration_duration_mean, expiration_duration_median, expiration_duration_quartile_deviation, expiration_duration_80percentile, \
+        respiration_duration_mean, respiration_duration_median, respiration_duration_quartile_deviation, respiration_duration_80percentile, \
+        inspiration_expiration_ratio_mean, inspiration_expiration_ratio_median, inspiration_expiration_ratio_quartile_deviation, inspiration_expiration_ratio_80percentile, \
+        stretch_mean, stretch_median, stretch_quartile_deviation, stretch_80percentile = window_rip(peaks_ds, valleys_ds, insp_datastream, expr_datastream, resp_datastream, ieRatio_datastream, stretch_datastream, window_size=60, window_offset=60)
+
+        self.assertIsInstance(datastream_breath_rates, DataStream)
+        self.assertIsInstance(datastream_minuteVentilation, DataStream)
+        self.assertIsInstance(stretch_quartile_deviation, DataStream)
+        self.assertEqual(len(datastream_breath_rates.data), len(datastream_minuteVentilation.data))
+        self.assertEqual(len(datastream_breath_rates.data), len(inspiration_duration_mean.data))
+        self.assertEqual(len(stretch_mean.data), len(respiration_duration_quartile_deviation.data))
 
 
 if __name__ == '__main__':

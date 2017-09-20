@@ -26,7 +26,8 @@ from pyspark import RDD
 
 from cerebralcortex.data_processor.feature.ecg import ecg_feature_computation
 from cerebralcortex.data_processor.feature.feature_vector import generate_cStress_feature_vector
-from cerebralcortex.data_processor.feature.rip import rip_feature_computation
+from cerebralcortex.data_processor.feature.rip import rip_cycle_feature_computation
+from cerebralcortex.data_processor.feature.rip import window_rip
 from cerebralcortex.data_processor.signalprocessing import rip
 from cerebralcortex.data_processor.signalprocessing.accelerometer import accelerometer_features
 from cerebralcortex.data_processor.signalprocessing.alignment import timestamp_correct, autosense_sequence_align
@@ -89,7 +90,7 @@ def cStress(rdd: RDD) -> RDD:
     # Accelerometer Feature Computation
     accel_features = accel.map(lambda ds: (ds[0], accelerometer_features(ds[1], window_length=10.0)))
 
-    # windowed_accel_features = accel_features.map(lambda ds: (ds[0], window_accel(ds[1], window_size=60)))
+    windowed_accel_features = accel_features.map(lambda ds: (ds[0], window_accel(ds[1], window_size=60)))
 
 
     rip_corrected_and_quality = rip_corrected.join(rip_quality)
@@ -98,12 +99,17 @@ def cStress(rdd: RDD) -> RDD:
     peak_valley = rip_corrected_and_quality.map(
         lambda ds: (ds[0], rip.compute_peak_valley(rip=ds[1][0], rip_quality=ds[1][1])))
 
-    rip_cycle_features = peak_valley.map(lambda ds: (ds[0], rip_feature_computation(ds[1][0])))
+    rip_cycle_features = peak_valley.map(lambda ds: (ds[0], rip_cycle_feature_computation(ds[1][0])))
 
-    # windowed_rip_features = rip_cycle_features.map(lambda ds: (ds[0], window_rip(inspiration_duration=ds[1][0],
-    #                                                                              expiration_duration=ds[1][1],                                                                                 ...,
-    #                                                                              window_size=60)))
-
+    windowed_rip_features = rip_cycle_features.map(lambda ds: (ds[0], window_rip(peak_datastream=ds[1][0],
+                                                                                 valley_datastream=ds[1][1],
+                                                                                 inspiration_duration=ds[1][2],
+                                                                                 expiration_duration=ds[1][3],
+                                                                                 respiration_duration=ds[1][4],
+                                                                                 inspiration_expiration_ratio=ds[1][5],
+                                                                                 stretch=ds[1][6],
+                                                                                 window_size=60,
+                                                                                 window_offset=60)))
 
     ecg_corrected_and_quality = ecg_corrected.join(ecg_quality)
 
