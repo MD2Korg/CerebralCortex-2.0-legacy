@@ -62,9 +62,10 @@ class MinioStorage:
         try:
             objects = self.minioClient.list_objects(bucket_name, recursive=True)
             for obj in objects:
-                objects_in_bucket[obj.object_name] = {
-                    "last_modified": str(obj.last_modified), "size": obj.size,
-                    "content_type": obj.content_type, "etag": obj.etag}
+                object_stat = self.minioClient.stat_object(obj.bucket_name, obj.object_name)
+                object_stat = json.dumps(object_stat, default=lambda o: o.__dict__)
+                object_stat = json.loads(object_stat)
+                objects_in_bucket[obj.object_name] = object_stat
             return objects_in_bucket
         except Exception as e:
             objects_in_bucket["error"] = str(e)
