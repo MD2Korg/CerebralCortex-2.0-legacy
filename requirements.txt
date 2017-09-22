@@ -13,3 +13,4 @@ addict
 flask-restplus
 Flask-OAuthlib
 minio==2.2.4
+kafka
