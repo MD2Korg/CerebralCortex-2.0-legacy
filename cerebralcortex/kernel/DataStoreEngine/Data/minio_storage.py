@@ -46,10 +46,12 @@ class MinioStorage:
         Fetch all available buckets from Minio
         :return:
         """
+        temp = []
         bucket_list = {}
         buckets = self.minioClient.list_buckets()
         for bucket in buckets:
-            bucket_list[bucket.name] = {"last_modified": str(bucket.creation_date)}
+            temp.append({"bucket-name":bucket.name, "last_modified": str(bucket.creation_date)})
+        bucket_list["buckets-list"] = temp
         return bucket_list
 
     def list_objects_in_bucket(self, bucket_name: str) -> dict:
@@ -61,12 +63,17 @@ class MinioStorage:
         objects_in_bucket = {}
         try:
             objects = self.minioClient.list_objects(bucket_name, recursive=True)
+            temp = []
+            bucket_objects = {}
             for obj in objects:
                 object_stat = self.minioClient.stat_object(obj.bucket_name, obj.object_name)
                 object_stat = json.dumps(object_stat, default=lambda o: o.__dict__)
                 object_stat = json.loads(object_stat)
+                temp.append(object_stat)
                 objects_in_bucket[obj.object_name] = object_stat
-            return objects_in_bucket
+                object_stat.pop('metadata', None)
+            bucket_objects["bucket-objects"] = temp
+            return bucket_objects
         except Exception as e:
             objects_in_bucket["error"] = str(e)
             return objects_in_bucket
