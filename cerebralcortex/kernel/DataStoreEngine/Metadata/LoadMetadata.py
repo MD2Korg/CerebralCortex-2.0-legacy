@@ -239,18 +239,18 @@ class LoadMetadata:
         rows = self.cursor.fetchall()
         return rows[0]["id"].decode("utf-8")
 
-    def login_user(self, user_name: str, password: str) -> bool:
+    def login_user(self, username: str, password: str) -> bool:
         """
 
-        :param user_name:
+        :param username:
         :param password:
         :return:
         """
-        if not user_name or not password:
+        if not username or not password:
             raise ValueError("User name and password cannot be empty/null.")
 
-        qry = "select * from user where user_name=%s and password=%s"
-        vals = user_name, password
+        qry = "select * from user where username=%s and password=%s"
+        vals = username, password
 
         self.cursor.execute(qry, vals)
         rows = self.cursor.fetchall()
@@ -270,7 +270,7 @@ class LoadMetadata:
         if not auth_token or not auth_token_expiry_time:
             raise ValueError("Auth token and auth-token expiry time cannot be null/empty.")
 
-        qry = "select * from user where token=%s and user_name=%s"
+        qry = "select * from user where token=%s and username=%s"
         vals = auth_token, token_owner
 
         self.cursor.execute(qry, vals)
