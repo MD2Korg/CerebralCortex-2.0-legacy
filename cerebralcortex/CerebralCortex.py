@@ -169,26 +169,26 @@ class CerebralCortex:
 
         return DataStream(identifier, data=[])
 
-    def login_user(self, user_name: str, password: str) -> bool:
+    def login_user(self, username: str, password: str) -> bool:
         """
 
-        :param user_name:
+        :param username:
         :param password:
         :return:
         """
-        return Metadata(self).login_user(user_name, password)
+        return Metadata(self).login_user(username, password)
 
-    def update_auth_token(self, user_name: str, auth_token: str, auth_token_issued_time: datetime,
+    def update_auth_token(self, username: str, auth_token: str, auth_token_issued_time: datetime,
                           auth_token_expiry_time: datetime):
         """
 
-        :param user_name:
+        :param username:
         :param auth_token:
         :param auth_token_issued_time:
         :param auth_token_expiry_time:
         :return:
         """
-        return Metadata(self).update_auth_token(user_name, auth_token, auth_token_issued_time, auth_token_expiry_time)
+        return Metadata(self).update_auth_token(username, auth_token, auth_token_issued_time, auth_token_expiry_time)
 
     def is_auth_token_valid(self, token_owner: str, auth_token: str, auth_token_expiry_time: datetime) -> bool:
         """

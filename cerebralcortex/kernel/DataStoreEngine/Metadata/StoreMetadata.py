@@ -129,30 +129,6 @@ class StoreMetadata:
         else:
             return "new"
 
-    # def is_id_created(self, ownerID: uuid, name: str, execution_context: dict) -> dict:
-    #
-    #     """
-    #     return existing UUID if stream name, owner ID, and method name defined in algorithm metadata (execution context) are found in MySql else it generates a newly created UUID
-    #     Assumption -> two streams cannot have same stream-name, owner-ID, and method-name
-    #     :param ownerID:
-    #     :param name:
-    #     :param execution_context:
-    #     :return:
-    #     """
-    #     if "execution_context" in execution_context and "algorithm" in "algorithm" in execution_context["execution_context"]["processing_module"] and any("method" in algo for algo in execution_context["execution_context"]["processing_module"]["algorithm"]):
-    #         algo_method = execution_context["execution_context"]["processing_module"]["algorithm"][0]["method"]
-    #     else:
-    #         raise ValueError("Execution context metadata is missing keys.")
-    #     method_name = execution_context["execution_context"]["processing_module"]["algorithm"][0]["method"]
-    #     qry = "SELECT * from " + self.datastreamTable + " where owner=%s and name=%s and execution_context->>\"$.method_name\"=%s"
-    #     vals = ownerID, name, algo_method
-    #     self.cursor.execute(qry, vals)
-    #     rows = self.cursor.fetchall()
-    #
-    #     if rows:
-    #         return {"id": rows[0]["identifier"], "status": "update"}
-    #     else:
-    #         return {"id": uuid.uuid4(), "status": "new"}
 
     def is_id_created(self, streamID: uuid) -> dict:
 
@@ -202,12 +178,12 @@ class StoreMetadata:
         else:
             raise ValueError("Stream has no start/end time.")
 
-    def update_auth_token(self, user_name: str, auth_token: str, auth_token_issued_time: datetime,
+    def update_auth_token(self, username: str, auth_token: str, auth_token_issued_time: datetime,
                           auth_token_expiry_time: datetime):
 
         """
 
-        :param user_name:
+        :param username:
         :param auth_token:
         :param auth_token_issued_time:
         :param auth_token_expiry_time:
@@ -215,8 +191,8 @@ class StoreMetadata:
         if not auth_token and not auth_token_expiry_time and not auth_token_issued_time:
             raise ValueError("Auth token and auth-token issue/expiry time cannot be null/empty.")
 
-        qry = "UPDATE " + self.userTable + " set token=%s, token_issued=%s, token_expiry=%s where user_name=%s"
-        vals = auth_token, auth_token_issued_time, auth_token_expiry_time, user_name
+        qry = "UPDATE " + self.userTable + " set token=%s, token_issued=%s, token_expiry=%s where username=%s"
+        vals = auth_token, auth_token_issued_time, auth_token_expiry_time, username
 
         self.cursor.execute(qry, vals)
         self.dbConnection.commit()
