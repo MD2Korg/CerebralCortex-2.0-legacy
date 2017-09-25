@@ -169,6 +169,38 @@ class CerebralCortex:
 
         return DataStream(identifier, data=[])
 
+
+
+    def update_or_create(self, stream: Stream):
+        """
+        This method should search the DBs to see if this stream object already exists.
+        If it exists, it will be loaded into memory and updated based on this input parameter
+        If not, it will be created
+
+        :param stream:
+        :return:
+        """
+
+        return stream
+
+    def find(self, query):
+        """
+        Find and return all matching datastreams
+        :param query: partial dictionary matching
+        """
+        pass
+
+    def readfile(self, filename):
+        data = []
+        with open(filename, 'rt') as f:
+            for l in f:
+                print(l)
+        return
+
+
+    #################################################
+    #   User Authentication
+    #################################################
     def login_user(self, username: str, password: str) -> bool:
         """
 
@@ -199,32 +231,6 @@ class CerebralCortex:
         :return:
         """
         return Metadata(self).is_auth_token_valid(token_owner, auth_token, auth_token_expiry_time)
-
-    def update_or_create(self, stream: Stream):
-        """
-        This method should search the DBs to see if this stream object already exists.
-        If it exists, it will be loaded into memory and updated based on this input parameter
-        If not, it will be created
-
-        :param stream:
-        :return:
-        """
-
-        return stream
-
-    def find(self, query):
-        """
-        Find and return all matching datastreams
-        :param query: partial dictionary matching
-        """
-        pass
-
-    def readfile(self, filename):
-        data = []
-        with open(filename, 'rt') as f:
-            for l in f:
-                print(l)
-        return
 
     #################################################
     #   Minio Storage Methods
