@@ -25,7 +25,7 @@
 import datetime
 import uuid
 from typing import List
-
+from cerebralcortex.kernel.utils.kernel_util import encrypt_user_password
 from pytz import timezone
 
 
@@ -248,6 +248,9 @@ class LoadMetadata:
         """
         if not username or not password:
             raise ValueError("User name and password cannot be empty/null.")
+
+        #hash password
+        password = encrypt_user_password(password)
 
         qry = "select * from user where username=%s and password=%s"
         vals = username, password
