@@ -211,16 +211,17 @@ class CerebralCortex:
         return Metadata(self).login_user(username, password)
 
     def update_auth_token(self, username: str, auth_token: str, auth_token_issued_time: datetime,
-                          auth_token_expiry_time: datetime):
+                          auth_token_expiry_time: datetime)->str:
         """
 
         :param username:
         :param auth_token:
         :param auth_token_issued_time:
         :param auth_token_expiry_time:
-        :return:
+        :return: uuid of the current user
         """
-        return Metadata(self).update_auth_token(username, auth_token, auth_token_issued_time, auth_token_expiry_time)
+        user_uuid = Metadata(self).update_auth_token(username, auth_token, auth_token_issued_time, auth_token_expiry_time)
+        return user_uuid
 
     def is_auth_token_valid(self, token_owner: str, auth_token: str, auth_token_expiry_time: datetime) -> bool:
         """

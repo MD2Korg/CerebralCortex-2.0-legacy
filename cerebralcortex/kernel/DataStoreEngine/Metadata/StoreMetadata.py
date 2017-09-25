@@ -179,7 +179,7 @@ class StoreMetadata:
             raise ValueError("Stream has no start/end time.")
 
     def update_auth_token(self, username: str, auth_token: str, auth_token_issued_time: datetime,
-                          auth_token_expiry_time: datetime):
+                          auth_token_expiry_time: datetime)->str:
 
         """
 
@@ -187,6 +187,7 @@ class StoreMetadata:
         :param auth_token:
         :param auth_token_issued_time:
         :param auth_token_expiry_time:
+        :return uuid of the current user
         """
         if not auth_token and not auth_token_expiry_time and not auth_token_issued_time:
             raise ValueError("Auth token and auth-token issue/expiry time cannot be null/empty.")
@@ -194,5 +195,28 @@ class StoreMetadata:
         qry = "UPDATE " + self.userTable + " set token=%s, token_issued=%s, token_expiry=%s where username=%s"
         vals = auth_token, auth_token_issued_time, auth_token_expiry_time, username
 
+        user_uuid = self.get_user_uuid(username)
+
         self.cursor.execute(qry, vals)
         self.dbConnection.commit()
+
+        return user_uuid
+
+    def get_user_uuid(self, username: str) -> str:
+
+        """
+
+        :param username:
+        :return:
+        """
+
+        qry = "SELECT identifier from " + self.userTable + " where username = %(username)s"
+        vals = {'username': str(username)}
+        self.cursor.execute(qry, vals)
+        rows = self.cursor.fetchall()
+
+        if rows:
+            user_uuid = rows[0]["identifier"]
+            return user_uuid
+        else:
+            return False
