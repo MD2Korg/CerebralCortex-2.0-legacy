@@ -13,4 +13,4 @@ addict
 flask-restplus
 Flask-OAuthlib
 minio==2.2.4
-kafka
+cassandra-driver==3.11.0
