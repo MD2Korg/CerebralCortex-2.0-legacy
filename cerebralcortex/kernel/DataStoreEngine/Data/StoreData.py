@@ -26,9 +26,11 @@ import json
 import uuid
 from typing import List
 from dateutil.parser import parse
-
 from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 from cerebralcortex.kernel.datatypes.datastream import DataStream, DataPoint
+
+from cassandra.cluster import Cluster
+from cassandra.query import *
 
 class StoreData:
     def store_stream(self, datastream: DataStream, type):
@@ -78,9 +80,10 @@ class StoreData:
                                                     annotations,
                                                     stream_type, new_start_time, new_end_time, result["status"])
 
-            dataframe = self.map_datapoint_to_dataframe(stream_identifier, data)
+            self.add_to_cassandra(stream_identifier, data, 10000)
+            #dataframe = self.map_datapoint_to_dataframe(stream_identifier, data)
 
-            self.store_data(dataframe, self.datapointTable)
+            #self.store_data(dataframe, self.datapointTable)
 
     def store_data(self, dataframe_data: object, table_name: str):
         """
@@ -92,13 +95,13 @@ class StoreData:
             raise Exception("Table name cannot be null.")
         elif dataframe_data == "":
             raise Exception("Data cannot be null.")
-        dataframe_data.write.format("org.apache.spark.sql.cassandra") \
-            .mode('append') \
-            .options(table=table_name, keyspace=self.keyspaceName) \
-            .option("spark.cassandra.connection.host", self.hostIP) \
-            .option("spark.cassandra.auth.username", self.dbUser) \
-            .option("spark.cassandra.auth.password", self.dbPassword) \
-            .save()
+        # dataframe_data.write.format("org.apache.spark.sql.cassandra") \
+        #     .mode('append') \
+        #     .options(table=table_name, keyspace=self.keyspaceName) \
+        #     .option("spark.cassandra.connection.host", self.hostIP) \
+        #     .option("spark.cassandra.auth.username", self.dbUser) \
+        #     .option("spark.cassandra.auth.password", self.dbPassword) \
+        #     .save()
 
     def map_datapoint_to_dataframe(self, stream_id: uuid, datapoints: DataPoint) -> List:
         """
@@ -109,6 +112,51 @@ class StoreData:
         """
         temp = []
         no_end_time = 0
+        # for i in datapoints:
+        #     day = i.start_time
+        #     day = day.strftime("%Y%m%d")
+        #     if isinstance(i.sample, str):
+        #         sample = i.sample
+        #     else:
+        #         sample = json.dumps(i.sample)
+        #
+        #     if i.end_time:
+        #         dp = str(stream_id), day, i.start_time, i.end_time, sample
+        #     else:
+        #         dp = str(stream_id), day, i.start_time, sample
+        #         if no_end_time != 1:
+        #             no_end_time = 1
+        #
+        #     temp.append(dp)
+        #
+        # temp_RDD = self.CC_obj.getOrCreateSC(type="sparkContext").parallelize(temp)
+        # if (no_end_time == 1):
+        #     df = self.CC_obj.getOrCreateSC(type="sqlContext").createDataFrame(temp_RDD,
+        #                                                                       schema=["identifier", "day", "start_time",
+        #                                                                               "sample"]).coalesce(400)
+        # else:
+        #     df = self.CC_obj.getOrCreateSC(type="sqlContext").createDataFrame(temp_RDD,
+        #                                                                       schema=["identifier", "day", "start_time",
+        #                                                                               "end_time",
+        #                                                                               "sample"]).coalesce(400)
+        # return df
+    def add_to_cassandra(self, stream_id: uuid, datapoints: DataPoint, batch_size):
+        cluster = Cluster(
+            ['127.0.0.1'],
+            port=9042)
+
+        session = cluster.connect('cerebralcortex')
+
+        insert_qry = session.prepare("INSERT INTO data (identifier, day, start_time, sample) VALUES (?, ?, ?, ?)")
+        batch = BatchStatement(consistency_level=ConsistencyLevel.QUORUM)
+
+        for data_block in self.datapoints_to_cassandra_sql_batch(stream_id, datapoints, insert_qry, batch, batch_size):
+            session.execute(data_block)
+            data_block.clear()
+
+    def datapoints_to_cassandra_sql_batch(self, stream_id: uuid, datapoints: DataPoint, insert_qry, batch, batch_size):
+
+        dp_number = 1
         for i in datapoints:
             day = i.start_time
             day = day.strftime("%Y%m%d")
@@ -117,26 +165,26 @@ class StoreData:
             else:
                 sample = json.dumps(i.sample)
 
-            if i.end_time:
-                dp = str(stream_id), day, i.start_time, i.end_time, sample
+            # if i.end_time:
+            #     dp = str(stream_id), day, i.start_time, i.end_time, sample
+            # else:
+            #     dp = str(stream_id), day, i.start_time, sample
+            #     if no_end_time != 1:
+            #         no_end_time = 1
+
+
+
+
+
+            if dp_number > batch_size:
+                yield batch
+                batch.clear()
+                dp_number = 1
             else:
-                dp = str(stream_id), day, i.start_time, sample
-                if no_end_time != 1:
-                    no_end_time = 1
+                batch.add(insert_qry, (uuid.UUID(stream_id), day, i.start_time, sample))
+                dp_number += 1
+        yield batch
 
-            temp.append(dp)
-
-        temp_RDD = self.CC_obj.getOrCreateSC(type="sparkContext").parallelize(temp)
-        if (no_end_time == 1):
-            df = self.CC_obj.getOrCreateSC(type="sqlContext").createDataFrame(temp_RDD,
-                                                                              schema=["identifier", "day", "start_time",
-                                                                                      "sample"]).coalesce(400)
-        else:
-            df = self.CC_obj.getOrCreateSC(type="sqlContext").createDataFrame(temp_RDD,
-                                                                              schema=["identifier", "day", "start_time",
-                                                                                      "end_time",
-                                                                                      "sample"]).coalesce(400)
-        return df
 
     #################################################################
     ## json to CC objects and dataframe conversion

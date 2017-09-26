@@ -94,6 +94,33 @@ class CerebralCortex:
         else:
             raise ValueError("Unknown type.")
 
+    @classmethod
+    def getOrCreateSC_old(cls,type="sparkContext", master=None, name=None):
+        from pyspark.sql import SQLContext
+        from pyspark.sql import SparkSession
+
+        ss = SparkSession.builder
+        if name:
+            ss.appName(name)
+        if master:
+            ss.master(master)
+
+        sparkSession = ss.getOrCreate()
+
+        sc = sparkSession.sparkContext
+
+        sqlContext = SQLContext(sc)
+        if type=="SparkSessionBuilder":
+            return sc
+        elif type=="sparkContext":
+            return sc
+        elif type=="sparkSession":
+            return ss
+        elif type=="sqlContext":
+            return sqlContext
+        else:
+            raise ValueError("Unknown type.")
+
     def get_datastream(self, stream_identifier: uuid, start_time: datetime = None, end_time: datetime = None,
                        data_type: enumerate = DataSet.COMPLETE) -> DataStream:
         """
