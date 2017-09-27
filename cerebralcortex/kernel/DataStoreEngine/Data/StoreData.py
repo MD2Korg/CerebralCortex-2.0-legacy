@@ -80,7 +80,7 @@ class StoreData:
                                                     annotations,
                                                     stream_type, new_start_time, new_end_time, result["status"])
 
-            self.add_to_cassandra(stream_identifier, data, 10000)
+            self.add_to_cassandra(stream_identifier, data, 1000)
 
 
             #dataframe = self.map_datapoint_to_dataframe(stream_identifier, data)
