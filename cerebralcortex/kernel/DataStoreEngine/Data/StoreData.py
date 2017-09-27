@@ -24,13 +24,13 @@
 
 import json
 import uuid
-from typing import List
 from dateutil.parser import parse
 from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 from cerebralcortex.kernel.datatypes.datastream import DataStream, DataPoint
 
 from cassandra.cluster import Cluster
 from cassandra.query import *
+
 
 class StoreData:
     def store_stream(self, datastream: DataStream, type):
@@ -81,81 +81,107 @@ class StoreData:
                                                     stream_type, new_start_time, new_end_time, result["status"])
 
             self.add_to_cassandra(stream_identifier, data, 10000)
-            #dataframe = self.map_datapoint_to_dataframe(stream_identifier, data)
 
+
+            #dataframe = self.map_datapoint_to_dataframe(stream_identifier, data)
             #self.store_data(dataframe, self.datapointTable)
 
-    def store_data(self, dataframe_data: object, table_name: str):
-        """
-        :param dataframe_data: pyspark Dataframe
-        :param table_name: Cassandra table name
-        """
+    #TODO: Remove commented code after final testing of data->cassandra without sparkContext
+    # def store_data(self, dataframe_data: object, table_name: str):
+    #     """
+    #     :param dataframe_data: pyspark Dataframe
+    #     :param table_name: Cassandra table name
+    #     """
+    #
+    #     if table_name == "":
+    #         raise Exception("Table name cannot be null.")
+    #     elif dataframe_data == "":
+    #         raise Exception("Data cannot be null.")
+    #     dataframe_data.write.format("org.apache.spark.sql.cassandra") \
+    #         .mode('append') \
+    #         .options(table=table_name, keyspace=self.keyspaceName) \
+    #         .option("spark.cassandra.connection.host", self.hostIP) \
+    #         .option("spark.cassandra.auth.username", self.dbUser) \
+    #         .option("spark.cassandra.auth.password", self.dbPassword) \
+    #         .save()
 
-        if table_name == "":
-            raise Exception("Table name cannot be null.")
-        elif dataframe_data == "":
-            raise Exception("Data cannot be null.")
-        # dataframe_data.write.format("org.apache.spark.sql.cassandra") \
-        #     .mode('append') \
-        #     .options(table=table_name, keyspace=self.keyspaceName) \
-        #     .option("spark.cassandra.connection.host", self.hostIP) \
-        #     .option("spark.cassandra.auth.username", self.dbUser) \
-        #     .option("spark.cassandra.auth.password", self.dbPassword) \
-        #     .save()
+    # def map_datapoint_to_dataframe(self, stream_id: uuid, datapoints: DataPoint) -> List:
+    #     """
+    #
+    #     :param stream_id:
+    #     :param datapoints:
+    #     :return:
+    #     """
+    #     temp = []
+    #     no_end_time = 0
+    #     for i in datapoints:
+    #         day = i.start_time
+    #         day = day.strftime("%Y%m%d")
+    #         if isinstance(i.sample, str):
+    #             sample = i.sample
+    #         else:
+    #             sample = json.dumps(i.sample)
+    #
+    #         if i.end_time:
+    #             dp = str(stream_id), day, i.start_time, i.end_time, sample
+    #         else:
+    #             dp = str(stream_id), day, i.start_time, sample
+    #             if no_end_time != 1:
+    #                 no_end_time = 1
+    #
+    #         temp.append(dp)
+    #
+    #     temp_RDD = self.CC_obj.getOrCreateSC(type="sparkContext").parallelize(temp)
+    #     if (no_end_time == 1):
+    #         df = self.CC_obj.getOrCreateSC(type="sqlContext").createDataFrame(temp_RDD,
+    #                                                                           schema=["identifier", "day", "start_time",
+    #                                                                                   "sample"]).coalesce(400)
+    #     else:
+    #         df = self.CC_obj.getOrCreateSC(type="sqlContext").createDataFrame(temp_RDD,
+    #                                                                           schema=["identifier", "day", "start_time",
+    #                                                                                   "end_time",
+    #                                                                                   "sample"]).coalesce(400)
+    #     return df
 
-    def map_datapoint_to_dataframe(self, stream_id: uuid, datapoints: DataPoint) -> List:
+    #         .mode('append') \
+    #         .options(table=table_name, keyspace=self.keyspaceName) \
+    #         .option("spark.cassandra.connection.host", self.hostIP) \
+    #         .option("spark.cassandra.auth.username", self.dbUser) \
+    #         .option("spark.cassandra.auth.password", self.dbPassword) \
+
+    def add_to_cassandra(self, stream_id: uuid, datapoints: DataPoint, batch_size: int):
         """
 
         :param stream_id:
         :param datapoints:
-        :return:
+        :param batch_size:
         """
-        temp = []
-        no_end_time = 0
-        # for i in datapoints:
-        #     day = i.start_time
-        #     day = day.strftime("%Y%m%d")
-        #     if isinstance(i.sample, str):
-        #         sample = i.sample
-        #     else:
-        #         sample = json.dumps(i.sample)
-        #
-        #     if i.end_time:
-        #         dp = str(stream_id), day, i.start_time, i.end_time, sample
-        #     else:
-        #         dp = str(stream_id), day, i.start_time, sample
-        #         if no_end_time != 1:
-        #             no_end_time = 1
-        #
-        #     temp.append(dp)
-        #
-        # temp_RDD = self.CC_obj.getOrCreateSC(type="sparkContext").parallelize(temp)
-        # if (no_end_time == 1):
-        #     df = self.CC_obj.getOrCreateSC(type="sqlContext").createDataFrame(temp_RDD,
-        #                                                                       schema=["identifier", "day", "start_time",
-        #                                                                               "sample"]).coalesce(400)
-        # else:
-        #     df = self.CC_obj.getOrCreateSC(type="sqlContext").createDataFrame(temp_RDD,
-        #                                                                       schema=["identifier", "day", "start_time",
-        #                                                                               "end_time",
-        #                                                                               "sample"]).coalesce(400)
-        # return df
-    def add_to_cassandra(self, stream_id: uuid, datapoints: DataPoint, batch_size):
-        cluster = Cluster(
-            ['127.0.0.1'],
-            port=9042)
+        cluster = Cluster(self.hostIP, port=self.hostPort)
 
         session = cluster.connect('cerebralcortex')
 
-        insert_qry = session.prepare("INSERT INTO data (identifier, day, start_time, sample) VALUES (?, ?, ?, ?)")
-        batch = BatchStatement(consistency_level=ConsistencyLevel.QUORUM)
+        insert_without_endtime_qry = session.prepare("INSERT INTO data (identifier, day, start_time, sample) VALUES (?, ?, ?, ?)")
+        insert_with_endtime_qry = session.prepare("INSERT INTO data (identifier, day, start_time, end_time, sample) VALUES (?, ?, ?, ?)")
 
-        for data_block in self.datapoints_to_cassandra_sql_batch(stream_id, datapoints, insert_qry, batch, batch_size):
+        for data_block in self.datapoints_to_cassandra_sql_batch(uuid.UUID(stream_id), datapoints, insert_without_endtime_qry, insert_with_endtime_qry, batch_size):
             session.execute(data_block)
             data_block.clear()
+        session.shutdown();
+        cluster.shutdown();
 
-    def datapoints_to_cassandra_sql_batch(self, stream_id: uuid, datapoints: DataPoint, insert_qry, batch, batch_size):
+    @staticmethod
+    def datapoints_to_cassandra_sql_batch(stream_id: uuid, datapoints: DataPoint, insert_without_endtime_qry: str, insert_with_endtime_qry: str, batch_size: int):
 
+        """
+
+        :param stream_id:
+        :param datapoints:
+        :param insert_without_endtime_qry:
+        :param insert_with_endtime_qry:
+        :param batch_size:
+        """
+        batch = BatchStatement(consistency_level=ConsistencyLevel.QUORUM)
+        batch.clear()
         dp_number = 1
         for i in datapoints:
             day = i.start_time
@@ -165,23 +191,19 @@ class StoreData:
             else:
                 sample = json.dumps(i.sample)
 
-            # if i.end_time:
-            #     dp = str(stream_id), day, i.start_time, i.end_time, sample
-            # else:
-            #     dp = str(stream_id), day, i.start_time, sample
-            #     if no_end_time != 1:
-            #         no_end_time = 1
-
-
-
-
+            if i.end_time:
+                insert_qry = insert_with_endtime_qry
+            else:
+                insert_qry = insert_without_endtime_qry
 
             if dp_number > batch_size:
                 yield batch
+                batch = BatchStatement(consistency_level=ConsistencyLevel.QUORUM)
+                #just to make sure batch does not have any existing entries.
                 batch.clear()
                 dp_number = 1
             else:
-                batch.add(insert_qry, (uuid.UUID(stream_id), day, i.start_time, sample))
+                batch.add(insert_qry, (stream_id, day, i.start_time, sample))
                 dp_number += 1
         yield batch
 
