@@ -156,12 +156,12 @@ class StoreData:
         :param datapoints:
         :param batch_size:
         """
-        cluster = Cluster(self.hostIP, port=self.hostPort)
+        cluster = Cluster([self.hostIP], port=self.hostPort)
 
         session = cluster.connect('cerebralcortex')
 
         insert_without_endtime_qry = session.prepare("INSERT INTO data (identifier, day, start_time, sample) VALUES (?, ?, ?, ?)")
-        insert_with_endtime_qry = session.prepare("INSERT INTO data (identifier, day, start_time, end_time, sample) VALUES (?, ?, ?, ?)")
+        insert_with_endtime_qry = session.prepare("INSERT INTO data (identifier, day, start_time, end_time, sample) VALUES (?, ?, ?, ?, ?)")
 
         for data_block in self.datapoints_to_cassandra_sql_batch(uuid.UUID(stream_id), datapoints, insert_without_endtime_qry, insert_with_endtime_qry, batch_size):
             session.execute(data_block)
