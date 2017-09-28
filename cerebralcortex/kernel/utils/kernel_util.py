@@ -32,3 +32,4 @@ def encrypt_user_password(user_password: str) -> str:
     """
     hash_pwd = hashlib.sha256(user_password.encode('utf-8'))
     return hash_pwd.hexdigest()
+

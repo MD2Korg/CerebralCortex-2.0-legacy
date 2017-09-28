@@ -25,11 +25,26 @@
 import json
 import uuid
 from dateutil.parser import parse
+from influxdb import InfluxDBClient
+
 from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 from cerebralcortex.kernel.datatypes.datastream import DataStream, DataPoint
 
 from cassandra.cluster import Cluster
 from cassandra.query import *
+
+
+def json_to_datapoints(json_obj):
+    if isinstance(json_obj["value"], str):
+        sample = json_obj["value"]
+    else:
+        sample = json.dumps(json_obj["value"])
+    start_time = parse(json_obj["starttime"])
+
+    if "endtime" in json_obj:
+        return DataPoint(start_time=start_time, end_time=json_obj["endtime"], sample=sample)
+    else:
+        return DataPoint(start_time=start_time, sample=sample)
 
 
 class StoreData:
@@ -212,20 +227,12 @@ class StoreData:
     ## json to CC objects and dataframe conversion
     #################################################################
 
-    def json_to_datapoints(self, json_obj):
-        if isinstance(json_obj["value"], str):
-            sample = json_obj["value"]
-        else:
-            sample = json.dumps(json_obj["value"])
-        start_time = parse(json_obj["starttime"])
+    def json_to_datastream(self, json_obj: dict) -> DataStream:
 
-        if "endtime" in json_obj:
-            return DataPoint(start_time=start_time, end_time=json_obj["endtime"], sample=sample)
-        else:
-            return DataPoint(start_time=start_time, sample=sample)
-
-    def json_to_datastream(self, json_obj):
-
+        """
+        :param json_obj:
+        :return:
+        """
         data = json_obj["data"]
         metadata = json_obj["metadata"]
         identifier = metadata["identifier"]
@@ -242,7 +249,7 @@ class StoreData:
         stream_type = "ds"  # TODO: it must be defined in json object
         start_time = parse(data[0]["starttime"])
         end_time = parse(data[len(data) - 1]["starttime"])
-        datapoints = list(map(self.json_to_datapoints, data))
+        datapoints = list(map(json_to_datapoints, data))
 
         return DataStream(identifier,
                           owner,
@@ -254,3 +261,49 @@ class StoreData:
                           start_time,
                           end_time,
                           datapoints)
+
+    def store_data_to_influxdb(self, json_data: dict):
+
+        """
+        :param json_data:
+        """
+        client = InfluxDBClient(host='127.0.0.1', port=8086, database='cerebralcortex')
+        data = json_data["data"]
+        metadata = json_data["metadata"]
+        stream_identifier = metadata["identifier"]
+        stream_owner = metadata["owner"]
+        stream_name = metadata["name"]
+        influx_data = []
+        for row in data:
+            object = {}
+            object['measurement'] = stream_identifier
+            object['tags'] = {'owner': stream_owner, 'name': stream_name}
+            object['time'] = row["starttime"]*1000000
+            values = row["value"]
+
+            if isinstance(values, tuple):
+                values = list(values)
+            else:
+                try:
+                    values = [float(values)]
+                except:
+                    try:
+                        values = list(map(float, values.split(',')))
+                    except:
+                        values = values
+
+
+            try:
+                object['fields'] = {}
+                for i, sample_val in enumerate(values):
+                    object['fields']['value_'+str(i)] = sample_val
+            except :
+                object['fields'] = {'value': values}
+
+            influx_data.append(object)
+
+            if len(influx_data) >= 100000:
+                print('Yielding:', uuid, len(influx_data), stream_identifier)
+                client.write_points(influx_data)
+                influx_data = []
+        client.close()
