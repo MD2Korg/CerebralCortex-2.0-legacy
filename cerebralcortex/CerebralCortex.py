@@ -145,6 +145,18 @@ class CerebralCortex:
         delta =et-st
         print("Time took to process and insert data "+str(int(delta.total_seconds() * 1000))+ " (Milliseconds)")
 
+    def save_datastream_to_influxdb(self, datastream: DataStream):
+        """
+        Save Datastream to appropriate datastores
+        :param datastream:
+        """
+        st = datetime.datetime.now()
+        Data(self).store_data_to_influxdb(datastream)
+        et = datetime.datetime.now()
+
+        delta =et-st
+        print("Time took to process and insert data into InfluxDB -> "+str(int(delta.total_seconds() * 1000))+ " (Milliseconds)")
+
 
 
     def get_stream_ids_of_owner(self, owner_id: uuid, stream_name: str = None, start_time: datetime = None,

@@ -1,6 +1,6 @@
 cassandra:
   host: 127.0.0.1
-  port: 9142
+  port: 9042
   keyspace: cerebralcortex
   db_user: ""
   db_pass: ""
