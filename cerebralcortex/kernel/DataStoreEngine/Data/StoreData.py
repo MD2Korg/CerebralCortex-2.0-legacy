@@ -95,7 +95,7 @@ class StoreData:
                                                     annotations,
                                                     stream_type, new_start_time, new_end_time, result["status"])
 
-            self.add_to_cassandra(stream_identifier, data, 1000)
+            self.add_to_cassandra(stream_identifier, data)
 
 
             #dataframe = self.map_datapoint_to_dataframe(stream_identifier, data)
@@ -164,7 +164,7 @@ class StoreData:
     #         .option("spark.cassandra.auth.username", self.dbUser) \
     #         .option("spark.cassandra.auth.password", self.dbPassword) \
 
-    def add_to_cassandra(self, stream_id: uuid, datapoints: DataPoint, batch_size: int):
+    def add_to_cassandra(self, stream_id: uuid, datapoints: DataPoint):
         """
 
         :param stream_id:
@@ -178,14 +178,14 @@ class StoreData:
         insert_without_endtime_qry = session.prepare("INSERT INTO data (identifier, day, start_time, sample) VALUES (?, ?, ?, ?)")
         insert_with_endtime_qry = session.prepare("INSERT INTO data (identifier, day, start_time, end_time, sample) VALUES (?, ?, ?, ?, ?)")
 
-        for data_block in self.datapoints_to_cassandra_sql_batch(uuid.UUID(stream_id), datapoints, insert_without_endtime_qry, insert_with_endtime_qry, batch_size):
-            session.execute(data_block)
-            data_block.clear()
+        data_block = self.datapoints_to_cassandra_sql_batch(uuid.UUID(stream_id), datapoints, insert_without_endtime_qry, insert_with_endtime_qry)
+        session.execute(data_block)
+        data_block.clear()
         session.shutdown();
         cluster.shutdown();
 
-    @staticmethod
-    def datapoints_to_cassandra_sql_batch(stream_id: uuid, datapoints: DataPoint, insert_without_endtime_qry: str, insert_with_endtime_qry: str, batch_size: int):
+
+    def datapoints_to_cassandra_sql_batch(self, stream_id: uuid, datapoints: DataPoint, insert_without_endtime_qry: str, insert_with_endtime_qry: str):
 
         """
 
@@ -210,17 +210,19 @@ class StoreData:
                 insert_qry = insert_with_endtime_qry
             else:
                 insert_qry = insert_without_endtime_qry
-
-            if dp_number > batch_size:
-                yield batch
-                batch = BatchStatement(consistency_level=ConsistencyLevel.QUORUM)
-                #just to make sure batch does not have any existing entries.
-                batch.clear()
-                dp_number = 1
-            else:
-                batch.add(insert_qry, (stream_id, day, i.start_time, sample))
-                dp_number += 1
-        yield batch
+            batch.add(insert_qry, (stream_id, day, i.start_time, sample))
+        return batch
+        # TODO: remove when final testing is done
+        #     if dp_number > batch_size:
+        #         yield batch
+        #         batch = BatchStatement(consistency_level=ConsistencyLevel.QUORUM)
+        #         #just to make sure batch does not have any existing entries.
+        #         batch.clear()
+        #         dp_number = 1
+        #     else:
+        #         batch.add(insert_qry, (stream_id, day, i.start_time, sample))
+        #         dp_number += 1
+        # yield batch
 
 
     #################################################################
