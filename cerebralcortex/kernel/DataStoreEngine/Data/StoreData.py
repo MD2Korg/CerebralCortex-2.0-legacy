@@ -276,8 +276,8 @@ class StoreData:
         influx_data = []
         for row in data:
             object = {}
-            object['measurement'] = stream_identifier
-            object['tags'] = {'owner': stream_owner, 'name': stream_name}
+            object['measurement'] = stream_name
+            object['tags'] = {'stream_id': stream_identifier, 'owner': stream_owner}
             object['time'] = row["starttime"]
             values = row["value"]
 
