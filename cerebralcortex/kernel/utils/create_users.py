@@ -29,6 +29,7 @@ import uuid
 import random
 import string
 import hashlib
+import itertools
 
 
 class CreateUsers():
@@ -37,7 +38,7 @@ class CreateUsers():
         Constructor
         :param configuration:
         """
-        # python3 create_users.py 127.0.0.1 3306 root pass create 2
+        # python3 create_users.py 127.0.0.1 3306 root pass create
         if not sys.argv[1]:
             print("Missing MySQL Args: Host Port UserName Password users-action total-users")
             print("action argument accepts three values only: create, list, delete")
@@ -56,14 +57,9 @@ class CreateUsers():
         self.cursor = self.dbConnection.cursor(dictionary=True)
 
         action = sys.argv[5]
-        if action == "create":
-            try:
-                total_users = int(sys.argv[6])
-            except:
-                raise ValueError("Total-users run time parameter cannot be null/empty.")
 
         if action == "create":
-            self.create_random_users(total_users)
+            self.create_random_users()
         elif action == "list":
             self.list_all_users()
         elif action == "delete":
@@ -75,7 +71,7 @@ class CreateUsers():
         if self.dbConnection:
             self.dbConnection.close()
 
-    def create_random_users(self, total_users: int):
+    def create_random_users(self):
         """
         :param total_users:
         """
@@ -92,10 +88,10 @@ class CreateUsers():
         print("Created " + str(len(self.defaultUsers)) + " default users.")
 
         # generate random users
-        for rand_user in range(total_users):
+        for i in itertools.chain(range(1000, 1005), range(5000, 5004), range(9000, 9004)):
             random_password = self.gen_random_pass("varchar")
             user_id = uuid.uuid4()
-            user_name = self.gen_random_pass("char")
+            user_name = i
             user_password = self.encrypt_user_password(random_password)
             token = random_password
             type = "participant"
@@ -104,7 +100,7 @@ class CreateUsers():
                 user_creation_datetime)
             self.cursor.execute(qry, vals)
             self.dbConnection.commit()
-        print("Created " + str(total_users) + " random users.")
+        print("Created random users.")
 
     def list_all_users(self):
         """
