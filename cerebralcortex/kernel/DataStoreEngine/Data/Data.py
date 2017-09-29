@@ -41,3 +41,10 @@ class Data(LoadData, StoreData):
         self.dbUser = self.configuration['cassandra']['db_user']
         self.dbPassword = self.configuration['cassandra']['db_pass']
         self.datapointTable = self.configuration['cassandra']['datapoint_table']
+
+        self.influxdbIP = self.configuration['influxdb']['host']
+        self.influxdbPort = self.configuration['influxdb']['port']
+        self.influxdbDatabase = self.configuration['influxdb']['database']
+        self.influxdbUser = self.configuration['influxdb']['db_user']
+        self.influxdbPassword = self.configuration['influxdb']['db_pass']
+

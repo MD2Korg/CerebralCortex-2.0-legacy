@@ -6,6 +6,12 @@ cassandra:
   db_pass: ""
   datapoint_table: data
 
+influxdb:
+  host: 127.0.0.1
+  port: 8086
+  database: cerebralcortex
+  db_user: ""
+  db_pass: ""
 
 mysql:
   host: 127.0.0.1

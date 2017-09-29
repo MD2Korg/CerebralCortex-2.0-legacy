@@ -267,7 +267,7 @@ class StoreData:
         """
         :param json_data:
         """
-        client = InfluxDBClient(host='127.0.0.1', port=8086, database='cerebralcortex')
+        client = InfluxDBClient(host=self.influxdbIP, port=self.influxdbPort, username=self.influxdbUser, password=self.influxdbPassword, database=self.influxdbDatabase)
         data = json_data["data"]
         metadata = json_data["metadata"]
         stream_identifier = metadata["identifier"]
@@ -278,7 +278,7 @@ class StoreData:
             object = {}
             object['measurement'] = stream_identifier
             object['tags'] = {'owner': stream_owner, 'name': stream_name}
-            object['time'] = row["starttime"]*1000000
+            object['time'] = row["starttime"]
             values = row["value"]
 
             if isinstance(values, tuple):
@@ -302,8 +302,5 @@ class StoreData:
 
             influx_data.append(object)
 
-            if len(influx_data) >= 100000:
-                print('Yielding:', uuid, len(influx_data), stream_identifier)
-                client.write_points(influx_data)
-                influx_data = []
-        client.close()
+        print('InfluxDB - Yielding:', stream_owner, len(influx_data), stream_identifier)
+        client.write_points(influx_data)
