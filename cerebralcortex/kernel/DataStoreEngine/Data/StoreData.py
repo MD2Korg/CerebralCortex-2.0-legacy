@@ -275,10 +275,14 @@ class StoreData:
         stream_identifier = metadata["identifier"]
         stream_owner = metadata["owner"]
         stream_name = metadata["name"]
+        if "data_descriptor" in metadata:
+            total_dd_columns = len(metadata["data_descriptor"])
+            data_descriptor = metadata["data_descriptor"]
+
         influx_data = []
         for row in data:
             object = {}
-            object['measurement'] = "stream-name_2"+stream_name
+            object['measurement'] = stream_name
             object['tags'] = {'stream_identifier':stream_identifier, 'owner': stream_owner}
             object['time'] = row["starttime"]
             values = row["value"]
@@ -298,7 +302,13 @@ class StoreData:
             try:
                 object['fields'] = {}
                 for i, sample_val in enumerate(values):
-                    object['fields']['value_'+str(i)] = sample_val
+                    if len(values)==total_dd_columns:
+                        if "NAME" in data_descriptor[i]:
+                            object['fields'][data_descriptor[i]["NAME"]] = sample_val
+                        else:
+                            object['fields']['value_'+str(i)] = sample_val
+                    else:
+                        object['fields']['value_'+str(i)] = sample_val
             except :
                 object['fields'] = {'value': values}
 
