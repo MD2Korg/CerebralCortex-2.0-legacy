@@ -275,9 +275,13 @@ class StoreData:
         stream_identifier = metadata["identifier"]
         stream_owner = metadata["owner"]
         stream_name = metadata["name"]
+
         if "data_descriptor" in metadata:
             total_dd_columns = len(metadata["data_descriptor"])
             data_descriptor = metadata["data_descriptor"]
+        else:
+            data_descriptor = {}
+            total_dd_columns = 0
 
         influx_data = []
         for row in data:
@@ -301,18 +305,32 @@ class StoreData:
 
             try:
                 object['fields'] = {}
-                for i, sample_val in enumerate(values):
-                    if len(values)==total_dd_columns:
-                        if "NAME" in data_descriptor[i]:
-                            object['fields'][data_descriptor[i]["NAME"]] = sample_val
+                if isinstance(values, list):
+                    for i, sample_val in enumerate(values):
+                        if len(values)==total_dd_columns:
+                            if "NAME" in data_descriptor[i]:
+                                object['fields'][data_descriptor[i]["NAME"]] = sample_val
+                            else:
+                                object['fields']['value_'+str(i)] = sample_val
                         else:
                             object['fields']['value_'+str(i)] = sample_val
+                else:
+                    if not values:
+                        values = "NULL"
+                    if "NAME" in data_descriptor[0]:
+                        object['fields'][data_descriptor[0]["NAME"]] = values
                     else:
-                        object['fields']['value_'+str(i)] = sample_val
-            except :
+                        object['fields']['value_0'] = values
+            except Exception as e:
+                print(e)
                 object['fields'] = {'value': values}
-
+                print("VALUES ==> ",values)
+            print(object)
             influx_data.append(object)
+            print(influx_data)
+
+
 
         print('InfluxDB - Yielding:', stream_owner, len(influx_data), stream_identifier)
+
         client.write_points(influx_data)
