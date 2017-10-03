@@ -273,7 +273,8 @@ class StoreData:
         data = json_data["data"]
         metadata = json_data["metadata"]
         stream_identifier = metadata["identifier"]
-        stream_owner = metadata["owner"]
+        stream_owner_id = metadata["owner"]
+        stream_owner_name = Metadata(self.CC_obj).owner_id_to_name(stream_owner_id)
         stream_name = metadata["name"]
 
         if "data_descriptor" in metadata:
@@ -287,7 +288,7 @@ class StoreData:
         for row in data:
             object = {}
             object['measurement'] = stream_name
-            object['tags'] = {'stream_identifier':stream_identifier, 'owner': stream_owner}
+            object['tags'] = {'stream_id':stream_identifier, 'owner_id': stream_owner_id, 'owner_name': stream_owner_name}
             object['time'] = row["starttime"]
             values = row["value"]
 
@@ -321,16 +322,13 @@ class StoreData:
                         object['fields'][data_descriptor[0]["NAME"]] = values
                     else:
                         object['fields']['value_0'] = values
-            except Exception as e:
-                print(e)
+            except:
                 object['fields'] = {'value': values}
-                print("VALUES ==> ",values)
-            print(object)
             influx_data.append(object)
-            print(influx_data)
 
 
 
-        print('InfluxDB - Yielding:', stream_owner, len(influx_data), stream_identifier)
+
+        print('InfluxDB - Yielding:', stream_owner_id, len(influx_data), stream_identifier)
 
         client.write_points(influx_data)

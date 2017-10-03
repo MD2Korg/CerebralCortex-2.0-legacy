@@ -258,6 +258,26 @@ class LoadMetadata:
         else:
             return True
 
+    def owner_id_to_name(self, owner_id: uuid) -> str:
+        """
+
+        :param owner_id:
+        :return:
+        """
+        if not owner_id:
+            return "NULL1"
+
+        qry = "select username from " + self.userTable + " where identifier = %(identifier)s"
+        vals = {'identifier': str(owner_id)}
+
+        self.cursor.execute(qry, vals)
+        rows = self.cursor.fetchall()
+
+        if len(rows) == 0:
+            return "NULL2"
+        else:
+            return rows[0]["username"]
+
     def is_auth_token_valid(self, token_owner: str, auth_token: str, auth_token_expiry_time: datetime) -> bool:
         """
 
