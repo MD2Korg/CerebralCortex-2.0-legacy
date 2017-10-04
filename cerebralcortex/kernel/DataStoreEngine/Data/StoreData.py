@@ -29,22 +29,9 @@ from influxdb import InfluxDBClient
 
 from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 from cerebralcortex.kernel.datatypes.datastream import DataStream, DataPoint
-
+from cerebralcortex.kernel.utils.logging import cc_log
 from cassandra.cluster import Cluster
 from cassandra.query import *
-
-
-def json_to_datapoints(json_obj):
-    if isinstance(json_obj["value"], str):
-        sample = json_obj["value"]
-    else:
-        sample = json.dumps(json_obj["value"])
-    start_time = parse(json_obj["starttime"])
-
-    if "endtime" in json_obj:
-        return DataPoint(start_time=start_time, end_time=json_obj["endtime"], sample=sample)
-    else:
-        return DataPoint(start_time=start_time, sample=sample)
 
 
 class StoreData:
@@ -251,7 +238,7 @@ class StoreData:
         stream_type = "ds"  # TODO: it must be defined in json object
         start_time = parse(data[0]["starttime"])
         end_time = parse(data[len(data) - 1]["starttime"])
-        datapoints = list(map(json_to_datapoints, data))
+        datapoints = list(map(self.json_to_datapoints, data))
 
         return DataStream(identifier,
                           owner,
@@ -263,6 +250,23 @@ class StoreData:
                           start_time,
                           end_time,
                           datapoints)
+
+    @staticmethod
+    def json_to_datapoints(json_obj: dict) -> DataPoint:
+        """
+        :param json_obj:
+        :return:
+        """
+        if isinstance(json_obj["value"], str):
+            sample = json_obj["value"]
+        else:
+            sample = json.dumps(json_obj["value"])
+        start_time = parse(json_obj["starttime"])
+
+        if "endtime" in json_obj:
+            return DataPoint(start_time=start_time, end_time=json_obj["endtime"], sample=sample)
+        else:
+            return DataPoint(start_time=start_time, sample=sample)
 
     def store_data_to_influxdb(self, json_data: dict):
 
@@ -289,6 +293,8 @@ class StoreData:
             object = {}
             object['measurement'] = stream_name
             object['tags'] = {'stream_id':stream_identifier, 'owner_id': stream_owner_id, 'owner_name': stream_owner_name}
+            #print("====================================>",row["starttime"])
+            #quit(1)
             object['time'] = row["starttime"]
             values = row["value"]
 
@@ -324,11 +330,12 @@ class StoreData:
                         object['fields']['value_0'] = values
             except:
                 object['fields'] = {'value': values}
+
             influx_data.append(object)
-
-
-
 
         print('InfluxDB - Yielding:', stream_owner_id, len(influx_data), stream_identifier)
 
-        client.write_points(influx_data)
+        try:
+            client.write_points(influx_data)
+        except:
+            cc_log()
