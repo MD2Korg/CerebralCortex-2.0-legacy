@@ -25,11 +25,15 @@
 
 import logging
 import inspect
-
-logs_dir = '/home/ali/Desktop/DUMP/del/bugy_files/'
+import os
+logs_dir = '/var/logs/cerebralcortex/'
 
 
 def cc_log(error_message="", error_type="EXCEPTION"):
+
+    if not os.path.exists(logs_dir):
+        os.makedirs(logs_dir)
+
     error_type = error_type.upper()
     FORMAT = '[%(asctime)s] - %(message)s'
 

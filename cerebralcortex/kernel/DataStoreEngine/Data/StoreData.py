@@ -293,8 +293,7 @@ class StoreData:
             object = {}
             object['measurement'] = stream_name
             object['tags'] = {'stream_id':stream_identifier, 'owner_id': stream_owner_id, 'owner_name': stream_owner_name}
-            #print("====================================>",row["starttime"])
-            #quit(1)
+
             object['time'] = row["starttime"]
             values = row["value"]
 
@@ -329,7 +328,8 @@ class StoreData:
                     else:
                         object['fields']['value_0'] = values
             except:
-                object['fields'] = {'value': values}
+                cc_log("Datapoint sample values conversion failed"+str(values),"ERROR")
+                object['fields']['value_0'] = values
 
             influx_data.append(object)
 
