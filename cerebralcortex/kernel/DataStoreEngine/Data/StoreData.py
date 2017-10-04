@@ -329,7 +329,7 @@ class StoreData:
                         object['fields']['value_0'] = values
             except:
                 cc_log("Datapoint sample values conversion failed"+str(values),"ERROR")
-                object['fields']['value_0'] = values
+                object['fields']['value_0'] = str(values)
 
             influx_data.append(object)
 
