@@ -26,7 +26,7 @@
 import logging
 import inspect
 import os
-logs_dir = '/var/logs/cerebralcortex/'
+logs_dir = '/var/log/cerebralcortex/'
 
 
 def cc_log(error_message="", error_type="EXCEPTION"):
@@ -45,11 +45,11 @@ def cc_log(error_message="", error_type="EXCEPTION"):
     error_message = "[" + str(file_name) + " - " + str(method_name) + " - " + str(line_number) + "] - " + str(error_message)
 
     if error_type=="CRITICAL":
-        logs_filename = logs_dir+"critical_errors.log"
+        logs_filename = logs_dir+"critical.log"
         logging.basicConfig(filename=logs_filename,level=logging.CRITICAL, format=FORMAT)
         logging.critical(error_message)
     elif error_type == "ERROR":
-        logs_filename = logs_dir+"errors.log"
+        logs_filename = logs_dir+"error.log"
         logging.basicConfig(filename=logs_filename,level=logging.ERROR, format=FORMAT)
         logging.error(error_message)
     elif error_type == "EXCEPTION":
@@ -57,7 +57,7 @@ def cc_log(error_message="", error_type="EXCEPTION"):
         logging.basicConfig(filename=logs_filename,level=logging.ERROR, format=FORMAT)
         logging.exception(error_message)
     elif error_type == "WARNING":
-        logs_filename = logs_dir+"warnings.log"
+        logs_filename = logs_dir+"warning.log"
         logging.basicConfig(filename=logs_filename,level=logging.WARNING, format=FORMAT)
         logging.warning(error_message)
     elif error_type == "DEBUG":
