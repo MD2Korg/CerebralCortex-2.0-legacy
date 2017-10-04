@@ -328,8 +328,12 @@ class StoreData:
                     else:
                         object['fields']['value_0'] = values
             except:
-                cc_log("Datapoint sample values conversion failed"+str(values),"ERROR")
-                object['fields']['value_0'] = str(values)
+                try:
+                    values = json.dumps(values)
+                    object['fields']['value_0'] = values
+                except:
+                    cc_log("Datapoint sample values conversion: "+str(values),"WARNING")
+                    object['fields']['value_0'] = str(values)
 
             influx_data.append(object)
 
