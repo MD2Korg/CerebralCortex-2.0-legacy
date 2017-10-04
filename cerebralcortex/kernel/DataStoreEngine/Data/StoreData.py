@@ -323,7 +323,12 @@ class StoreData:
                 else:
                     if not values:
                         values = "NULL"
+                    try:
+                        values = float(values)
+                    except:
+                        values = values
                     if "NAME" in data_descriptor[0]:
+
                         object['fields'][data_descriptor[0]["NAME"]] = values
                     else:
                         object['fields']['value_0'] = values
