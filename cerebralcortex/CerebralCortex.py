@@ -39,7 +39,7 @@ from cerebralcortex.kernel.kafka_engine.consumer import Consumer
 
 
 class CerebralCortex:
-    def __init__(self, configuration_file, master=None, name=None, time_zone=None, load_spark=True):
+    def __init__(self, configuration_file, master=None, name=None, time_zone='UTC', load_spark=True):
 
         """
         
