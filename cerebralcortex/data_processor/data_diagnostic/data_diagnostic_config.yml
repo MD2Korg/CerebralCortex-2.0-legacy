@@ -6,6 +6,9 @@ sampling_rate:
   ecg: 64
   autosense_accel: 10.67
   motionsense: 16
+  phone_battery: 1
+  autosense_battery: 1
+  motionsense_battery: 1
 
 battery_marker:
   phone_powered_off: 0 #min=0 and max=100
@@ -54,12 +57,8 @@ labels:
   rip_packet_loss: 6
   motionsense_packet_loss: 6
   #battery labels
-  phone_powered_off: 20
-  phone_battery_down: 16
-  autosesen_powered_off: 18
-  autosense_battery_down: 14
-  motionsense_powered_off: 18
-  motionsense_battery_down: 14
+  powered_off: 0
+  battery_down: 10
 
 sensor_types:
   phone_battery: phone_battery

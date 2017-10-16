@@ -23,12 +23,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import statistics as stat
+from typing import List
 from collections import OrderedDict
 
 from cerebralcortex.kernel.datatypes.datastream import DataPoint
 
 
-def merge_consective_windows(data: OrderedDict) -> DataPoint:
+def merge_consective_windows(data: OrderedDict) -> List[DataPoint]:
     """
     Merge two or more windows if the time difference between them is 0
     :param data:

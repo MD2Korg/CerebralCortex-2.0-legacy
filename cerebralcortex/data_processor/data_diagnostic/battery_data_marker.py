@@ -43,35 +43,26 @@ def battery_marker(stream_id: uuid, CC_obj: CerebralCortex, config: dict, start_
     """
     results = OrderedDict()
 
-    # stream = CC_obj.get_datastream(stream_id, data_type="all")
-
     stream = CC_obj.get_datastream(stream_id, data_type=DataSet.COMPLETE, start_time=start_time, end_time=end_time)
     windowed_data = window(stream.data, config['general']['window_size'], True)
 
-    name = stream._name
+    stream_name = stream._name
 
     for key, data in windowed_data.items():
         dp = []
         for k in data:
             dp.append(float(k.sample))
 
-        if name == config["sensor_types"]["phone_battery"]:
-            results[key] = phone_battery(dp, config)
-        elif name == config["sensor_types"]["motionsense_battery"]:
-            results[key] = motionsense_battery(dp, config)
-        elif name == config["sensor_types"]["autosense_battery"]:
-            results[key] = autosense_battery(dp, config)
-        else:
-            raise ValueError("Incorrect sensor type.")
-
+        results[key] = battery(dp, config)
     merged_windows = merge_consective_windows(results)
-    input_streams = [{"id": str(stream_id), "name": name}]
-    store(input_streams, merged_windows, CC_obj, config, config["algo_names"]["battery_marker"])
+    labelled_windows = mark_windows(merged_windows)
+    input_streams = [{"id": str(stream_id), "name": stream_name}]
+    store(input_streams, labelled_windows, CC_obj, config, config["algo_names"]["battery_marker"])
 
 
-def phone_battery(dp: list, config: dict) -> str:
+def battery(dp: list, sensor_type: str, config: dict) -> str:
     """
-    labels a window as sensor powerd-off or low battery and returns the label
+    label a window as sensor powerd-off or low battery
     :param dp:
     :param config:
     :return:
@@ -79,51 +70,49 @@ def phone_battery(dp: list, config: dict) -> str:
     if not dp:
         dp_sample_avg = 0
     else:
-        dp_sample_avg = np.mean(dp)
+        dp_sample_avg = np.median(dp)
 
-    if dp_sample_avg <= config['battery_marker']['phone_powered_off']:
-        return config['labels']['phone_powered_off']
-    elif dp_sample_avg <= config['battery_marker']['phone_battery_down']:
-        return config['labels']['phone_battery_down']
-    return None
-
-
-def motionsense_battery(dp: list, config: dict) -> str:
-    """
-    labels a window as sensor powerd-off or low battery and returns the label
-    :param dp:
-    :param config:
-    :return:
-    """
-    if not dp:
-        dp_sample_avg = 0
-    else:
-        dp_sample_avg = np.mean(dp)
-
-    if dp_sample_avg <= config['battery_marker']['motionsense_powered_off']:
-        return config['labels']['motionsense_powered_off']
-    elif dp_sample_avg <= config['battery_marker']['phone_powered_off']:
-        return config['labels']['motionsense_battery_down']
-    return None
-
-
-def autosense_battery(dp: list, config: dict) -> str:
-    """
-    labels a window as sensor powerd-off or low battery and returns the label
-    :param dp:
-    :param config:
-    :return:
-    """
-    if not dp:
-        dp_sample_avg = 0
-    else:
-        dp_sample_avg = np.mean(dp)
-
-    if dp_sample_avg <= config['battery_marker']['autosense_powered_off']:
-        return config['labels']['autosesen_powered_off']
-    else:
+    if sensor_type=="phone_battery":
+        sensor_battery_down = config['battery_marker']['phone_battery_down']
+        sensor_battery_off = config['battery_marker']['phone_powered_off']
+    elif sensor_type=="autosense_battery":
+        sensor_battery_down = config['battery_marker']['autosense_battery_down']
+        sensor_battery_off = config['battery_marker']['autosense_powered_off']
         # Values (Min=0 and Max=6) in battery voltage.
-        voltageValue = (dp_sample_avg / 4096) * 3 * 2
-        if voltageValue < config['battery_marker']['autosense_battery_down']:
-            return config['labels']['autosense_battery_down']
-    return None
+        dp_sample_avg = (dp_sample_avg / 4096) * 3 * 2
+    elif sensor_type=="motionsense_battery":
+        sensor_battery_down = config['battery_marker']['motionsense_battery_down']
+        sensor_battery_off = config['battery_marker']['motionsense_powered_off']
+    else:
+        raise ValueError("Unknow sensor-battery type")
+
+    if dp_sample_avg < 1:
+        return "no-data"
+    elif dp_sample_avg < sensor_battery_down and dp_sample_avg > 1:
+        return "low"
+    elif dp_sample_avg > sensor_battery_off:
+        return "charged"
+
+
+def mark_windows(merged_windows: list, config: dict) -> str:
+    """
+    label a window as sensor powerd-off or low battery
+    :param dp:
+    :param config:
+    :return:
+    """
+    prev_wind = None
+    labelled_windows = []
+    for merged_window in merged_windows:
+        if merged_window.sample == "no-data":
+            if prev_wind and prev_wind.sample == "charged":
+                merged_window.sample = config['labels']['powered_off']
+            elif prev_wind and prev_wind.sample == "low":
+                merged_window.sample = config['labels']['battery_down']
+            else:
+                # TODO: if first window data has 'no-data' label then query DB to check label of the last window
+                merged_window.sample = "TODO"
+            labelled_windows.append(merged_window)
+        else:
+            prev_wind = merged_window
+    return labelled_windows

@@ -39,6 +39,10 @@ class DataPoint:
     def sample(self):
         return self._sample
 
+    @sample.setter
+    def sample(self, val):
+        self._sample = val
+
     @property
     def start_time(self):
         return self._start_time

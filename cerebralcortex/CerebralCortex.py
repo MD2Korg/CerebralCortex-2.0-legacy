@@ -169,7 +169,7 @@ class CerebralCortex:
         :param end_time:
         :return:
         """
-        return Metadata(self).get_stream_id_by_owner_id(owner_id, stream_name, start_time, end_time)
+        return Metadata(self).get_stream_ids_of_owner(owner_id, stream_name, start_time, end_time)
 
     def get_stream_ids_by_name(self, stream_name: str, owner_id: uuid = None, start_time: datetime = None,
                                end_time: datetime = None) -> str:
