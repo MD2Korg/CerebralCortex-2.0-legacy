@@ -49,12 +49,12 @@ def merge_consective_windows(data: OrderedDict) -> List[DataPoint]:
             element = val
             end = key[1]
         else:
-            merged_windows.append(DataPoint(start, end, element))  # [(start, end)] = element
+            merged_windows.append(DataPoint(start, end, element))  # [(export_data, end)] = element
             element = val
             start = key[0]
             end = key[1]
     if val is not None:
-        merged_windows.append(DataPoint(start, end, val))  # merged_windows[(start, end)] = val
+        merged_windows.append(DataPoint(start, end, val))  # merged_windows[(export_data, end)] = val
 
     return merged_windows
 

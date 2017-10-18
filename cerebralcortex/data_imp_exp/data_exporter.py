@@ -27,13 +27,14 @@ import json
 import os
 import shutil
 import uuid
-from datetime import datetime
 from typing import List
 from cerebralcortex.kernel.DataStoreEngine.Data.Data import Data
 from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 from cerebralcortex.CerebralCortex import CerebralCortex
+
 class DataExporter():
-    def __init__(self, CC_obj:CerebralCortex, export_dir_path:str, owner_ids:List[uuid]=None, owner_user_names:List[str]=None, owner_name_regex:str=None, start_time:str=None, end_time:str=None):
+
+    def __init__(self, CC_obj:CerebralCortex, export_dir_path:str, owner_ids:List=None, owner_user_names:List=None, owner_name_regex:str=None, start_time:str=None, end_time:str=None):
         """
         :param CC_obj:
         :param export_dir_path:
@@ -43,35 +44,44 @@ class DataExporter():
         :param start_time:
         :param end_time:
         """
+        if owner_ids and (owner_user_names or owner_name_regex):
+            raise ValueError("Expecting owner_ids: got owner_user_names and/or owner_name_regex too.")
+        elif owner_user_names and (owner_ids or owner_name_regex):
+            raise ValueError("Expecting owner_user_names: got owner_ids and/or owner_name_regex too.")
+        elif owner_name_regex and (owner_ids or owner_user_names):
+            raise ValueError("Expecting owner_name_regex: got owner_ids and owner_user_names too.")
+
         self.streamData = Data(CC_obj)
         self.export_dir_path = export_dir_path
         self.metadata = Metadata(CC_obj)
-        self.owner_ids = str(owner_ids)
-        self.owner_user_names = str(owner_user_names)
+        self.owner_ids = owner_ids
+        self.owner_user_names = owner_user_names
         self.owner_name_regex = str(owner_name_regex)
         self.start_time = str(start_time)
         self.end_time = str(end_time)
 
-    def start2(self):
-        if self.owner_ids and self.owner_user_names and self.owner_name_regex:
-
     def start(self):
-        owner_id = None
-        owner_name = None
-        if not self.owner_ids and self.owner_user_names:
-            owner_id = self.metadata.owner_name_to_id(self.owner_user_names)
-            owner_name = self.owner_user_names
-            pass
-        elif self.owner_ids and not self.owner_user_names:
-            owner_id = self.owner_ids
-            owner_name = self.metadata.owner_id_to_name(self.owner_ids)
-        else:
-            raise ValueError("Owner ID OR owner user name cannot be None.")
+        if self.owner_ids and self.owner_ids!='None':
+            for owner_id in self.owner_ids:
+                owner_name = self.metadata.owner_id_to_name(owner_id)
+                self.export_data(owner_id=owner_id, owner_name=owner_name)
+        elif self.owner_user_names and self.owner_user_names!='None':
+            for owner_user_name in self.owner_user_names:
+                owner_id = self.metadata.owner_name_to_id(owner_user_name)
+                self.export_data(owner_id=owner_id, owner_name=owner_user_name)
+        elif self.owner_name_regex and self.owner_name_regex!='None':
+            owner_idz = self.metadata.get_owner_ids_by_owner_name_regex(self.owner_name_regex)
+            for owner_id in owner_idz:
+                owner_name = self.metadata.owner_id_to_name(owner_id["identifier"])
+                self.export_data(owner_id=owner_id["identifier"], owner_name=owner_name)
+
+
+    def export_data(self, owner_id=None, owner_name=None):
 
         rows = self.metadata.get_stream_metadata_by_owner_id(owner_id)
         if rows=="NULL":
-            print("No data found for the owner-name/owner-id")
-            quit()
+            print("No data found for => owner-id: "+owner_id+" - owner-name: "+owner_name)
+            return
 
         for row in rows:
             stream_id = row["identifier"]

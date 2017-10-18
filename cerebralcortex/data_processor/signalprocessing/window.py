@@ -110,7 +110,7 @@ def window_iter(iterable: List[DataPoint],
 
 def create_all_windows(datapoint: List[DataPoint], window_size: float, window_offset: float):
     """
-    This method will create a complete list of a windows between start and end time of the data provided.
+    This method will create a complete list of a windows between export_data and end time of the data provided.
     :param datapoint:
     :param window_size:
     :param window_offset:
@@ -155,7 +155,7 @@ def epoch_align(ts: datetime,
     Epoch timestamp alignment based on offset
 
     :param time_zone: Specifiy the timezone of the timestamps, default US/Central
-    :param ts: datatime object representing the timestamp to start with
+    :param ts: datatime object representing the timestamp to export_data with
     :param offset: seconds as a float
     :param after: Flag designating if the result should be after ts
     :param time_base: specifies the precision with which the time base should be manipulated (1e6 -> microseconds)

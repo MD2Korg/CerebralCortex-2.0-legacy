@@ -34,7 +34,9 @@ def run():
 
     output_dir = "/home/ali/Desktop/DUMP/aaaa/"
 
-    de = DataExporter(CC_obj, output_dir, owner_ids="de5b4a7d-ba1b-44c4-b55e-cd0ca7487734")
+    owner_ids = ["de5b4a7d-ba1b-44c4-b55e-cd0ca7487734"]
+
+    de = DataExporter(CC_obj, output_dir, owner_name_regex='ali')
     de.start()
 
 

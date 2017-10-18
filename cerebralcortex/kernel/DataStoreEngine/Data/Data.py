@@ -35,7 +35,9 @@ class Data(LoadData, StoreData):
         """
         self.CC_obj = CC_obj
         self.configuration = CC_obj.configuration
-        self.sqlContext = CC_obj.sqlContext
+
+        if hasattr(CC_obj, "sqlContext"):
+            self.sqlContext = CC_obj.sqlContext
 
         self.hostIP = self.configuration['cassandra']['host']
         self.hostPort = self.configuration['cassandra']['port']

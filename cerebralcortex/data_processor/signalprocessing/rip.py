@@ -294,7 +294,7 @@ def correct_peak_position(peaks: List[DataPoint],
             up_intercept = up_intercepts[i]
             # points between current valley and UI.
             if up_intercept.start_time not in data_start_time_to_index or peaks[i].start_time not in data_start_time_to_index:
-                exception_message = 'Data has no start time for peak or up intercept start time at index ' + str(i)
+                exception_message = 'Data has no export_data time for peak or up intercept export_data time at index ' + str(i)
                 raise Exception(exception_message)
             else:
                 data_up_intercept_index = data_start_time_to_index[up_intercept.start_time]
@@ -354,7 +354,7 @@ def correct_valley_position(peaks: List[DataPoint],
             up_intercept = up_intercepts[i]
 
             if valleys[i].start_time not in data_start_time_to_index or up_intercept.start_time not in data_start_time_to_index:
-                exception_message = 'Data has no start time for valley or up intercept start time at index ' + str(i)
+                exception_message = 'Data has no export_data time for valley or up intercept export_data time at index ' + str(i)
                 raise Exception(exception_message)
             else:
                 valley_index = data_start_time_to_index[valleys[i].start_time]

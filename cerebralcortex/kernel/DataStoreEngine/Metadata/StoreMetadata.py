@@ -176,7 +176,7 @@ class StoreMetadata:
             else:
                 return "unchanged"
         else:
-            raise ValueError("Stream has no start/end time.")
+            raise ValueError("Stream has no export_data/end time.")
 
     def update_auth_token(self, username: str, auth_token: str, auth_token_issued_time: datetime,
                           auth_token_expiry_time: datetime)->str:

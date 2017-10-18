@@ -212,7 +212,7 @@ class TestPeakValleyComputation(unittest.TestCase):
                                                                              180, 500]
 
         expected_valleys_start_time = [6,
-                                       21]  # data is not monotoneously increasing from 1 to 10 start time, so new valley move towards right at 6 where it is monotonoeously increasing. but the second valley is alright. as data is monotonoeusly increasing from start time 21 to 30.
+                                       21]  # data is not monotoneously increasing from 1 to 10 export_data time, so new valley move towards right at 6 where it is monotonoeously increasing. but the second valley is alright. as data is monotonoeusly increasing from export_data time 21 to 30.
         expected_valleys_samples = [100, 100]
 
         peaks_input = form_data_point_list_from_start_time_sample(start_time_list=peaks_start_time,
@@ -499,7 +499,7 @@ class TestPeakValleyComputation(unittest.TestCase):
 
         self.assertGreaterEqual(timestamp_corrected_rip_data_unique_start_time_count,
                                 raw_rip_data_unique_start_time_count,
-                                msg='Timestamp corrected rip data has duplicate start times. '
+                                msg='Timestamp corrected rip data has duplicate export_data times. '
                                     'Check if rip raw data sample frequency missmatch with provided default rip sample frequency.')
 
 

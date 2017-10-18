@@ -202,6 +202,26 @@ class LoadMetadata:
         else:
             return rows
 
+    def get_owner_ids_by_owner_name_regex(self, owner_name_regex: str) -> uuid:
+        """
+
+        :param owner_id:
+        :return:
+        """
+        if not owner_name_regex:
+            return "NULL"
+
+        qry = "select identifier from " + self.userTable + " where username like %(username)s"
+        vals = {'username': str(owner_name_regex) + '%'}
+
+        self.cursor.execute(qry, vals)
+        rows = self.cursor.fetchall()
+
+        if len(rows) == 0:
+            return "NULL"
+        else:
+            return rows
+
     def get_stream_ids_by_name(self, stream_name: str, owner_id: uuid = None, start_time: datetime = None,
                                end_time: datetime = None) -> List:
         """

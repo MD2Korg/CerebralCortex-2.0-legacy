@@ -74,7 +74,7 @@ def check_ecg_rr_window_quality(quality_datastream_data:List[DataPoint],
                                 endtime: datetime,
                                 acceptable_ratio: float = .66):
     """
-    Calculates the quality of RR interval in between the start time and end time of a window.
+    Calculates the quality of RR interval in between the export_data time and end time of a window.
     Renders a boolean decision if the window is usable for feature processing or not.
 
     """
