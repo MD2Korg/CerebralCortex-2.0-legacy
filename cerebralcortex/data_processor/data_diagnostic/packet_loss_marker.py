@@ -42,20 +42,20 @@ def packet_loss_marker(stream_id: uuid, CC_obj: CerebralCortex, config: dict, st
     :param config:
     """
     stream = CC_obj.get_datastream(stream_id, data_type=DataSet.COMPLETE, start_time=start_time, end_time=end_time)
-    name = stream._name
+    stream_name = stream._name
     results = OrderedDict()
 
-    if name == config["sensor_types"]["autosense_ecg"]:
+    if stream_name == config["sensor_types"]["autosense_ecg"]:
         sampling_rate = config["sampling_rate"]["ecg"]
         threshold_val = config["packet_loss_marker"]["ecg_acceptable_packet_loss"]
         label = config["labels"]["ecg_packet_loss"]
         windowed_data = window(stream.data, config['general']['window_size'], False)
-    elif name == config["sensor_types"]["autosense_rip"]:
+    elif stream_name == config["sensor_types"]["autosense_rip"]:
         sampling_rate = config["sampling_rate"]["rip"]
         threshold_val = config["packet_loss_marker"]["rip_acceptable_packet_loss"]
         label = config["labels"]["rip_packet_loss"]
         windowed_data = window(stream.data, config['general']['window_size'], False)
-    elif name == config["sensor_types"]["motionsense_accel"]:
+    elif stream_name == config["sensor_types"]["motionsense_accel"]:
         sampling_rate = config["sampling_rate"]["motionsense"]
         threshold_val = config["packet_loss_marker"]["motionsense_acceptable_packet_loss"]
         label = config["labels"]["motionsense_packet_loss"]
@@ -73,5 +73,5 @@ def packet_loss_marker(stream_id: uuid, CC_obj: CerebralCortex, config: dict, st
             results[key] = label
 
     merged_windows = merge_consective_windows(results)
-    input_streams = [{"id": str(stream_id), "name": name}]
+    input_streams = [{"id": str(stream_id), "name": stream_name}]
     store(input_streams, merged_windows, CC_obj, config, config["algo_names"]["packet_loss_marker"])

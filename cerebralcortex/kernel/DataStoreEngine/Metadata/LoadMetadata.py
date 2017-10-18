@@ -182,6 +182,26 @@ class LoadMetadata:
             stream_ids_names[row["name"]] = row["identifier"]
         return stream_ids_names
 
+    def get_stream_metadata_by_owner_id(self, owner_id: str) -> uuid:
+        """
+
+        :param owner_id:
+        :return:
+        """
+        if not owner_id:
+            return "NULL"
+
+        qry = "select * from " + self.datastreamTable + " where owner = %(owner)s"
+        vals = {'owner': str(owner_id)}
+
+        self.cursor.execute(qry, vals)
+        rows = self.cursor.fetchall()
+
+        if len(rows) == 0:
+            return "NULL"
+        else:
+            return rows
+
     def get_stream_ids_by_name(self, stream_name: str, owner_id: uuid = None, start_time: datetime = None,
                                end_time: datetime = None) -> List:
         """
@@ -268,7 +288,7 @@ class LoadMetadata:
         :return:
         """
         if not owner_id:
-            return "NULL1"
+            return "NULL"
 
         qry = "select username from " + self.userTable + " where identifier = %(identifier)s"
         vals = {'identifier': str(owner_id)}
@@ -277,9 +297,29 @@ class LoadMetadata:
         rows = self.cursor.fetchall()
 
         if len(rows) == 0:
-            return "NULL2"
+            return "NULL"
         else:
             return rows[0]["username"]
+
+    def owner_name_to_id(self, owner_name: str) -> uuid:
+        """
+
+        :param owner_id:
+        :return:
+        """
+        if not owner_name:
+            return "NULL"
+
+        qry = "select identifier from " + self.userTable + " where username = %(username)s"
+        vals = {'username': str(owner_name)}
+
+        self.cursor.execute(qry, vals)
+        rows = self.cursor.fetchall()
+
+        if len(rows) == 0:
+            return "NULL"
+        else:
+            return rows[0]["identifier"]
 
     def is_auth_token_valid(self, token_owner: str, auth_token: str, auth_token_expiry_time: datetime) -> bool:
         """

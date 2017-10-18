@@ -50,19 +50,19 @@ def attachment_marker(stream_id: uuid, CC_obj: CerebralCortex, config: dict, sta
 
     results = OrderedDict()
     threshold_val = None
-    name = stream._name
+    stream_name = stream._name
 
-    if name == config["sensor_types"]["autosense_ecg"]:
+    if stream_name == config["sensor_types"]["autosense_ecg"]:
         threshold_val = config['attachment_marker']['ecg_on_body']
         label_on = config['labels']['ecg_on_body']
         label_off = config['labels']['ecg_off_body']
         windowed_data = window(stream.data, config['general']['window_size'], False)
-    elif name == config["sensor_types"]["autosense_rip"]:
+    elif stream_name == config["sensor_types"]["autosense_rip"]:
         threshold_val = config['attachment_marker']['rip_on_body']
         label_on = config['labels']['rip_on_body']
         label_off = config['labels']['rip_off_body']
         windowed_data = window(stream.data, config['general']['window_size'], False)
-    elif name == config["sensor_types"]["motionsense_accel"]:
+    elif stream_name == config["sensor_types"]["motionsense_accel"]:
         threshold_val = config['attachment_marker']['motionsense_on_body']
         label_on = config['labels']['motionsense_on_body']
         label_off = config['labels']['motionsense_off_body']
@@ -81,14 +81,11 @@ def attachment_marker(stream_id: uuid, CC_obj: CerebralCortex, config: dict, sta
             results[key] = label_on
 
     merged_windows = merge_consective_windows(results)
-    input_streams = [{"id": str(stream_id), "name": name}]
+    input_streams = [{"id": str(stream_id), "name": stream_name}]
     store(input_streams, merged_windows, CC_obj, config, config["algo_names"]["attachment_marker"])
 
 
-# TO-DO gsr_response method is not being used. Need to make sure whether GSR values actually respresent GSR data.
-
-
-
+# TODO: gsr_response method is not being used. Need to make sure whether GSR values actually respresent GSR data.
 def gsr_response(stream_id: uuid, start_time: datetime, end_time: datetime, label_attachment: str, label_off: str,
                  CC_obj: CerebralCortex, config: dict) -> str:
     """

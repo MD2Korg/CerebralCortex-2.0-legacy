@@ -25,21 +25,30 @@
 import unittest
 import time
 import pytz
+import os
 from datetime import datetime
 from collections import OrderedDict
+from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.configuration import Configuration
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
 from cerebralcortex.data_processor.data_diagnostic.battery_data_marker import battery, mark_windows
 from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.data_processor.data_diagnostic.util import merge_consective_windows
+import random
+def tt(dd):
+    dd.sample = random.random()
+    return dd
+    #print("====> ", dd)
 
 class TestDataDiagnostic(unittest.TestCase):
 
     @classmethod
-    def setUp(self):
-        self.config = Configuration(filepath="../data_diagnostic/data_diagnostic_config.yml").config
+    def setUpClass(cls):
+        configuration_file = os.path.join(os.path.dirname(__file__), '../../../cerebralcortex.yml')
+        cls.CC = CerebralCortex(configuration_file, master="local[*]", name="Data Diagnostic App", time_zone="US/Central")
+        cls.config = Configuration(filepath="../data_diagnostic/data_diagnostic_config.yml").config
 
-        self.sample_battery_data = []
+        cls.sample_battery_data = []
         for row in range(1,481):
             if row<61:
                 battery = 87.0
@@ -58,8 +67,8 @@ class TestDataDiagnostic(unittest.TestCase):
             start_time = tz.localize(datetime.fromtimestamp(int(round((time.time()+row) * 1000))/1e3))
 
             dp = DataPoint(start_time=start_time, sample=battery)
-            self.sample_battery_data.append(dp)
-            self.window_size = 60
+            cls.sample_battery_data.append(dp)
+        cls.window_size = 60
 
     def test_phone_battery(self):
         """
@@ -67,6 +76,9 @@ class TestDataDiagnostic(unittest.TestCase):
         """
         merged_windows_samples_expect = ['charged', 'no-data', 'charged', 'low', 'no-data', 'charged']
         labelled_windows_samples_expect = [0,10]
+        cc = [self.sample_battery_data,self.sample_battery_data]
+        dd = self.CC.sc.parallelize(cc)
+        ecg_quality = dd.map(lambda ds: tt(ds))
         windowed_data = window(self.sample_battery_data, self.window_size, True)
         results = OrderedDict()
         for key, data in windowed_data.items():

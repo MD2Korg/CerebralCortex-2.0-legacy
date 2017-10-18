@@ -25,10 +25,11 @@
 import os
 
 from cerebralcortex.configuration import Configuration
+from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.data_processor.data_diagnostic.attachment_marker import attachment_marker
 from cerebralcortex.data_processor.data_diagnostic.battery_data_marker import battery_marker
 from cerebralcortex.data_processor.data_diagnostic.packet_loss_marker import packet_loss_marker
-from cerebralcortex.data_processor.data_diagnostic.sensor_unavailable_marker import *
+from cerebralcortex.data_processor.data_diagnostic.sensor_unavailable_marker import wireless_disconnection
 
 
 class DiagnoseData:
@@ -56,7 +57,7 @@ class DiagnoseData:
         :param start_time:
         :param end_time:
         """
-        help('CerebralCortex')
+
         all_stream_ids_names = CC_obj.get_stream_ids_of_owner(owner_id)
 
         main_stream_id = all_stream_ids_names[stream_name]
@@ -73,7 +74,7 @@ class DiagnoseData:
             motionsense_battery_stream_id = all_stream_ids_names[config["sensor_types"]["motionsense_battery"]]
             battery_marker(motionsense_battery_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
 
-        wireless_disconnection(main_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
+        wireless_disconnection(main_stream_id, all_stream_ids_names, CC_obj, config, start_time=start_time, end_time=end_time)
         attachment_marker(main_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
         packet_loss_marker(main_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
 

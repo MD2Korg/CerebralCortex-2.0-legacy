@@ -22,31 +22,21 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from cerebralcortex.kernel.DataStoreEngine.Data.LoadData import LoadData
-from cerebralcortex.kernel.DataStoreEngine.Data.StoreData import StoreData
+import os
+from cerebralcortex.CerebralCortex import CerebralCortex
+from cerebralcortex.data_imp_exp.data_exporter import DataExporter
 
-class Data(LoadData, StoreData):
-    def __init__(self, CC_obj):
-        """
-        :param sparkContext:
-        :param sparkContext:
-        :param configuration:
-        :param sqlContext:
-        """
-        self.CC_obj = CC_obj
-        self.configuration = CC_obj.configuration
-        self.sqlContext = CC_obj.sqlContext
 
-        self.hostIP = self.configuration['cassandra']['host']
-        self.hostPort = self.configuration['cassandra']['port']
-        self.keyspaceName = self.configuration['cassandra']['keyspace']
-        self.dbUser = self.configuration['cassandra']['db_user']
-        self.dbPassword = self.configuration['cassandra']['db_pass']
-        self.datapointTable = self.configuration['cassandra']['datapoint_table']
+def run():
+    testConfigFile = os.path.join(os.path.dirname(__file__), '../../cerebralcortex.yml')
+    CC_obj = CerebralCortex(testConfigFile, master="local[*]", name="Cerebral Cortex DataStoreEngine Tests",
+                        time_zone="US/Central", load_spark=True)
 
-        self.influxdbIP = self.configuration['influxdb']['host']
-        self.influxdbPort = self.configuration['influxdb']['port']
-        self.influxdbDatabase = self.configuration['influxdb']['database']
-        self.influxdbUser = self.configuration['influxdb']['db_user']
-        self.influxdbPassword = self.configuration['influxdb']['db_pass']
+    output_dir = "/home/ali/Desktop/DUMP/aaaa/"
 
+    de = DataExporter(CC_obj, output_dir, owner_ids="de5b4a7d-ba1b-44c4-b55e-cd0ca7487734")
+    de.start()
+
+
+if __name__=="__main__":
+    run()

@@ -55,9 +55,9 @@ class CerebralCortex:
 
             self.sparkSession = self.getOrCreateSC(type="sparkSession")
 
-            self.sc = self.getOrCreateSC(type="sqlContext")
+            self.sc = self.getOrCreateSC(type="sparkContext")
 
-            self.sqlContext = self.getOrCreateSC(type="sparkContext")  # TODO: This may need to become a sparkSession
+            self.sqlContext = self.getOrCreateSC(type="sqlContext")  # TODO: This may need to become a sparkSession
 
         self.configuration = Configuration(filepath=configuration_file).config
 

@@ -39,7 +39,7 @@ from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 # TO-DO: use advanced sensor quality algorithms to detect whether a window contains good or bad data.
 
 
-def wireless_disconnection(stream_id: uuid, CC_obj: CerebralCortex, config: dict, start_time=None, end_time=None):
+def wireless_disconnection(stream_id: uuid, all_stream_ids_names:dict, CC_obj: CerebralCortex, config: dict, start_time=None, end_time=None):
     """
     Analyze whether a sensor was unavailable due to a wireless disconnection
     or due to sensor powered off. This method automatically loads related
@@ -78,21 +78,16 @@ def wireless_disconnection(stream_id: uuid, CC_obj: CerebralCortex, config: dict
 
     if battery_off_data:
         if name == config["sensor_types"]["motionsense_accel"]:
-            motionsense_accel_stream_id = CC_obj.get_stream_id_by_owner_id(owner_id,
-                                                                           config[
-                                                                               "sensor_types"][
-                                                                               "motionsense_accel"],
-                                                                           "id")
+            motionsense_accel_stream_id = all_stream_ids_names["motionsense_accel"]
+
             input_streams = [{"id": str(stream_id), "name": str(stream_name)},
                              {"id": str(motionsense_accel_stream_id),
                               "name": config["sensor_types"]["motionsense_accel"]}]
         else:
-            x = CC_obj.get_stream_id_by_owner_id(owner_id,
-                                                 config["sensor_types"]["autosense_accel_x"])
-            y = CC_obj.get_stream_id_by_owner_id(owner_id,
-                                                 config["sensor_types"]["autosense_accel_y"])
-            z = CC_obj.get_stream_id_by_owner_id(owner_id,
-                                                 config["sensor_types"]["autosense_accel_z"])
+            x = all_stream_ids_names["autosense_accel_x"]
+            y = all_stream_ids_names["autosense_accel_y"]
+            z = all_stream_ids_names["autosense_accel_z"]
+
             input_streams = [{"id": str(stream_id), "name": stream_name},
                              {"id": str(x), "name": config["sensor_types"]["autosense_accel_x"]},
                              {"id": str(y), "name": config["sensor_types"]["autosense_accel_y"]},
