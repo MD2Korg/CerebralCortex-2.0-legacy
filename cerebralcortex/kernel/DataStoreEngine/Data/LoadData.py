@@ -237,15 +237,18 @@ class LoadData:
         return DataStream(stream_id, ownerID, name, data_descriptor, execution_context, annotations,
                           stream_type, start_time, end_time, data)
 
-    def load_data_from_cassandra(self, table_name: str, where_clause: str) -> object:
+    def load_data_from_cassandra(self, table_name: str, where_clause: str, num_partitions:int=0) -> object:
         """
         Establish connection with cassandra, load data, and filter based on the condition passed in whereClause argument
         :return:
         :param table_name:
         :param where_clause:
+        :param num_partitions: total number of partitions to be used when shuffling/retrieving data, default is 200 http://spark.apache.org/docs/latest/sql-programming-guide.html#other-configuration-options
         :return: spark dataframe
         """
-        # TO-DO, replace .filter with .where() for performance
+
+        if num_partitions>0:
+            self.sqlContext.setConf("spark.sql.shuffle.partitions", str(num_partitions))
 
         dataframe = self.sqlContext.read.format("org.apache.spark.sql.cassandra"). \
             option("spark.cassandra.connection.host", self.hostIP). \

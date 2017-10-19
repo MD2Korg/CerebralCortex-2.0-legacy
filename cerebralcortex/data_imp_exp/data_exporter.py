@@ -52,8 +52,8 @@ class DataExporter():
         self.owner_ids = owner_ids
         self.owner_user_names = owner_user_names
         self.owner_name_regex = str(owner_name_regex)
-        self.start_time = str(start_time)
-        self.end_time = str(end_time)
+        self.start_time = start_time
+        self.end_time = end_time
 
     def start(self):
         if self.owner_ids and self.owner_ids!='None':
@@ -119,16 +119,16 @@ class DataExporter():
             raise ValueError("Missing owner ID.")
 
         if self.start_time and self.end_time:
-            where_clause += " and start_time>=cast('" + self.start_time + "' as timestamp) and start_time<=cast('" + self.end_time + "' as timestamp)"
+            where_clause += " and start_time>=cast('" + str(self.start_time) + "' as timestamp) and start_time<=cast('" + str(self.end_time) + "' as timestamp)"
         elif self.start_time and not self.end_time:
-            where_clause += " and start_time>=cast('" + self.start_time + "' as timestamp)"
+            where_clause += " and start_time>=cast('" + str(self.start_time) + "' as timestamp)"
         elif not self.start_time and self.end_time:
-            where_clause += " start_time<=cast('" + self.end_time + "' as timestamp)"
+            where_clause += " start_time<=cast('" + str(self.end_time) + "' as timestamp)"
 
-        df = self.streamData.load_data_from_cassandra(self.streamData.datapointTable, where_clause)
+        df = self.streamData.load_data_from_cassandra(self.streamData.datapointTable, where_clause,1)
         df.write\
-            .format("com.databricks.spark.csv")\
-            .option("codec", "org.apache.hadoop.io.compress.GzipCodec")\
+            .format("csv") \
+            .option("codec", "org.apache.hadoop.io.compress.GzipCodec") \
             .save(file_path+"/"+stream_id)
 
         os.system("cat "+file_path+"/"+stream_id+"/p* > "+file_path+"/"+stream_id+".gz")
