@@ -23,21 +23,39 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import argparse
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.data_imp_exp.data_exporter import DataExporter
 
 
 def run():
+    parser = argparse.ArgumentParser(description='CerebralCortex Data Exporter.')
+    parser.add_argument("-o", "--output_dir", help="Directory path where exported data will be stored", required=True)
+    parser.add_argument("-idz", "--owner_ids", help="Comma separated users' UUIDs", required=False)
+    parser.add_argument("-namez", "--owner_user_names", help="Comma separated user-names", required=False)
+    parser.add_argument("-nr", "--owner_name_regex", help="User name pattern. For example, '-nr ali' will export all users' data that start with user-name 'ali'", required=False)
+    args = vars(parser.parse_args())
+
+    if args["owner_ids"] and (args["owner_user_names"] or args["owner_name_regex"]):
+        raise ValueError("Expecting owner_ids: got owner_user_names and/or owner_name_regex too.")
+    elif args["owner_user_names"] and (args["owner_ids"] or args["owner_name_regex"]):
+        raise ValueError("Expecting owner_user_names: got owner_ids and/or owner_name_regex too.")
+    elif args["owner_name_regex"] and (args["owner_ids"] or args["owner_user_names"]):
+        raise ValueError("Expecting owner_name_regex: got owner_ids and owner_user_names too.")
+
     testConfigFile = os.path.join(os.path.dirname(__file__), '../../cerebralcortex.yml')
-    CC_obj = CerebralCortex(testConfigFile, master="local[*]", name="Cerebral Cortex DataStoreEngine Tests",
+    CC_obj = CerebralCortex(testConfigFile, master="local[*]", name="Cerebral Cortex Data Importer and Exporter",
                         time_zone="US/Central", load_spark=True)
 
-    output_dir = "/home/ali/Desktop/DUMP/aaaa/"
-
-    owner_ids = ["de5b4a7d-ba1b-44c4-b55e-cd0ca7487734"]
-
-    de = DataExporter(CC_obj, output_dir, owner_name_regex='ali')
-    de.start()
+    if args["owner_ids"]:
+        DataExporter(CC_obj, args["output_dir"], owner_ids=args["owner_ids"].split(",")).start()
+    elif args["owner_ids"]:
+        DataExporter(CC_obj, args["output_dir"], owner_user_names=args["owner_ids"].split(",")).start()
+    elif args["owner_ids"]:
+        DataExporter(CC_obj, args["output_dir"], owner_name_regex=args["owner_user_names"]).start()
+    else:
+        parser.print_help()
+        print("Please provide at least one of these: comma separated owner-ids OR comma separated owner-names OR owner-name pattern")
 
 
 if __name__=="__main__":

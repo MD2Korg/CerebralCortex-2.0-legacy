@@ -23,6 +23,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import bz2
+import argparse
 import json
 import os
 import shutil
@@ -44,12 +45,20 @@ class DataExporter():
         :param start_time:
         :param end_time:
         """
-        if owner_ids and (owner_user_names or owner_name_regex):
-            raise ValueError("Expecting owner_ids: got owner_user_names and/or owner_name_regex too.")
-        elif owner_user_names and (owner_ids or owner_name_regex):
-            raise ValueError("Expecting owner_user_names: got owner_ids and/or owner_name_regex too.")
-        elif owner_name_regex and (owner_ids or owner_user_names):
-            raise ValueError("Expecting owner_name_regex: got owner_ids and owner_user_names too.")
+
+        # parser = argparse.ArgumentParser(description='CerebralCortex Data Exporter.')
+        # parser.add_argument("-o", "--output_dir", help="Directory path where exported data will be stored", required=True)
+        # parser.add_argument("-idz", "--idz", help="Comma separated users' UUIDs", required=False)
+        # parser.add_argument("-namez", "--namez", help="Comma separated user-names", required=False)
+        # parser.add_argument("-nr", "--nr", help="User name pattern. For example, '-nr ali' will export all users' data that start with user-name 'ali'", required=False)
+        # args = vars(parser.parse_args())
+        #
+        # if owner_ids and (owner_user_names or owner_name_regex):
+        #     raise ValueError("Expecting owner_ids: got owner_user_names and/or owner_name_regex too.")
+        # elif owner_user_names and (owner_ids or owner_name_regex):
+        #     raise ValueError("Expecting owner_user_names: got owner_ids and/or owner_name_regex too.")
+        # elif owner_name_regex and (owner_ids or owner_user_names):
+        #     raise ValueError("Expecting owner_name_regex: got owner_ids and owner_user_names too.")
 
         self.streamData = Data(CC_obj)
         self.export_dir_path = export_dir_path
