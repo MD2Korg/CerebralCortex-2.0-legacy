@@ -32,7 +32,7 @@ from typing import List
 from cerebralcortex.kernel.DataStoreEngine.Data.Data import Data
 from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 from cerebralcortex.CerebralCortex import CerebralCortex
-
+from cerebralcortex.data_imp_exp.util import calculate_time
 class DataExporter():
 
     def __init__(self, CC_obj:CerebralCortex, export_dir_path:str, owner_ids:List=None, owner_user_names:List=None, owner_name_regex:str=None, start_time:str=None, end_time:str=None):
@@ -45,20 +45,6 @@ class DataExporter():
         :param start_time:
         :param end_time:
         """
-
-        # parser = argparse.ArgumentParser(description='CerebralCortex Data Exporter.')
-        # parser.add_argument("-o", "--output_dir", help="Directory path where exported data will be stored", required=True)
-        # parser.add_argument("-idz", "--idz", help="Comma separated users' UUIDs", required=False)
-        # parser.add_argument("-namez", "--namez", help="Comma separated user-names", required=False)
-        # parser.add_argument("-nr", "--nr", help="User name pattern. For example, '-nr ali' will export all users' data that start with user-name 'ali'", required=False)
-        # args = vars(parser.parse_args())
-        #
-        # if owner_ids and (owner_user_names or owner_name_regex):
-        #     raise ValueError("Expecting owner_ids: got owner_user_names and/or owner_name_regex too.")
-        # elif owner_user_names and (owner_ids or owner_name_regex):
-        #     raise ValueError("Expecting owner_user_names: got owner_ids and/or owner_name_regex too.")
-        # elif owner_name_regex and (owner_ids or owner_user_names):
-        #     raise ValueError("Expecting owner_name_regex: got owner_ids and owner_user_names too.")
 
         self.streamData = Data(CC_obj)
         self.export_dir_path = export_dir_path
@@ -84,7 +70,7 @@ class DataExporter():
                 owner_name = self.metadata.owner_id_to_name(owner_id["identifier"])
                 self.export_data(owner_id=owner_id["identifier"], owner_name=owner_name)
 
-
+    @calculate_time
     def export_data(self, owner_id=None, owner_name=None):
 
         rows = self.metadata.get_stream_metadata_by_owner_id(owner_id)
