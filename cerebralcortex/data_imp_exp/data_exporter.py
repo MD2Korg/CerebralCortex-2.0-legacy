@@ -85,8 +85,8 @@ class DataExporter():
                 "owner_id": row["owner"],
                 "name": row["name"],
                 "data_available": {
-                    "start_time": row["start_time"],
-                    "end_time": row["end_time"]
+                    "start_time": str(row["start_time"]),
+                    "end_time": str(row["end_time"])
                 }
             }
             data_descriptor = json.loads(row["data_descriptor"])

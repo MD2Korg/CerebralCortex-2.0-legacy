@@ -251,7 +251,7 @@ class LoadData:
             option("spark.cassandra.connection.host", self.hostIP). \
             option("spark.cassandra.auth.username", self.dbUser). \
             option("spark.cassandra.auth.password", self.dbPassword). \
-            options(table=table_name, keyspace=self.keyspaceName, pushdownss=True).load(). \
+            options(table=table_name, keyspace=self.keyspaceName, pushdown=True).load(). \
             select("start_time", "end_time", "sample"). \
             filter(where_clause). \
             orderBy('start_time', ascending=True)
