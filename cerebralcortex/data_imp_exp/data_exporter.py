@@ -93,9 +93,9 @@ class DataExporter():
             execution_context = json.loads(row["execution_context"])
             annotations = json.loads(row["annotations"])
 
-            stream_metadata.update(data_descriptor)
-            stream_metadata.update(execution_context)
-            stream_metadata.update(annotations)
+            stream_metadata.update({"data_descriptor": data_descriptor})
+            stream_metadata.update({"execution_context":execution_context})
+            stream_metadata.update({"annotations":annotations})
 
             file_path = self.export_dir_path+owner_name
             if not os.path.exists(file_path):

@@ -49,10 +49,10 @@ def run():
 
     if args["owner_ids"]:
         DataExporter(CC_obj, args["output_dir"], owner_ids=args["owner_ids"].split(",")).start()
-    elif args["owner_ids"]:
-        DataExporter(CC_obj, args["output_dir"], owner_user_names=args["owner_ids"].split(",")).start()
-    elif args["owner_ids"]:
-        DataExporter(CC_obj, args["output_dir"], owner_name_regex=args["owner_user_names"]).start()
+    elif args["owner_user_names"]:
+        DataExporter(CC_obj, args["output_dir"], owner_user_names=args["owner_user_names"].split(",")).start()
+    elif args["owner_name_regex"]:
+        DataExporter(CC_obj, args["output_dir"], owner_name_regex=args["owner_name_regex"]).start()
     else:
         parser.print_help()
         print("Please provide at least one of these: comma separated owner-ids OR comma separated owner-names OR owner-name pattern")
