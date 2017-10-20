@@ -32,7 +32,7 @@ from typing import List
 from cerebralcortex.kernel.DataStoreEngine.Data.Data import Data
 from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 from cerebralcortex.CerebralCortex import CerebralCortex
-from cerebralcortex.data_imp_exp.util import calculate_time
+from cerebralcortex.data_import_export.util import calculate_time
 class DataExporter():
 
     def __init__(self, CC_obj:CerebralCortex, export_dir_path:str, owner_ids:List=None, owner_user_names:List=None, owner_name_regex:str=None, start_time:str=None, end_time:str=None):

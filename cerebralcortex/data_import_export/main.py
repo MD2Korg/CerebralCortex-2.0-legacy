@@ -25,7 +25,7 @@
 import os
 import argparse
 from cerebralcortex.CerebralCortex import CerebralCortex
-from cerebralcortex.data_imp_exp.data_exporter import DataExporter
+from cerebralcortex.data_import_export.data_exporter import DataExporter
 
 
 def run():
