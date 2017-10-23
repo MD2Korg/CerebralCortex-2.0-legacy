@@ -290,7 +290,7 @@ class StoreData:
         stream_owner_name = Metadata(self.CC_obj).owner_id_to_name(stream_owner_id)
         stream_name = datastream.name
 
-        if not datastream.data_descriptor:
+        if datastream.data_descriptor:
             total_dd_columns = len(datastream.data_descriptor)
             data_descriptor = datastream.data_descriptor
         else:
@@ -323,7 +323,7 @@ class StoreData:
                 if isinstance(values, list):
                     for i, sample_val in enumerate(values):
                         if len(values)==total_dd_columns:
-                            dd = json.loads(data_descriptor[i])
+                            dd = data_descriptor[i]
                             if "NAME" in dd:
                                 object['fields'][dd["NAME"]] = sample_val
                             else:
@@ -331,7 +331,7 @@ class StoreData:
                         else:
                             object['fields']['value_'+str(i)] = sample_val
                 else:
-                    dd = json.loads(data_descriptor[0])
+                    dd = data_descriptor[0]
                     if not values:
                         values = "NULL"
                     try:
@@ -339,8 +339,7 @@ class StoreData:
                     except:
                         values = values
                     if "NAME" in dd:
-
-                        object['fields'][dd] = values
+                        object['fields'][dd["NAME"]] = values
                     else:
                         object['fields']['value_0'] = values
             except:
