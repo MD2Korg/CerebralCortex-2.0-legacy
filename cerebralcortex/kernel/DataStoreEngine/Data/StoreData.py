@@ -282,6 +282,7 @@ class StoreData:
         """
         :param datastream:
         """
+        st = datetime.now()
         client = InfluxDBClient(host=self.influxdbIP, port=self.influxdbPort, username=self.influxdbUser, password=self.influxdbPassword, database=self.influxdbDatabase)
         datapoints = datastream.data
         stream_identifier = datastream.identifier
@@ -351,10 +352,13 @@ class StoreData:
                     object['fields']['value_0'] = str(values)
 
             influx_data.append(object)
+        et = datetime
 
-        print('InfluxDB - Yielding:', stream_owner_id, len(influx_data), stream_identifier)
+        #print('InfluxDB - Yielding:', stream_owner_id, len(influx_data), stream_identifier)
 
         try:
             client.write_points(influx_data)
+            et2 = datetime.now()
+            #print("Influx Time BreakDown: Processing: ", et-st, " Inserting: ",et2-et, " Size: ",len(influx_data))
         except:
             cc_log()

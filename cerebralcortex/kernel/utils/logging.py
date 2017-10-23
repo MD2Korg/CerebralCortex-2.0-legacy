@@ -26,7 +26,7 @@
 import logging
 import inspect
 import os
-logs_dir = '/home/ali/Desktop/DUMP/aaaa/'
+logs_dir = '/var/log/cerebralcortex/'
 
 
 def cc_log(error_message="", error_type="EXCEPTION"):
