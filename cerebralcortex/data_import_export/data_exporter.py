@@ -23,19 +23,23 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import bz2
-import argparse
 import json
 import os
 import shutil
 import uuid
+from datetime import datetime, timedelta
 from typing import List
-from cerebralcortex.kernel.DataStoreEngine.Data.Data import Data
-from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
+
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.data_import_export.util import calculate_time
-class DataExporter():
+from cerebralcortex.kernel.DataStoreEngine.Data.Data import Data
+from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 
-    def __init__(self, CC_obj:CerebralCortex, export_dir_path:str, owner_ids:List=None, owner_user_names:List=None, owner_name_regex:str=None, start_time:str=None, end_time:str=None):
+
+class DataExporter():
+    def __init__(self, CC_obj: CerebralCortex, export_dir_path: str, owner_ids: List = None,
+                 owner_user_names: List = None, owner_name_regex: str = None, start_time: str = None,
+                 end_time: str = None):
         """
         :param CC_obj:
         :param export_dir_path:
@@ -56,15 +60,15 @@ class DataExporter():
         self.end_time = end_time
 
     def start(self):
-        if self.owner_ids and self.owner_ids!='None':
+        if self.owner_ids and self.owner_ids != 'None':
             for owner_id in self.owner_ids:
                 owner_name = self.metadata.owner_id_to_name(owner_id)
                 self.export_data(owner_id=owner_id, owner_name=owner_name)
-        elif self.owner_user_names and self.owner_user_names!='None':
+        elif self.owner_user_names and self.owner_user_names != 'None':
             for owner_user_name in self.owner_user_names:
                 owner_id = self.metadata.owner_name_to_id(owner_user_name)
                 self.export_data(owner_id=owner_id, owner_name=owner_user_name)
-        elif self.owner_name_regex and self.owner_name_regex!='None':
+        elif self.owner_name_regex and self.owner_name_regex != 'None':
             owner_idz = self.metadata.get_owner_ids_by_owner_name_regex(self.owner_name_regex)
             for owner_id in owner_idz:
                 owner_name = self.metadata.owner_id_to_name(owner_id["identifier"])
@@ -74,73 +78,82 @@ class DataExporter():
     def export_data(self, owner_id=None, owner_name=None):
 
         rows = self.metadata.get_stream_metadata_by_owner_id(owner_id)
-        if rows=="NULL":
-            print("No data found for => owner-id: "+owner_id+" - owner-name: "+owner_name)
+        if rows == "NULL":
+            print("No data found for => owner-id: " + owner_id + " - owner-name: " + owner_name)
             return
 
         for row in rows:
             stream_id = row["identifier"]
+            data_start_time = row["start_time"]
+            data_end_time = row["end_time"]
             stream_metadata = {
                 "identifier": stream_id,
                 "owner_id": row["owner"],
                 "name": row["name"],
                 "data_available": {
-                    "start_time": str(row["start_time"]),
-                    "end_time": str(row["end_time"])
+                    "start_time": str(data_start_time),
+                    "end_time": str(data_end_time)
                 }
             }
+
             data_descriptor = json.loads(row["data_descriptor"])
             execution_context = json.loads(row["execution_context"])
             annotations = json.loads(row["annotations"])
 
             stream_metadata.update({"data_descriptor": data_descriptor})
-            stream_metadata.update({"execution_context":execution_context})
-            stream_metadata.update({"annotations":annotations})
+            stream_metadata.update({"execution_context": execution_context})
+            stream_metadata.update({"annotations": annotations})
 
-            file_path = self.export_dir_path+owner_name
+            file_path = self.export_dir_path + owner_name
             if not os.path.exists(file_path):
                 os.mkdir(file_path)
 
-            #write metadata to json file
-            self.write_to_file(file_path+"/"+stream_id+".json", json.dumps(stream_metadata))
+            # write metadata to json file
+            self.write_to_file(file_path + "/" + stream_id + ".json", json.dumps(stream_metadata))
 
-            #load and write stream raw data to bz2
-            self.writeStreamDataToBz2(stream_id, file_path)
+            # load and write stream raw data to bz2
+            delta = data_end_time - data_start_time
 
-    def writeStreamDataToBz2(self, stream_id:uuid, file_path:str):
+            for i in range(delta.days + 1):
+                day = data_start_time + timedelta(days=i)
+                day = datetime.strftime(day, "%Y%m%d")
+            self.writeStreamDataToZipFile(stream_id, day, file_path)
+
+    def writeStreamDataToZipFile(self, stream_id: uuid, day, file_path: str):
         """
 
         :param stream_id:
         :param file_path:
         """
         if stream_id:
-            where_clause = "identifier='" + stream_id + "'"
+            where_clause = "identifier='" + stream_id + "' and day='" + str(day) + "'"
         else:
             raise ValueError("Missing owner ID.")
 
         if self.start_time and self.end_time:
-            where_clause += " and start_time>=cast('" + str(self.start_time) + "' as timestamp) and start_time<=cast('" + str(self.end_time) + "' as timestamp)"
+            where_clause += " and start_time>=cast('" + str(
+                self.start_time) + "' as timestamp) and start_time<=cast('" + str(self.end_time) + "' as timestamp)"
         elif self.start_time and not self.end_time:
             where_clause += " and start_time>=cast('" + str(self.start_time) + "' as timestamp)"
         elif not self.start_time and self.end_time:
             where_clause += " start_time<=cast('" + str(self.end_time) + "' as timestamp)"
 
-        df = self.streamData.load_data_from_cassandra(self.streamData.datapointTable, where_clause,1)
-        df.write\
+        df = self.streamData.load_data_from_cassandra(self.streamData.datapointTable, where_clause, 1)
+        df.write \
             .format("csv") \
             .option("codec", "org.apache.hadoop.io.compress.GzipCodec") \
-            .save(file_path+"/"+stream_id)
+            .save(file_path + "/" + stream_id)
 
-        os.system("cat "+file_path+"/"+stream_id+"/p* > "+file_path+"/"+stream_id+".gz")
-        if os.path.exists(file_path+"/"+stream_id+"/"):
-            shutil.rmtree(file_path+"/"+stream_id+"/", ignore_errors=True)
+        os.system("cat " + file_path + "/" + stream_id + "/p* > " + file_path + "/" + stream_id + ".gz")
+        if os.path.exists(file_path + "/" + stream_id + "/"):
+            shutil.rmtree(file_path + "/" + stream_id + "/", ignore_errors=True)
 
     def write_to_bz2(self, file_name, data):
         with open(file_name, 'wb+') as outfile:
             compressed_data = bz2.compress(data, 9)
             outfile.write(compressed_data)
 
-    def write_to_file(self, file_name:str, data:str):
+    def write_to_file(self, file_name: str, data: str):
         """
         :param file_name:
         :param data:

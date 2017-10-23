@@ -24,6 +24,7 @@
 
 import json
 import uuid
+from datetime import datetime
 from dateutil.parser import parse
 from influxdb import InfluxDBClient
 
@@ -42,7 +43,7 @@ class StoreData:
         """
         if (type == "json"):
             datastream = self.json_to_datastream(datastream)
-        elif (type != "json" or type != "datastream"):
+        elif (type != "json" and type != "datastream"):
             raise ValueError(type + " is not supported data type")
 
         ownerID = datastream.owner
@@ -164,10 +165,10 @@ class StoreData:
 
         insert_without_endtime_qry = session.prepare("INSERT INTO data (identifier, day, start_time, sample) VALUES (?, ?, ?, ?)")
         insert_with_endtime_qry = session.prepare("INSERT INTO data (identifier, day, start_time, end_time, sample) VALUES (?, ?, ?, ?, ?)")
-
-        data_block = self.datapoints_to_cassandra_sql_batch(uuid.UUID(stream_id), datapoints, insert_without_endtime_qry, insert_with_endtime_qry)
-        session.execute(data_block)
-        data_block.clear()
+        st = datetime.now()
+        for data_block in self.datapoints_to_cassandra_sql_batch(uuid.UUID(stream_id), datapoints, insert_without_endtime_qry, insert_with_endtime_qry):
+            session.execute(data_block)
+            data_block.clear()
         session.shutdown();
         cluster.shutdown();
 
@@ -197,19 +198,19 @@ class StoreData:
                 insert_qry = insert_with_endtime_qry
             else:
                 insert_qry = insert_without_endtime_qry
-            batch.add(insert_qry, (stream_id, day, i.start_time, sample))
-        return batch
+            #batch.add(insert_qry, (stream_id, day, i.start_time, sample))
+        #return batch
         # TODO: remove when final testing is done
-        #     if dp_number > batch_size:
-        #         yield batch
-        #         batch = BatchStatement(consistency_level=ConsistencyLevel.QUORUM)
-        #         #just to make sure batch does not have any existing entries.
-        #         batch.clear()
-        #         dp_number = 1
-        #     else:
-        #         batch.add(insert_qry, (stream_id, day, i.start_time, sample))
-        #         dp_number += 1
-        # yield batch
+            if dp_number > 64500:
+                yield batch
+                batch = BatchStatement(consistency_level=ConsistencyLevel.QUORUM)
+                #just to make sure batch does not have any existing entries.
+                batch.clear()
+                dp_number = 1
+            else:
+                batch.add(insert_qry, (stream_id, day, i.start_time, sample))
+                dp_number += 1
+        yield batch
 
 
     #################################################################
@@ -235,10 +236,18 @@ class StoreData:
             annotations = metadata["annotations"]
         else:
             annotations={}
-        stream_type = "ds"  # TODO: it must be defined in json object
+        if "stream_type" in metadata:
+            stream_type = metadata["stream_type"]
+        else:
+            stream_type = "ds"  # TODO: it must be defined in json object
+
         start_time = parse(data[0]["starttime"])
         end_time = parse(data[len(data) - 1]["starttime"])
+
+        st = datetime.now()
         datapoints = list(map(self.json_to_datapoints, data))
+        et = datetime.now()
+        print("Map time: ",et-st)
 
         return DataStream(identifier,
                           owner,
@@ -268,34 +277,33 @@ class StoreData:
         else:
             return DataPoint(start_time=start_time, sample=sample)
 
-    def store_data_to_influxdb(self, json_data: dict):
+    def store_data_to_influxdb(self, datastream: DataStream):
 
         """
-        :param json_data:
+        :param datastream:
         """
         client = InfluxDBClient(host=self.influxdbIP, port=self.influxdbPort, username=self.influxdbUser, password=self.influxdbPassword, database=self.influxdbDatabase)
-        data = json_data["data"]
-        metadata = json_data["metadata"]
-        stream_identifier = metadata["identifier"]
-        stream_owner_id = metadata["owner"]
+        datapoints = datastream.data
+        stream_identifier = datastream.identifier
+        stream_owner_id = datastream.owner
         stream_owner_name = Metadata(self.CC_obj).owner_id_to_name(stream_owner_id)
-        stream_name = metadata["name"]
+        stream_name = datastream.name
 
-        if "data_descriptor" in metadata:
-            total_dd_columns = len(metadata["data_descriptor"])
-            data_descriptor = metadata["data_descriptor"]
+        if not datastream.data_descriptor:
+            total_dd_columns = len(datastream.data_descriptor)
+            data_descriptor = datastream.data_descriptor
         else:
-            data_descriptor = {}
+            data_descriptor = []
             total_dd_columns = 0
 
         influx_data = []
-        for row in data:
+        for datapoint in datapoints:
             object = {}
             object['measurement'] = stream_name
             object['tags'] = {'stream_id':stream_identifier, 'owner_id': stream_owner_id, 'owner_name': stream_owner_name}
 
-            object['time'] = row["starttime"]
-            values = row["value"]
+            object['time'] = datapoint.start_time
+            values = datapoint.sample
 
             if isinstance(values, tuple):
                 values = list(values)
@@ -314,22 +322,24 @@ class StoreData:
                 if isinstance(values, list):
                     for i, sample_val in enumerate(values):
                         if len(values)==total_dd_columns:
-                            if "NAME" in data_descriptor[i]:
-                                object['fields'][data_descriptor[i]["NAME"]] = sample_val
+                            dd = json.loads(data_descriptor[i])
+                            if "NAME" in dd:
+                                object['fields'][dd["NAME"]] = sample_val
                             else:
                                 object['fields']['value_'+str(i)] = sample_val
                         else:
                             object['fields']['value_'+str(i)] = sample_val
                 else:
+                    dd = json.loads(data_descriptor[0])
                     if not values:
                         values = "NULL"
                     try:
                         values = float(values)
                     except:
                         values = values
-                    if "NAME" in data_descriptor[0]:
+                    if "NAME" in dd:
 
-                        object['fields'][data_descriptor[0]["NAME"]] = values
+                        object['fields'][dd] = values
                     else:
                         object['fields']['value_0'] = values
             except:
