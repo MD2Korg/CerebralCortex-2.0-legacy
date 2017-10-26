@@ -64,6 +64,10 @@ def cc_log(error_message="", error_type="EXCEPTION"):
         logs_filename = logs_dir+"debug.log"
         logging.basicConfig(filename=logs_filename,level=logging.DEBUG, format=FORMAT)
         logging.debug(error_message)
+    elif error_type == "MISSING_DATA":
+        logs_filename = logs_dir+"missing_data.log"
+        logging.basicConfig(filename=logs_filename,level=logging.WARNING, format=FORMAT)
+        logging.warning(error_message)
     else:
         logs_filename = logs_dir+"info.log"
         logging.basicConfig(filename=logs_filename,level=logging.INFO, format=FORMAT)
