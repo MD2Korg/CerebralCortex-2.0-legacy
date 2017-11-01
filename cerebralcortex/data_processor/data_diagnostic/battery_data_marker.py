@@ -32,7 +32,7 @@ from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 
 
-def battery_marker(stream_id: uuid, CC_obj: CerebralCortex, config: dict, start_time=None, end_time=None):
+def battery_marker(stream_id: uuid, owner_id:uuid, CC_obj: CerebralCortex, config: dict, start_time=None, end_time=None):
     """
     This algorithm uses battery percentages to decide whether phone was powered-off or battery was low.
     All the labeled data (st, et, label) with its metadata are then stored in a datastore.
@@ -40,6 +40,9 @@ def battery_marker(stream_id: uuid, CC_obj: CerebralCortex, config: dict, start_
     :param CC_obj:
     :param config:
     """
+    #using stream_id, algo_name, and owner id to generate a unique stream ID for battery-marker
+    battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+config["algo_names"]["battery_marker"]+owner_id))
+
     results = OrderedDict()
 
     stream = CC_obj.get_datastream(stream_id, data_type=DataSet.COMPLETE, start_time=start_time, end_time=end_time)
@@ -54,7 +57,7 @@ def battery_marker(stream_id: uuid, CC_obj: CerebralCortex, config: dict, start_
 
         results[key] = battery(dp, config)
     merged_windows = merge_consective_windows(results)
-    labelled_windows = mark_windows(merged_windows)
+    labelled_windows = mark_windows(battery_marker_stream_id, merged_windows, CC_obj, config)
     input_streams = [{"id": str(stream_id), "name": stream_name}]
     store(input_streams, labelled_windows, CC_obj, config, config["algo_names"]["battery_marker"])
 
@@ -93,7 +96,7 @@ def battery(dp: list, sensor_type: str, config: dict) -> str:
         return "charged"
 
 
-def mark_windows(merged_windows: list, config: dict) -> str:
+def mark_windows(battery_marker_stream_id:uuid, merged_windows: list, CC_obj, config: dict) -> str:
     """
     label a window as sensor powerd-off or low battery
     :param dp:
@@ -109,8 +112,8 @@ def mark_windows(merged_windows: list, config: dict) -> str:
             elif prev_wind and prev_wind.sample == "low":
                 merged_window.sample = config['labels']['battery_down']
             else:
-                # TODO: if first window data has 'no-data' label then query DB to check label of the last window
-                merged_window.sample = "TODO"
+                rows = CC_obj.get_stream_samples(battery_marker_stream_id)
+                merged_window.sample = rows[len(rows)-1]
             labelled_windows.append(merged_window)
         else:
             prev_wind = merged_window

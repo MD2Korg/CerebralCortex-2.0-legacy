@@ -58,25 +58,25 @@ class DiagnoseData:
         :param end_time:
         """
 
-        all_stream_ids_names = CC_obj.get_stream_ids_of_owner(owner_id)
+        all_stream_ids_name = CC_obj.get_stream_ids_of_owner(owner_id)
 
-        main_stream_id = all_stream_ids_names[stream_name]
-        phone_battery_stream_id = all_stream_ids_names[config["sensor_types"]["phone_battery"]]
+        diagnose_stream_id = all_stream_ids_name[stream_name]
+        phone_battery_stream_id = all_stream_ids_name[config["sensor_types"]["phone_battery"]]
 
 
         battery_marker(phone_battery_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
 
         if stream_name == config["sensor_types"]["autosense_rip"] or stream_name == config["sensor_types"][
             "autosense_ecg"]:
-            autosense_battery_stream_id = all_stream_ids_names[config["sensor_types"]["autosense_battery"]]
-            battery_marker(autosense_battery_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
+            autosense_battery_stream_id = all_stream_ids_name[config["sensor_types"]["autosense_battery"]]
+            battery_marker(autosense_battery_stream_id, owner_id, CC_obj, config, start_time=start_time, end_time=end_time)
         elif stream_name == config["sensor_types"]["motionsense_accel"]:
-            motionsense_battery_stream_id = all_stream_ids_names[config["sensor_types"]["motionsense_battery"]]
-            battery_marker(motionsense_battery_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
+            motionsense_battery_stream_id = all_stream_ids_name[config["sensor_types"]["motionsense_battery"]]
+            battery_marker(motionsense_battery_stream_id, owner_id, CC_obj, config, start_time=start_time, end_time=end_time)
 
-        wireless_disconnection(main_stream_id, all_stream_ids_names, CC_obj, config, start_time=start_time, end_time=end_time)
-        attachment_marker(main_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
-        packet_loss_marker(main_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
+        wireless_disconnection(diagnose_stream_id, all_stream_ids_name, CC_obj, config, start_time=start_time, end_time=end_time)
+        attachment_marker(diagnose_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
+        packet_loss_marker(diagnose_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
 
 if __name__ == '__main__':
     stream = DiagnoseData.diagnose_data()

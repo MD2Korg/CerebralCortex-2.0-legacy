@@ -185,6 +185,14 @@ class CerebralCortex:
         annotation_stream_id = Metadata(self).get_annotation_id(data_stream_id, annotation_stream_name)
         return Data(self).get_annotation_stream(data_stream_id, annotation_stream_id, annotation, start_time, end_time)
 
+    def get_stream_samples(self, stream_id: uuid) -> List:
+        """
+        return sample values of a stream
+        :param stream_id:
+        :return:
+        """
+        return Data(self).get_stream_samples(stream_id)
+
     def filter(self, stream_id):
         pass
 

@@ -182,6 +182,27 @@ class LoadMetadata:
             stream_ids_names[row["name"]] = row["identifier"]
         return stream_ids_names
 
+    def get_stream_start_end_time(self, stream_id: uuid) -> uuid:
+        """
+
+        :param stream_id:
+        :param time_type: acceptable parameters are start_time OR end_time
+        :return:
+        """
+        if not stream_id:
+            return None
+
+        qry = "select DATE_FORMAT(start_time,'%Y%m%d'), DATE_FORMAT(end_time,'%Y%m%d') from " + self.datastreamTable + " where identifier = %(identifier)s"
+        vals = {'identifier': str(stream_id)}
+
+        self.cursor.execute(qry, vals)
+        rows = self.cursor.fetchall()
+
+        if len(rows) == 0:
+            return "NULL"
+        else:
+            return rows[0]
+
     def get_stream_metadata_by_owner_id(self, owner_id: str) -> uuid:
         """
 

@@ -27,7 +27,7 @@ import json
 import uuid
 from datetime import datetime
 from typing import List
-
+from cassandra.cluster import Cluster
 from pytz import timezone
 
 from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
@@ -132,6 +132,19 @@ class LoadData:
             raise ValueError("Invalid type parameter.")
 
         return annotation_stream
+
+    def get_stream_samples(self, stream_id):
+        rows = Metadata(self.CC_obj).get_stream_start_end_time(stream_id)
+        day = rows["end_time"]
+
+        cluster = Cluster([self.hostIP], port=self.hostPort)
+        session = cluster.connect(self.keyspaceName)
+
+        rows = session.execute('SELECT sample from '+self.datapointTable+' where identifier="'+stream_id+'" and day="'+day+'"')
+        session.shutdown();
+        cluster.shutdown();
+        return rows
+
 
     def get_annotation_stream(self, input_stream_id: uuid, annotation_stream_id: uuid, annotation: str,
                               start_time: datetime = None, end_time: datetime = None) -> List[DataPoint]:

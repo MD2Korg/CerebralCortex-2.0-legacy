@@ -42,9 +42,9 @@ def store(input_streams: dict, data: OrderedDict, CC_obj: CerebralCortex, config
     :param algo_type:
     """
     parent_stream_id = input_streams[0]["id"]
-    stream_name = input_streams[0]["name"]
+    parent_stream_name = input_streams[0]["name"]
 
-    result = process_data(stream_name, input_streams, algo_type, config)
+    result = process_data(parent_stream_name, input_streams, algo_type, config)
 
     data_descriptor = json.loads(result["dd"])
     execution_context = json.loads(result["ec"])
