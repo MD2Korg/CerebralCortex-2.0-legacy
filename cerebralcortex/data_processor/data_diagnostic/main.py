@@ -43,7 +43,7 @@ class DiagnoseData:
         CC = CerebralCortex(configuration_file, master="local[*]", name="Data Diagnostic App", time_zone="US/Central")
 
         configuration = Configuration(filepath="data_diagnostic_config.yml").config
-        stream_name = configuration["sensor_types"]["autosense_rip"]
+        stream_name = configuration["stream_names"]["motionsense_hrv_accel_right"]
 
         cls.diagnose("de5b4a7d-ba1b-44c4-b55e-cd0ca7487734", CC, configuration, stream_name)
 
@@ -61,22 +61,22 @@ class DiagnoseData:
         all_stream_ids_name = CC_obj.get_stream_ids_of_owner(owner_id)
 
         diagnose_stream_id = all_stream_ids_name[stream_name]
-        phone_battery_stream_id = all_stream_ids_name[config["sensor_types"]["phone_battery"]]
 
-
-        battery_marker(phone_battery_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
-
-        if stream_name == config["sensor_types"]["autosense_rip"] or stream_name == config["sensor_types"][
-            "autosense_ecg"]:
+        if stream_name == config["stream_names"]["autosense_battery"]:
             autosense_battery_stream_id = all_stream_ids_name[config["sensor_types"]["autosense_battery"]]
-            battery_marker(autosense_battery_stream_id, owner_id, CC_obj, config, start_time=start_time, end_time=end_time)
-        elif stream_name == config["sensor_types"]["motionsense_accel"]:
+            battery_marker(autosense_battery_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
+        elif stream_name == config["stream_names"]["motionsense_hrv_battery_right"] or stream_name == config["stream_names"]["motionsense_hrv_battery_left"]:
             motionsense_battery_stream_id = all_stream_ids_name[config["sensor_types"]["motionsense_battery"]]
-            battery_marker(motionsense_battery_stream_id, owner_id, CC_obj, config, start_time=start_time, end_time=end_time)
+            battery_marker(motionsense_battery_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
+        elif stream_name == config["stream_names"]["phone_battery"]:
+            phone_battery_stream_id = all_stream_ids_name[config["sensor_types"]["motionsense_battery"]]
+            battery_marker(phone_battery_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
 
         wireless_disconnection(diagnose_stream_id, all_stream_ids_name, CC_obj, config, start_time=start_time, end_time=end_time)
         attachment_marker(diagnose_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
         packet_loss_marker(diagnose_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
+
+        #TODO: check if one sensor (on same device) is sending data and other is not (sensor malfunctioning)
 
 if __name__ == '__main__':
     stream = DiagnoseData.diagnose_data()

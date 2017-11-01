@@ -32,7 +32,7 @@ from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 
 
-def battery_marker(stream_id: uuid, owner_id:uuid, CC_obj: CerebralCortex, config: dict, start_time=None, end_time=None):
+def battery_marker(stream_id: uuid, CC_obj: CerebralCortex, config: dict, start_time=None, end_time=None):
     """
     This algorithm uses battery percentages to decide whether phone was powered-off or battery was low.
     All the labeled data (st, et, label) with its metadata are then stored in a datastore.
@@ -40,29 +40,30 @@ def battery_marker(stream_id: uuid, owner_id:uuid, CC_obj: CerebralCortex, confi
     :param CC_obj:
     :param config:
     """
-    #using stream_id, algo_name, and owner id to generate a unique stream ID for battery-marker
-    battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+config["algo_names"]["battery_marker"]+owner_id))
-
     results = OrderedDict()
 
     stream = CC_obj.get_datastream(stream_id, data_type=DataSet.COMPLETE, start_time=start_time, end_time=end_time)
     windowed_data = window(stream.data, config['general']['window_size'], True)
 
     stream_name = stream._name
+    owner_id = stream._owner
+
+    #using stream_id, algo_name, and owner id to generate a unique stream ID for battery-marker
+    battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+stream_name+owner_id))
 
     for key, data in windowed_data.items():
         dp = []
         for k in data:
             dp.append(float(k.sample))
 
-        results[key] = battery(dp, config)
+        results[key] = battery(dp, stream_name, config)
     merged_windows = merge_consective_windows(results)
     labelled_windows = mark_windows(battery_marker_stream_id, merged_windows, CC_obj, config)
     input_streams = [{"id": str(stream_id), "name": stream_name}]
     store(input_streams, labelled_windows, CC_obj, config, config["algo_names"]["battery_marker"])
 
 
-def battery(dp: list, sensor_type: str, config: dict) -> str:
+def battery(dp: list, stream_name: str, config: dict) -> str:
     """
     label a window as sensor powerd-off or low battery
     :param dp:
@@ -74,15 +75,15 @@ def battery(dp: list, sensor_type: str, config: dict) -> str:
     else:
         dp_sample_avg = np.median(dp)
 
-    if sensor_type=="phone_battery":
+    if stream_name== config["stream_names"]["phone_battery"]:
         sensor_battery_down = config['battery_marker']['phone_battery_down']
         sensor_battery_off = config['battery_marker']['phone_powered_off']
-    elif sensor_type=="autosense_battery":
+    elif stream_name== config["stream_names"]["autosense_battery"]:
         sensor_battery_down = config['battery_marker']['autosense_battery_down']
         sensor_battery_off = config['battery_marker']['autosense_powered_off']
         # Values (Min=0 and Max=6) in battery voltage.
         dp_sample_avg = (dp_sample_avg / 4096) * 3 * 2
-    elif sensor_type=="motionsense_battery":
+    elif stream_name == config["stream_names"]["motionsense_hrv_battery_right"] or stream_name == config["stream_names"]["motionsense_hrv_battery_left"]:
         sensor_battery_down = config['battery_marker']['motionsense_battery_down']
         sensor_battery_off = config['battery_marker']['motionsense_powered_off']
     else:

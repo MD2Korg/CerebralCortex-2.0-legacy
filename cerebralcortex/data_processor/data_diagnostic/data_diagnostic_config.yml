@@ -71,6 +71,18 @@ sensor_types:
   motionsense_battery: motionsense_battery
   motionsense_accel: motionsense_accel
 
+stream_names:
+  motionsense_hrv_accel_right: "ACCELEROMETER--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
+  motionsense_hrv_accel_left: "ACCELEROMETER--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
+
+  autosense_ecg: "ECG--org.md2k.autosense"
+  autosense_rip: "RIP--org.md2k.autosense"
+
+  motionsense_hrv_battery_right: "BATTERY--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
+  motionsense_hrv_battery_left: "BATTERY--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
+  autosense_battery: "BATTERY--org.md2k.autosense"
+  phone_battery: "BATTERY--org.md2k.phonesensor--PHONE"
+
 algo_names:
   battery_marker: battery
   attachment_marker: attachment
