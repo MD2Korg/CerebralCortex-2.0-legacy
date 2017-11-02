@@ -35,8 +35,7 @@ packet_loss_marker:
 
 sensor_unavailable_marker:
   #Threshold to distinguish between a wireless disconnection and sensor-off
-  ecg: 4000
-  rip: 4000
+  autosense: 4000
   motionsense: 0.005
 
 labels:
@@ -77,6 +76,10 @@ stream_names:
 
   autosense_ecg: "ECG--org.md2k.autosense"
   autosense_rip: "RIP--org.md2k.autosense"
+  autosense_accel_x: "ACCELEROMETER-X--org.md2k.autosense"
+  autosense_accel_x: "ACCELEROMETER-Y--org.md2k.autosense"
+  autosense_accel_x: "ACCELEROMETER-Z--org.md2k.autosense"
+  autosense_gyro: "GYRO--org.md2k.autosense"
 
   motionsense_hrv_battery_right: "BATTERY--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
   motionsense_hrv_battery_left: "BATTERY--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"

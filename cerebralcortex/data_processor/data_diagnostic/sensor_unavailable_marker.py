@@ -66,13 +66,13 @@ def wireless_disconnection(stream_id: uuid, all_stream_ids_names:dict, CC_obj: C
 
     windowed_data = filter_battery_off_windows(stream_id, stream_name, windowed_data, owner_id, config, CC_obj)
 
-    if stream_name == config["sensor_types"]["autosense_ecg"]:
+    if stream_name == config["stream_names"]["autosense_ecg"]:
         threshold = config['sensor_unavailable_marker']['ecg']
         label = config['labels']['autosense_unavailable']
-    if stream_name == config["sensor_types"]["autosense_rip"]:
+    if stream_name == config["stream_names"]["autosense_rip"]:
         threshold = config['sensor_unavailable_marker']['rip']
         label = config['labels']['autosense_unavailable']
-    elif stream_name == config["sensor_types"]["motionsense_accel"]:
+    elif stream_name == config["stream_names"]["motionsense_hrv_accel_right"] or stream_name == config["stream_names"]["motionsense_hrv_accel_left"]:
         threshold = config['sensor_unavailable_marker']['motionsense']
         label = config['labels']['motionsense_unavailable']
 
@@ -84,30 +84,36 @@ def wireless_disconnection(stream_id: uuid, all_stream_ids_names:dict, CC_obj: C
     battery_off_data = CC_obj.get_datastream(battery_marker_stream_id, data_type=DataSet.ONLY_DATA, start_time=start_time,
                                              end_time=end_time)
 
-    if battery_off_data:
+    if windowed_data:
         #prepare input streams metadata
-        if stream_name == config["sensor_types"]["motionsense_accel"]:
-            motionsense_accel_stream_id = all_stream_ids_names["motionsense_accel"]
+        if stream_name == config["stream_names"]["motionsense_hrv_accel_right"]:
+            motionsense_accel_stream_id = all_stream_ids_names[config["stream_names"]["motionsense_hrv_accel_right"]]
 
             input_streams = [{"id": str(stream_id), "name": str(stream_name)},
                              {"id": str(motionsense_accel_stream_id),
-                              "name": config["sensor_types"]["motionsense_accel"]}]
+                              "name": config["stream_names"]["motionsense_hrv_accel_right"]}]
+        elif stream_name == config["stream_names"]["motionsense_hrv_accel_left"]:
+            motionsense_accel_stream_id = all_stream_ids_names[config["stream_names"]["motionsense_hrv_accel_left"]]
+
+            input_streams = [{"id": str(stream_id), "name": str(stream_name)},
+                             {"id": str(motionsense_accel_stream_id),
+                              "name": config["stream_names"]["motionsense_hrv_accel_left"]}]
         else:
-            x = all_stream_ids_names["autosense_accel_x"]
-            y = all_stream_ids_names["autosense_accel_y"]
-            z = all_stream_ids_names["autosense_accel_z"]
+            x = all_stream_ids_names[config["stream_names"]["autosense_accel_x"]]
+            y = all_stream_ids_names[config["stream_names"]["autosense_accel_y"]]
+            z = all_stream_ids_names[config["stream_names"]["autosense_accel_z"]]
 
             input_streams = [{"id": str(stream_id), "name": stream_name},
                              {"id": str(x), "name": config["sensor_types"]["autosense_accel_x"]},
                              {"id": str(y), "name": config["sensor_types"]["autosense_accel_y"]},
                              {"id": str(z), "name": config["sensor_types"]["autosense_accel_z"]}]
 
-        for dp in battery_off_data:
+        for dp in windowed_data:
             if dp.start_time != "" and dp.end_time != "":
                 # get a window prior to a battery powered off
                 start_time = dp.start_time - timedelta(seconds=config['general']['window_size'])
                 end_time = dp.start_time
-                if stream_name == config["sensor_types"]["motionsense_accel"]:
+                if stream_name == config["stream_names"]["motionsense_hrv_accel_right"] or stream_name == config["stream_names"]["motionsense_hrv_accel_left"]:
                     motionsense_accel_xyz = CC_obj.get_datastream(motionsense_accel_stream_id, start_time=start_time,
                                                                   end_time=end_time, data_type=DataSet.COMPLETE)
                     magnitudeValStream = magnitude(motionsense_accel_xyz)
@@ -116,14 +122,14 @@ def wireless_disconnection(stream_id: uuid, all_stream_ids_names:dict, CC_obj: C
                         magnitudeVals.append(mv.sample)
 
                 else:
-                    autosense_acc_x = CC_obj.get_datastream(x, start_time=start_time, end_time=end_time,
+                    autosense_accel_x = CC_obj.get_datastream(x, start_time=start_time, end_time=end_time,
                                                             data_type=DataSet.ONLY_DATA)
-                    autosense_acc_y = CC_obj.get_datastream(y, start_time=start_time, end_time=end_time,
+                    autosense_accel_y = CC_obj.get_datastream(y, start_time=start_time, end_time=end_time,
                                                             data_type=DataSet.ONLY_DATA)
-                    autosense_acc_z = CC_obj.get_datastream(z, start_time=start_time, end_time=end_time,
+                    autosense_accel_z = CC_obj.get_datastream(z, start_time=start_time, end_time=end_time,
                                                             data_type=DataSet.ONLY_DATA)
 
-                    magnitudeVals = autosense_calculate_magnitude(autosense_acc_x, autosense_acc_y, autosense_acc_z)
+                    magnitudeVals = autosense_calculate_magnitude(autosense_accel_x, autosense_accel_y, autosense_accel_z)
 
                 if np.var(magnitudeVals) > threshold:
                     key = (dp.start_time, dp.end_time)
