@@ -35,10 +35,7 @@ from cerebralcortex.data_processor.data_diagnostic.battery_data_marker import ba
 from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.data_processor.data_diagnostic.util import merge_consective_windows
 import random
-def tt(dd):
-    dd.sample = random.random()
-    return dd
-    #print("====> ", dd)
+
 
 class TestDataDiagnostic(unittest.TestCase):
 
@@ -78,7 +75,7 @@ class TestDataDiagnostic(unittest.TestCase):
         labelled_windows_samples_expect = [0,10]
         cc = [self.sample_battery_data,self.sample_battery_data]
         dd = self.CC.sc.parallelize(cc)
-        ecg_quality = dd.map(lambda ds: tt(ds))
+
         windowed_data = window(self.sample_battery_data, self.window_size, True)
         results = OrderedDict()
         for key, data in windowed_data.items():

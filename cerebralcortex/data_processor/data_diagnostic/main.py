@@ -73,7 +73,7 @@ class DiagnoseData:
             battery_marker(phone_battery_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
 
         wireless_disconnection(diagnose_stream_id, all_stream_ids_name, CC_obj, config, start_time=start_time, end_time=end_time)
-        attachment_marker(diagnose_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
+        attachment_marker(all_stream_ids_name, CC_obj, config, start_time=start_time, end_time=end_time)
         packet_loss_marker(diagnose_stream_id, CC_obj, config, start_time=start_time, end_time=end_time)
 
         #TODO: check if one sensor (on same device) is sending data and other is not (sensor malfunctioning)

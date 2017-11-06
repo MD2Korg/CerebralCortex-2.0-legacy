@@ -118,7 +118,6 @@ def create_all_windows(datapoint: List[DataPoint], window_size: float, window_of
                                        (st,et),[], (if a window does not contain any data}
                                         ...]
     """
-    # print(datapoint)
     window_start_time = epoch_align(datapoint[0].start_time, window_offset)
     window_end_time = window_start_time + timedelta(seconds=window_size)
     window_data = []

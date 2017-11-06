@@ -23,9 +23,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import statistics as stat
-from typing import List
 from collections import OrderedDict
-
+from numpy.linalg import norm
+from typing import List
+import math
+import numpy as np
 from cerebralcortex.kernel.datatypes.datastream import DataPoint
 
 
@@ -82,3 +84,40 @@ def outlier_detection(window_data: list) -> list:
             normal_values.append(float(val.sample))
 
     return normal_values
+
+
+def magnitude_motionsense(data: DataPoint) -> List:
+    """
+
+    :param data:
+    :return:
+    """
+
+    if data is None or len(data) == 0:
+        return []
+
+    input_data = np.array([i.sample for i in data])
+    data = norm(input_data, axis=1).tolist()
+
+    return data
+
+def magnitude_autosense_v1(accel_x: float, accel_y: float, accel_z: float) -> list:
+    """
+    compute magnitude of x, y, and z
+    :param accel_x:
+    :param accel_y:
+    :param accel_z:
+    :return: magnitude values of a window as list
+    """
+    magnitudeList = []
+    max_list_size = len(max(accel_x, accel_y, accel_z, key=len))
+
+    for i in range(max_list_size):
+        x = 0 if len(accel_x) - 1 < i else float(accel_x[i].sample)
+        y = 0 if len(accel_y) - 1 < i else float(accel_y[i].sample)
+        z = 0 if len(accel_z) - 1 < i else float(accel_z[i].sample)
+
+        magnitude = math.sqrt(math.pow(x, 2) + math.pow(y, 2) + math.pow(z, 2));
+        magnitudeList.append(magnitude)
+
+    return magnitudeList

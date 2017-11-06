@@ -26,18 +26,15 @@ import uuid
 from collections import OrderedDict
 from cerebralcortex.data_processor.signalprocessing.window import window
 import numpy as np
-from numpy.linalg import norm
-from typing import List
-from cerebralcortex.kernel.datatypes.datapoint import DataPoint
+from cerebralcortex.data_processor.data_diagnostic.util import magnitude_motionsense
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.data_processor.data_diagnostic.post_processing import store
 from cerebralcortex.data_processor.data_diagnostic.util import merge_consective_windows
-from cerebralcortex.data_processor.signalprocessing.vector import magnitude
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 from cerebralcortex.data_processor.data_diagnostic.sensor_unavailable_marker import filter_battery_off_windows
 
 
-def wireless_disconnection(stream_id: uuid, all_stream_ids_names:dict, CC_obj: CerebralCortex, config: dict, start_time=None, end_time=None):
+def wireless_disconnection(stream_id: uuid, stream_name: str, owner_id: uuid, CC_obj: CerebralCortex, config: dict):
     """
     Analyze whether a sensor was unavailable due to a wireless disconnection
     or due to sensor powered off. This method automatically loads related
@@ -52,13 +49,13 @@ def wireless_disconnection(stream_id: uuid, all_stream_ids_names:dict, CC_obj: C
 
     results = OrderedDict()
 
-    #load stream data to be diagnosed
-    stream = CC_obj.get_datastream(stream_id, data_type=DataSet.COMPLETE, start_time=start_time,
-                                   end_time=end_time)
-    windowed_data = window(stream.data, config['general']['window_size'], True)
+    stream_end_time = CC_obj.get_stream_start_end_time(stream_id)["end_time"]
+    day = stream_end_time
 
-    owner_id = stream._owner
-    stream_name = stream._name
+    #load stream data to be diagnosed
+    stream = CC_obj.get_datastream(stream_id, day, data_type=DataSet.COMPLETE)
+
+    windowed_data = window(stream.data, config['general']['window_size'], True)
 
     windowed_data = filter_battery_off_windows(stream_id, stream_name, windowed_data, owner_id, config, CC_obj)
 
@@ -67,48 +64,23 @@ def wireless_disconnection(stream_id: uuid, all_stream_ids_names:dict, CC_obj: C
 
 
     if windowed_data:
-        #prepare input streams metadata
-        if stream_name == config["stream_names"]["motionsense_hrv_accel_right"]:
-            motionsense_accel_stream_id = all_stream_ids_names[config["stream_names"]["motionsense_hrv_accel_right"]]
-            output_stream_name = config["stream_names"]["motionsense_hrv_accel_right"]
-
-        elif stream_name == config["stream_names"]["motionsense_hrv_accel_left"]:
-            motionsense_accel_stream_id = all_stream_ids_names[config["stream_names"]["motionsense_hrv_accel_left"]]
-            output_stream_name = config["stream_names"]["motionsense_hrv_accel_left"]
-
-        input_streams = [{"id": str(stream_id), "name": str(stream_name)},
-                         {"id": str(motionsense_accel_stream_id),
-                          "name": output_stream_name}]
-
         for dp in windowed_data:
             if dp.data:
                 prev_data = dp.data
             else:
                 # compute magnitude of the window
-                magnitude_vals = magnitude(prev_data)
+                magnitude_vals = magnitude_motionsense(prev_data)
 
                 if np.var(magnitude_vals) > threshold:
                     key = (dp.start_time, dp.end_time)
                     results[key] = label
 
-        merged_windows = merge_consective_windows(results)
-        store(input_streams, merged_windows, CC_obj, config, config["algo_names"]["sensor_unavailable_marker"])
+            input_streams = [{"id": str(stream_id), "name": str(stream_name)}]
+            merged_windows = merge_consective_windows(results)
+            store(input_streams, merged_windows, CC_obj, config, config["algo_names"]["sensor_unavailable_marker"])
 
 
-def magnitude(data: DataPoint) -> List:
-    """
 
-    :param data:
-    :return:
-    """
-
-    if data is None or len(data) == 0:
-        return []
-
-    input_data = np.array([i.sample for i in data])
-    data = norm(input_data, axis=1).tolist()
-
-    return data
 
 
 

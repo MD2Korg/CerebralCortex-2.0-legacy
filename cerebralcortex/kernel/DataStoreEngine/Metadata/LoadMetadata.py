@@ -182,7 +182,7 @@ class LoadMetadata:
             stream_ids_names[row["name"]] = row["identifier"]
         return stream_ids_names
 
-    def get_stream_start_end_time(self, stream_id: uuid) -> uuid:
+    def get_stream_start_end_time(self, stream_id: uuid) -> dict:
         """
 
         :param stream_id:
@@ -192,16 +192,62 @@ class LoadMetadata:
         if not stream_id:
             return None
 
-        qry = "select DATE_FORMAT(start_time,'%Y%m%d'), DATE_FORMAT(end_time,'%Y%m%d') from " + self.datastreamTable + " where identifier = %(identifier)s"
+        qry = "select DATE_FORMAT(start_time,'%Y%m%d') as start_time, DATE_FORMAT(end_time,'%Y%m%d') as end_time from " + self.datastreamTable + " where identifier = %(identifier)s"
         vals = {'identifier': str(stream_id)}
 
         self.cursor.execute(qry, vals)
         rows = self.cursor.fetchall()
 
         if len(rows) == 0:
-            return "NULL"
+            return {"start_time":None, "end_time":None}
         else:
-            return rows[0]
+            return {"start_time":rows[0]["start_time"], "end_time":rows[0]["end_time"]}
+
+    def get_all_participants(self, study_name: str) -> dict:
+
+        """
+
+        :param study_name:
+        :return:
+        """
+        if not study_name:
+            return None
+
+        qry = 'SELECT identifier, username FROM '+ self.userTable +' where user_metadata->"$.study_name"=%(study_name)s'
+
+        vals = {'study_name': str(study_name)}
+
+        self.cursor.execute(qry, vals)
+        rows = self.cursor.fetchall()
+
+        if len(rows) == 0:
+            return None
+        else:
+            return rows
+
+    def get_participant_streams(self, participant_id: uuid) -> dict:
+
+        """
+
+        :param participant_id:
+        :return:
+        """
+        if not participant_id:
+            return None
+        result = {}
+        qry = 'SELECT * FROM '+ self.datastreamTable +' where owner=%(owner)s'
+
+        vals = {'owner': str(participant_id)}
+
+        self.cursor.execute(qry, vals)
+        rows = self.cursor.fetchall()
+
+        if len(rows) == 0:
+            return None
+        else:
+            for row in rows:
+                result[row["name"]] = row
+            return result
 
     def get_stream_metadata_by_owner_id(self, owner_id: str) -> uuid:
         """

@@ -35,10 +35,9 @@ from cerebralcortex.data_processor.data_diagnostic.util import merge_consective_
 from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 from cerebralcortex.data_processor.data_diagnostic.sensor_unavailable_marker import filter_battery_off_windows
+from cerebralcortex.data_processor.data_diagnostic.util import magnitude_autosense_v1
 
-
-def wireless_disconnection(stream_id: uuid, all_stream_ids_names: dict, CC_obj: CerebralCortex, config: dict,
-                           start_time=None, end_time=None):
+def wireless_disconnection(stream_id: uuid, stream_name: str, owner_id: uuid, CC_obj: CerebralCortex, config: dict):
     """
     Analyze whether a sensor was unavailable due to a wireless disconnection
     or due to sensor powered off. This method automatically loads related
@@ -53,9 +52,11 @@ def wireless_disconnection(stream_id: uuid, all_stream_ids_names: dict, CC_obj: 
 
     results = OrderedDict()
 
+    stream_end_time = CC_obj.get_stream_start_end_time(stream_id)["end_time"]
+    day = stream_end_time
+
     # load stream data to be diagnosed
-    stream = CC_obj.get_datastream(stream_id, data_type=DataSet.COMPLETE, start_time=start_time,
-                                   end_time=end_time)
+    stream = CC_obj.get_datastream(stream_id, day, data_type=DataSet.COMPLETE)
     windowed_data = window(stream.data, config['general']['window_size'], True)
 
     owner_id = stream._owner
@@ -89,7 +90,7 @@ def wireless_disconnection(stream_id: uuid, all_stream_ids_names: dict, CC_obj: 
                 autosense_accel_z = CC_obj.get_datastream(z, start_time=start_time, end_time=end_time,
                                                           data_type=DataSet.ONLY_DATA)
 
-                magnitudeVals = autosense_accel_magnitude(autosense_accel_x, autosense_accel_y, autosense_accel_z)
+                magnitudeVals = magnitude_autosense_v1(autosense_accel_x, autosense_accel_y, autosense_accel_z)
 
                 if np.var(magnitudeVals) > threshold:
                     key = (dp.start_time, dp.end_time)
@@ -97,25 +98,3 @@ def wireless_disconnection(stream_id: uuid, all_stream_ids_names: dict, CC_obj: 
 
         merged_windows = merge_consective_windows(results)
         store(input_streams, merged_windows, CC_obj, config, config["algo_names"]["sensor_unavailable_marker"])
-
-
-def autosense_accel_magnitude(accel_x: float, accel_y: float, accel_z: float) -> list:
-    """
-    compute magnitude of x, y, and z
-    :param accel_x:
-    :param accel_y:
-    :param accel_z:
-    :return: magnitude values of a window as list
-    """
-    magnitudeList = []
-    max_list_size = len(max(accel_x, accel_y, accel_z, key=len))
-
-    for i in range(max_list_size):
-        x = 0 if len(accel_x) - 1 < i else float(accel_x[i].sample)
-        y = 0 if len(accel_y) - 1 < i else float(accel_y[i].sample)
-        z = 0 if len(accel_z) - 1 < i else float(accel_z[i].sample)
-
-        magnitude = math.sqrt(math.pow(x, 2) + math.pow(y, 2) + math.pow(z, 2));
-        magnitudeList.append(magnitude)
-
-    return magnitudeList

@@ -25,6 +25,7 @@
 import ast
 import json
 import uuid
+from pyspark.sql import DataFrame
 from datetime import datetime
 from typing import List
 from cassandra.cluster import Cluster
@@ -35,8 +36,12 @@ from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 from cerebralcortex.kernel.datatypes.datastream import DataStream, DataPoint
 
 
+
+
+
 class LoadData:
-    def get_stream(self, stream_id: uuid, start_time: datetime = None, end_time: datetime = None,
+
+    def get_stream(self, stream_id: uuid, day:str=None, start_time: datetime = None, end_time: datetime = None,
                    data_type=DataSet.COMPLETE) -> DataStream:
 
         """
@@ -49,7 +54,7 @@ class LoadData:
         start_time = str(start_time)
         end_time = str(end_time)
 
-        where_clause = "identifier='" + stream_id + "'"
+        where_clause = "identifier='" + stream_id + "' and day='"+day+"'"
 
         if stream_id == 'None':
             raise Exception("Identifier cannot be null.")
@@ -61,14 +66,54 @@ class LoadData:
             where_clause += " and start_time<=cast('" + end_time + "' as timestamp)"
 
         if data_type == DataSet.COMPLETE:
-            datapoints = self.map_dataframe_to_datapoint(
-                self.load_data_from_cassandra(self.datapointTable, where_clause))
-            stream = self.map_datapoint_and_metadata_to_datastream(stream_id, datapoints)
+            df = self.load_data_from_cassandra(self.datapointTable, where_clause)
+            rdd = df.rdd
+            datapoints_rdd = rdd.map(self.map_dataframe_to_datapoint)
+            stream = self.map_datapoint_and_metadata_to_datastream(stream_id, datapoints_rdd)
         elif data_type == DataSet.ONLY_DATA:
-            return self.map_dataframe_to_datapoint(self.load_data_from_cassandra(self.datapointTable, where_clause))
+            df = self.load_data_from_cassandra(self.datapointTable, where_clause)
+            rdd = df.rdd
+            datapoints_rdd = rdd.map(self.map_dataframe_to_datapoint)
+            return datapoints_rdd
         elif data_type == DataSet.ONLY_METADATA:
-            datapoints = []
-            stream = self.map_datapoint_and_metadata_to_datastream(stream_id, datapoints)
+            stream = self.map_datapoint_and_metadata_to_datastream(stream_id, None)
+        else:
+            raise ValueError("Invalid type parameter.")
+
+        return stream
+
+    def get_stream_dataframe(self, stream_id: uuid, day:str=None, start_time: datetime = None, end_time: datetime = None,
+                   data_type=DataSet.COMPLETE) -> dict:
+
+        """
+        :param stream_id:
+        :param start_time:
+        :param end_time:
+        :param data_type: this parameter accepts only three types (i.e., all, data, metadata)
+        :return:
+        {"metadata":dict, "data":DataFrame}
+        """
+        start_time = str(start_time)
+        end_time = str(end_time)
+
+        where_clause = "identifier='" + stream_id + "' and day='"+day+"'"
+
+        if stream_id == 'None':
+            raise Exception("Identifier cannot be null.")
+
+        if start_time != 'None':
+            where_clause += " and start_time>=cast('" + start_time + "' as timestamp)"
+
+        if end_time != 'None':
+            where_clause += " and start_time<=cast('" + end_time + "' as timestamp)"
+
+        if data_type == DataSet.COMPLETE:
+            datapoints = self.load_data_from_cassandra(self.datapointTable, where_clause)
+            stream = self.map_datapoint_and_metadata_to_dataframe(stream_id, datapoints)
+        elif data_type == DataSet.ONLY_DATA:
+            return {"metadata":{}, "data": self.load_data_from_cassandra(self.datapointTable, where_clause)}
+        elif data_type == DataSet.ONLY_METADATA:
+            stream = self.map_datapoint_and_metadata_to_dataframe(stream_id, [])
         else:
             raise ValueError("Invalid type parameter.")
 
@@ -200,34 +245,17 @@ class LoadData:
                             break
         yield filtered_datapoints
 
-    def map_dataframe_to_datapoint(self, dataframe: object) -> list:
-        """
-        Converts a PySpark DataFrame into a list of datapoint objects
-        :param dataframe:
-        :return: list of datapoint objects
-        """
-        datapointsList = []
-        rows = dataframe.collect()
+    @staticmethod
+    def map_dataframe_to_datapoint(row: dict) -> DataPoint:
+        # ast.literal_eval is used to convert strings into json, list, dict. it returns string if ast.literal_eval fails
+        try:
+            sample = ast.literal_eval(row["sample"])
+        except:
+            sample = row["sample"]
 
-        for row in rows:
-            localtz = timezone(self.CC_obj.time_zone)
-            start_time = localtz.localize(row["start_time"])
-            if row["end_time"] != None:
-                end_time = localtz.localize(row["end_time"])
-            else:
-                end_time = ""
+        return DataPoint(row["start_time"], row["end_time"], sample)
 
-            # ast.literal_eval is used to convert strings into json, list, dict. it returns string if ast.literal_eval fails
-            try:
-                smple = ast.literal_eval(row["sample"])
-            except:
-                smple = row["sample"]
-
-            dp = DataPoint(start_time, end_time, smple)
-            datapointsList.append(dp)
-        return datapointsList
-
-    def map_datapoint_and_metadata_to_datastream(self, stream_id: int, data: list) -> DataStream:
+    def map_datapoint_and_metadata_to_datastream(self, stream_id: int, data: object) -> DataStream:
         """
         This method will map the datapoint and metadata to datastream object
         :param stream_id:
@@ -249,6 +277,21 @@ class LoadData:
 
         return DataStream(stream_id, ownerID, name, data_descriptor, execution_context, annotations,
                           stream_type, start_time, end_time, data)
+
+    def map_datapoint_and_metadata_to_dataframe(self, stream_id: int, data: DataFrame) -> dict:
+        """
+        This method will map the datapoint and metadata to datastream object
+        :param stream_id:
+        :param data: list
+        :return: datastream object
+        """
+        result = {}
+        # query datastream(mysql) for metadata
+        datastream_info = Metadata(self.CC_obj).get_stream_info(stream_id)
+
+        result["metadata"] = datastream_info[0]
+        result["data"] = data
+        return result
 
     def load_data_from_cassandra(self, table_name: str, where_clause: str, num_partitions:int=0) -> object:
         """

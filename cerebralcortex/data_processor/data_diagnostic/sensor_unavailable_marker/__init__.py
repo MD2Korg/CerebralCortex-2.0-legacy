@@ -24,9 +24,19 @@
 
 import uuid
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
+from cerebralcortex.CerebralCortex import CerebralCortex
 
+def filter_battery_off_windows(stream_id: uuid, stream_name: str, main_stream_windows: dict, owner_id: uuid, config: dict, CC_obj: CerebralCortex) -> dict:
+    """
 
-def filter_battery_off_windows(stream_id, stream_name, main_stream_windows, owner_id, config, CC_obj):
+    :param stream_id:
+    :param stream_name:
+    :param main_stream_windows:
+    :param owner_id:
+    :param config:
+    :param CC_obj:
+    :return:
+    """
 
     start_time = ""
     end_time = ""

@@ -121,7 +121,7 @@ class CerebralCortex:
         else:
             raise ValueError("Unknown type.")
 
-    def get_datastream(self, stream_identifier: uuid, start_time: datetime = None, end_time: datetime = None,
+    def get_datastream(self, stream_identifier: uuid, day=None, start_time: datetime = None, end_time: datetime = None,
                        data_type: enumerate = DataSet.COMPLETE) -> DataStream:
         """
         Returns a data stream with data and metadata
@@ -131,7 +131,20 @@ class CerebralCortex:
         :param data_type:
         :return:
         """
-        return Data(self).get_stream(stream_identifier, start_time, end_time, data_type)
+        return Data(self).get_stream(stream_identifier, day, start_time, end_time, data_type)
+
+    def get_stream_dataframe(self, stream_identifier: uuid, start_time: datetime = None, end_time: datetime = None,
+                             data_type: enumerate = DataSet.COMPLETE) -> dict:
+
+        """
+        :param stream_id:
+        :param start_time:
+        :param end_time:
+        :param data_type: this parameter accepts only three types (i.e., all, data, metadata)
+        :return: {"metadata":dict, "data":DataFrame}
+        """
+        return Data(self).get_stream_dataframe(stream_identifier, start_time, end_time, data_type)
+
 
     def save_datastream(self, datastream: DataStream, type):
         """
@@ -170,6 +183,34 @@ class CerebralCortex:
         :return:
         """
         return Metadata(self).get_stream_ids_by_name(stream_name, owner_id, start_time, end_time)
+
+    def get_all_participants(self, study_name: str) -> dict:
+
+        """
+
+        :param study_name:
+        :return:
+        """
+        return Metadata(self).get_all_participants(study_name)
+
+    def get_stream_start_end_time(self, stream_id: uuid) -> dict:
+        """
+
+        :param stream_id:
+        :param time_type: acceptable parameters are start_time OR end_time
+        :return:
+        """
+        return Metadata(self).get_stream_start_end_time(stream_id)
+
+    def get_participant_streams(self, participant_id: uuid) -> dict:
+
+        """
+
+        :param participant_id:
+        :return:
+        """
+        return Metadata(self).get_participant_streams(participant_id)
+
 
     def filter_stream(self, data_stream_id: uuid, annotation_stream_name: uuid, annotation: str,
                       start_time: datetime = None, end_time: datetime = None) -> List[DataPoint]:

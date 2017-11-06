@@ -39,7 +39,8 @@ from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 # TODO: use advanced sensor quality algorithms to detect whether a window contains good or bad data.
 
 
-def wireless_disconnection(stream_id: uuid, all_stream_ids_names:dict, CC_obj: CerebralCortex, config: dict, start_time=None, end_time=None):
+def wireless_disconnection(stream_id: uuid, all_stream_ids_names: dict, CC_obj: CerebralCortex, config: dict,
+                           start_time=None, end_time=None):
     """
     Analyze whether a sensor was unavailable due to a wireless disconnection
     or due to sensor powered off. This method automatically loads related
@@ -55,10 +56,9 @@ def wireless_disconnection(stream_id: uuid, all_stream_ids_names:dict, CC_obj: C
     results = OrderedDict()
     threshold = 0
 
-
-    #load stream data to be diagnosed
+    # load stream data to be diagnosed
     stream = CC_obj.get_datastream(stream_id, data_type=DataSet.ONLY_METADATA, start_time=start_time,
-                                        end_time=end_time)
+                                   end_time=end_time)
     windowed_data = window(stream.data, config['general']['window_size'], True)
 
     owner_id = stream._owner
@@ -72,20 +72,22 @@ def wireless_disconnection(stream_id: uuid, all_stream_ids_names:dict, CC_obj: C
     if stream_name == config["stream_names"]["autosense_rip"]:
         threshold = config['sensor_unavailable_marker']['rip']
         label = config['labels']['autosense_unavailable']
-    elif stream_name == config["stream_names"]["motionsense_hrv_accel_right"] or stream_name == config["stream_names"]["motionsense_hrv_accel_left"]:
+    elif stream_name == config["stream_names"]["motionsense_hrv_accel_right"] or stream_name == config["stream_names"][
+        "motionsense_hrv_accel_left"]:
         threshold = config['sensor_unavailable_marker']['motionsense']
         label = config['labels']['motionsense_unavailable']
 
+    # using stream_id, algo_name, and owner id to generate a unique stream ID for battery-marker
+    wireless_disconnection_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id + label + owner_id))
+    battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS,
+                                          str(stream_id + config["algo_names"]["battery_marker"] + owner_id))
 
-    #using stream_id, algo_name, and owner id to generate a unique stream ID for battery-marker
-    wireless_disconnection_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+label+owner_id))
-    battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+config["algo_names"]["battery_marker"]+owner_id))
-
-    battery_off_data = CC_obj.get_datastream(battery_marker_stream_id, data_type=DataSet.ONLY_DATA, start_time=start_time,
+    battery_off_data = CC_obj.get_datastream(battery_marker_stream_id, data_type=DataSet.ONLY_DATA,
+                                             start_time=start_time,
                                              end_time=end_time)
 
     if windowed_data:
-        #prepare input streams metadata
+        # prepare input streams metadata
         if stream_name == config["stream_names"]["motionsense_hrv_accel_right"]:
             motionsense_accel_stream_id = all_stream_ids_names[config["stream_names"]["motionsense_hrv_accel_right"]]
 
@@ -113,7 +115,8 @@ def wireless_disconnection(stream_id: uuid, all_stream_ids_names:dict, CC_obj: C
                 # get a window prior to a battery powered off
                 start_time = dp.start_time - timedelta(seconds=config['general']['window_size'])
                 end_time = dp.start_time
-                if stream_name == config["stream_names"]["motionsense_hrv_accel_right"] or stream_name == config["stream_names"]["motionsense_hrv_accel_left"]:
+                if stream_name == config["stream_names"]["motionsense_hrv_accel_right"] or stream_name == \
+                        config["stream_names"]["motionsense_hrv_accel_left"]:
                     motionsense_accel_xyz = CC_obj.get_datastream(motionsense_accel_stream_id, start_time=start_time,
                                                                   end_time=end_time, data_type=DataSet.COMPLETE)
                     magnitudeValStream = magnitude(motionsense_accel_xyz)
@@ -123,13 +126,14 @@ def wireless_disconnection(stream_id: uuid, all_stream_ids_names:dict, CC_obj: C
 
                 else:
                     autosense_accel_x = CC_obj.get_datastream(x, start_time=start_time, end_time=end_time,
-                                                            data_type=DataSet.ONLY_DATA)
+                                                              data_type=DataSet.ONLY_DATA)
                     autosense_accel_y = CC_obj.get_datastream(y, start_time=start_time, end_time=end_time,
-                                                            data_type=DataSet.ONLY_DATA)
+                                                              data_type=DataSet.ONLY_DATA)
                     autosense_accel_z = CC_obj.get_datastream(z, start_time=start_time, end_time=end_time,
-                                                            data_type=DataSet.ONLY_DATA)
+                                                              data_type=DataSet.ONLY_DATA)
 
-                    magnitudeVals = autosense_calculate_magnitude(autosense_accel_x, autosense_accel_y, autosense_accel_z)
+                    magnitudeVals = autosense_calculate_magnitude(autosense_accel_x, autosense_accel_y,
+                                                                  autosense_accel_z)
 
                 if np.var(magnitudeVals) > threshold:
                     key = (dp.start_time, dp.end_time)
@@ -160,38 +164,57 @@ def autosense_calculate_magnitude(accel_x: float, accel_y: float, accel_z: float
 
     return magnitudeList
 
-def filter_battery_off_windows(stream_id, stream_name, main_stream_windows, owner_id, config, CC_obj):
+
+def filter_battery_off_windows(stream_id: uuid, stream_name: str, main_stream_windows: dict, owner_id: uuid, config: dict, CC_obj: CerebralCortex) -> dict:
+    """
+
+    :param stream_id:
+    :param stream_name:
+    :param main_stream_windows:
+    :param owner_id:
+    :param config:
+    :param CC_obj:
+    :return:
+    """
 
     start_time = ""
     end_time = ""
-    #load phone battery data
-    phone_battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+config["stream_name"]["phone_battery"]+owner_id))
-    phone_battery_marker_stream = CC_obj.get_datastream(phone_battery_marker_stream_id, data_type=DataSet.ONLY_DATA, start_time=start_time,
-                          end_time=end_time)
-
-    #load sensor battery data
-    if stream_name == config["stream_names"]["autosense_ecg"] or stream_name == config["stream_names"]["autosense_rip"]:
-        autosense_battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+config["stream_name"]["autosense_battery"]+owner_id))
-        sensor_battery_marker_stream = CC_obj.get_datastream(phone_battery_marker_stream_id, data_type=DataSet.ONLY_DATA, start_time=start_time,
+    # load phone battery data
+    phone_battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS,
+                                                str(stream_id + config["stream_name"]["phone_battery"] + owner_id))
+    phone_battery_marker_stream = CC_obj.get_datastream(phone_battery_marker_stream_id, data_type=DataSet.ONLY_DATA,
+                                                        start_time=start_time,
                                                         end_time=end_time)
+
+    # load sensor battery data
+    if stream_name == config["stream_names"]["autosense_ecg"] or stream_name == config["stream_names"]["autosense_rip"]:
+        autosense_battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(
+            stream_id + config["stream_name"]["autosense_battery"] + owner_id))
+        sensor_battery_marker_stream = CC_obj.get_datastream(phone_battery_marker_stream_id,
+                                                             data_type=DataSet.ONLY_DATA, start_time=start_time,
+                                                             end_time=end_time)
     elif stream_name == config["stream_names"]["motionsense_hrv_accel_right"]:
-        motionsense_battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+config["stream_name"]["motionsense_hrv_battery_right"]+owner_id))
-        sensor_battery_marker_stream = CC_obj.get_datastream(phone_battery_marker_stream_id, data_type=DataSet.ONLY_DATA, start_time=start_time,
-                                                               end_time=end_time)
+        motionsense_battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(
+            stream_id + config["stream_name"]["motionsense_hrv_battery_right"] + owner_id))
+        sensor_battery_marker_stream = CC_obj.get_datastream(phone_battery_marker_stream_id,
+                                                             data_type=DataSet.ONLY_DATA, start_time=start_time,
+                                                             end_time=end_time)
     elif stream_name == config["stream_names"]["motionsense_hrv_accel_left"]:
-        motionsense_battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+config["stream_name"]["motionsense_hrv_battery_left"]+owner_id))
-        sensor_battery_marker_stream = CC_obj.get_datastream(phone_battery_marker_stream_id, data_type=DataSet.ONLY_DATA, start_time=start_time,
-                                                               end_time=end_time)
+        motionsense_battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(
+            stream_id + config["stream_name"]["motionsense_hrv_battery_left"] + owner_id))
+        sensor_battery_marker_stream = CC_obj.get_datastream(phone_battery_marker_stream_id,
+                                                             data_type=DataSet.ONLY_DATA, start_time=start_time,
+                                                             end_time=end_time)
     mk = 0
     results = None
     for key, data in main_stream_windows.items():
         for phone_key, phone_data in phone_battery_marker_stream.items():
-            if phone_key.start_time <= key.start_time and phone_key.end_time>=key.end_time:
+            if phone_key.start_time <= key.start_time and phone_key.end_time >= key.end_time:
                 mk = 1
         for sensor_key, sensor_data in sensor_battery_marker_stream.items():
-            if sensor_key.start_time <= key.start_time and sensor_key.end_time>=key.end_time:
+            if sensor_key.start_time <= key.start_time and sensor_key.end_time >= key.end_time:
                 mk = 1
 
-        if mk!=1:
+        if mk != 1:
             results[key] = data
     return results

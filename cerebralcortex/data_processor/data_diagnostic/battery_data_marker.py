@@ -31,8 +31,11 @@ from cerebralcortex.data_processor.data_diagnostic.util import merge_consective_
 from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 
+def ddd(val):
+    print(val)
+    return val*2;
 
-def battery_marker(stream_id: uuid, CC_obj: CerebralCortex, config: dict, start_time=None, end_time=None):
+def battery_marker(stream_id: uuid, stream_name:str, owner_id, CC_obj: CerebralCortex, config: dict, start_time=None, end_time=None):
     """
     This algorithm uses battery percentages to decide whether phone was powered-off or battery was low.
     All the labeled data (st, et, label) with its metadata are then stored in a datastore.
@@ -42,14 +45,19 @@ def battery_marker(stream_id: uuid, CC_obj: CerebralCortex, config: dict, start_
     """
     results = OrderedDict()
 
-    stream = CC_obj.get_datastream(stream_id, data_type=DataSet.COMPLETE, start_time=start_time, end_time=end_time)
-    windowed_data = window(stream.data, config['general']['window_size'], True)
-
-    stream_name = stream._name
-    owner_id = stream._owner
-
     #using stream_id, algo_name, and owner id to generate a unique stream ID for battery-marker
     battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+stream_name+owner_id))
+
+    stream_end_day = CC_obj.get_stream_start_end_time(battery_marker_stream_id)["end_time"]
+    if not stream_end_day:
+        stream_end_day = CC_obj.get_stream_start_end_time(stream_id)["end_time"]
+
+    stream = CC_obj.get_datastream(stream_id, data_type=DataSet.COMPLETE, day=stream_end_day, start_time=start_time, end_time=end_time)
+
+    windowed_data = stream.data.map(lambda data: window(data, config['general']['window_size'], True))
+    windowed_data = window(stream["data"], config['general']['window_size'], True)
+
+
 
     for key, data in windowed_data.items():
         dp = []
