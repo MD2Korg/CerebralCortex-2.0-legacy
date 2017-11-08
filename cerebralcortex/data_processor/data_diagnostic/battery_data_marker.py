@@ -45,7 +45,7 @@ def battery_marker(stream_id: uuid, stream_name:str, owner_id, dd_stream_name, C
     CC_worker = CC["worker"]
 
     #using stream_id, algo_name, and owner id to generate a unique stream ID for battery-marker
-    battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+stream_name+owner_id))
+    battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+dd_stream_name+owner_id))
 
     stream_end_day = CC_driver.get_stream_start_end_time(battery_marker_stream_id)["end_time"]
 
