@@ -165,7 +165,10 @@ class StoreData:
         insert_without_endtime_qry = session.prepare("INSERT INTO data (identifier, day, start_time, sample) VALUES (?, ?, ?, ?)")
         insert_with_endtime_qry = session.prepare("INSERT INTO data (identifier, day, start_time, end_time, sample) VALUES (?, ?, ?, ?, ?)")
         st = datetime.now()
-        for data_block in self.datapoints_to_cassandra_sql_batch(uuid.UUID(stream_id), datapoints, insert_without_endtime_qry, insert_with_endtime_qry):
+        if isinstance(stream_id, str):
+            stream_id = uuid.UUID(stream_id)
+
+        for data_block in self.datapoints_to_cassandra_sql_batch(stream_id, datapoints, insert_without_endtime_qry, insert_with_endtime_qry):
             session.execute(data_block)
             data_block.clear()
         session.shutdown();
@@ -199,6 +202,7 @@ class StoreData:
                 insert_qry = insert_without_endtime_qry
             #batch.add(insert_qry, (stream_id, day, i.start_time, sample))
         #return batch
+
         # TODO: remove when final testing is done
             if dp_number > 64500:
                 yield batch
@@ -207,7 +211,10 @@ class StoreData:
                 batch.clear()
                 dp_number = 1
             else:
-                batch.add(insert_qry, (stream_id, day, i.start_time, sample))
+                if i.end_time:
+                    batch.add(insert_qry, (stream_id, day, i.start_time, i.end_time, sample))
+                else:
+                    batch.add(insert_qry, (stream_id, day, i.start_time, sample))
                 dp_number += 1
         yield batch
 

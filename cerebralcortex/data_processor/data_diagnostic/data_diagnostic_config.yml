@@ -87,13 +87,16 @@ stream_names:
   motionsense_hrv_battery_right: "BATTERY--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
   motionsense_hrv_battery_left: "BATTERY--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
   autosense_battery: "BATTERY--org.md2k.autosense"
-  phone_battery: "LED--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
+  phone_battery: "BATTERY--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
 
   # OUTPUTS
-  TODO: TODO
+  phone_battery_marker: "DATA-DIAGNOSTIC--PHONE-BATTERY"
+  motionsense_hrv_battery_right_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--RIGHT_WRIST--BATTERY"
+  motionsense_hrv_battery_left_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--LEFT_WRIST--BATTERY"
+  autosense_battery_marker: "DATA-DIAGNOSTIC--AUTOSENSE--BATTERY"
 
 
-algo_names:
+algo_type:
   battery_marker: battery
   attachment_marker: attachment
   sensor_unavailable_marker: sensor_unavailable

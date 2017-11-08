@@ -32,7 +32,7 @@ from cerebralcortex.kernel.schema_builder.data_descriptor import data_descriptor
 from cerebralcortex.kernel.schema_builder.execution_context import execution_context
 
 
-def store(input_streams: dict, data: OrderedDict, CC_obj: CerebralCortex, config: dict, algo_type: str):
+def store(data: OrderedDict, input_streams: dict, output_streams: dict, CC_obj: CerebralCortex, config:dict):
     """
     Store diagnostic results with its metadata in the data-store
     :param input_streams:
@@ -41,44 +41,47 @@ def store(input_streams: dict, data: OrderedDict, CC_obj: CerebralCortex, config
     :param config:
     :param algo_type:
     """
-    parent_stream_id = input_streams[0]["id"]
-    parent_stream_name = input_streams[0]["name"]
 
-    result = process_data(parent_stream_name, input_streams, algo_type, config)
+    #basic output stream info
+    owner = input_streams[0]["owner_id"]
+    dd_stream_id = output_streams["id"]
+    dd_stream_name = output_streams["name"]
+    stream_type = "ds"
 
-    data_descriptor = json.loads(result["dd"])
-    execution_context = json.loads(result["ec"])
-    annotations = json.loads(result["anno"])
+    #parent_stream_id = input_streams[0]["id"]
+    #parent_stream_name = input_streams[0]["name"]
 
-    metadata = CC_obj.get_datastream(parent_stream_id, data_type=DataSet.ONLY_METADATA)
+    result = process_data(dd_stream_name, input_streams, output_streams["algo_type"], config)
 
-    owner = metadata.owner
-    name = metadata.name
-    stream_type = "datastream"
+    data_descriptor = result["dd"]
+    execution_context = result["ec"]
+    annotations = result["anno"]
 
-    ds = DataStream(owner=owner, name=name, data_descriptor=data_descriptor,
+    #metadata = CC_obj.get_datastream(parent_stream_id, data_type=DataSet.ONLY_METADATA)
+
+    ds = DataStream(identifier=dd_stream_id, owner=owner, name=dd_stream_name, data_descriptor=data_descriptor,
                     execution_context=execution_context, annotations=annotations,
                     stream_type=stream_type, data=data)
 
-    CC_obj.save_datastream(ds)
+    CC_obj.save_datastream(ds,"datastream")
 
 
-def process_data(stream_name: str, input_streams: dict, algo_type: str, config: dict) -> dict:
+def process_data(dd_stream_name: str, input_streams: dict, algo_type: str, config: dict) -> dict:
     """
-    :param stream_name:
+    :param dd_stream_name:
     :param input_streams:
     :param algo_type:
     :param config:
     :return:
     """
-    if algo_type == config["algo_names"]["attachment_marker"]:
-        result = attachment_marker(stream_name, input_streams, config)
-    elif algo_type == config["algo_names"]["battery_marker"]:
-        result = battery_data_marker(stream_name, input_streams, config)
-    elif algo_type == config["algo_names"]["sensor_unavailable_marker"]:
-        result = sensor_unavailable(stream_name, input_streams, config)
-    elif algo_type == config["algo_names"]["packet_loss_marker"]:
-        result = packet_loss(stream_name, input_streams, config)
+    if algo_type == config["algo_type"]["attachment_marker"]:
+        result = attachment_marker(dd_stream_name, input_streams, config)
+    elif algo_type == config["algo_type"]["battery_marker"]:
+        result = battery_data_marker(dd_stream_name, input_streams, config)
+    elif algo_type == config["algo_type"]["sensor_unavailable_marker"]:
+        result = sensor_unavailable(dd_stream_name, input_streams, config)
+    elif algo_type == config["algo_type"]["packet_loss_marker"]:
+        result = packet_loss(dd_stream_name, input_streams, config)
     return result
 
 
@@ -116,41 +119,40 @@ def attachment_marker(stream_name: str, input_streams: dict, config: dict) -> di
     return {"ec": ec, "dd": dd, "anno": anno}
 
 
-def battery_data_marker(stream_name: str, input_streams: dict, config: dict) -> dict:
+def battery_data_marker(dd_stream_name: str, input_streams: dict, config: dict) -> dict:
     """
 
-    :param stream_name:
+    :param dd_stream_name:
     :param input_streams:
     :param config:
     :return:
     """
-    if stream_name == config["sensor_types"]["phone_battery"]:
-        name = config["output_stream_names"]["ddt_phone_battery"]
+    if dd_stream_name == config["stream_names"]["phone_battery_marker"]:
         input_param = {"window_size": config["general"]["window_size"],
                        "phone_powered_off_threshold": config["battery_marker"]["phone_powered_off"],
                        "phone_battery_down_threshold": config["battery_marker"]["phone_battery_down"]}
-    elif stream_name == config["sensor_types"]["autosense_battery"]:
-        name = config["output_stream_names"]["ddt_autosense_battery"]
+    elif dd_stream_name == config["stream_names"]["autosense_battery_marker"]:
         input_param = {"window_size": config["general"]["window_size"],
                        "autosense_powered_off_threshold": config["battery_marker"]["autosense_powered_off"],
                        "autosense_battery_down_threshold": config["battery_marker"]["autosense_battery_down"]}
-
-    elif stream_name == config["sensor_types"]["motionsense_battery"]:
-        name = config["output_stream_names"]["ddt_motionsense_battery"]
+    elif dd_stream_name == config["stream_names"]["motionsense_hrv_battery_right_marker"] or dd_stream_name == config["stream_names"]["motionsense_hrv_battery_left_marker"]:
         input_param = {"window_size": config["general"]["window_size"],
                        "motionsense_powered_off_threshold": config["battery_marker"]["motionsense_powered_off"],
                        "motionsense_battery_down_threshold": config["battery_marker"]["motionsense_battery_down"]}
     else:
         raise ValueError("Incorrect sensor type")
 
+    data_descriptor = {"powered_off": config["labels"]["powered_off"],
+                       "battery_down": config["labels"]["battery_down"]}
+
     algo_description = config["description"]["battery_data_marker"]
 
-    method = 'cerebralcortex.data_processor.data_diagnostic.BatteryDataMarker'
+    method = 'cerebralcortex.data_processor.data_diagnostic.battery_data_marker.py'
 
-    ec = get_execution_context(name, input_param, input_streams, method, algo_description, config)
-    dd = get_data_descriptor(config["algo_names"]["battery_marker"], config)
+    ec = get_execution_context(dd_stream_name, input_param, input_streams, method, algo_description, config)
+
     anno = get_annotations()
-    return {"ec": ec, "dd": dd, "anno": anno}
+    return {"ec": ec, "dd": data_descriptor, "anno": anno}
 
 
 def sensor_unavailable(sensor_type: str, input_streams: dict, config: dict) -> dict:
@@ -199,6 +201,7 @@ def packet_loss(sensor_type: str, input_streams: dict, config: dict) -> dict:
         name = config["output_stream_names"]["ddt_ecg_packet_loss"]
         input_param = {"window_size": config["general"]["window_size"],
                        "ecg_acceptable_packet_loss": config["packet_loss_marker"]["ecg_acceptable_packet_loss"]}
+
     elif sensor_type == config["sensor_types"]["autosense_rip"]:
         name = config["output_stream_names"]["ddt_rip_packet_loss"]
         input_param = {"window_size": config["general"]["window_size"],
@@ -208,6 +211,7 @@ def packet_loss(sensor_type: str, input_streams: dict, config: dict) -> dict:
         name = config["output_stream_names"]["ddt_motionsense_packet_loss"]
         input_param = {"window_size": config["general"]["window_size"],
                        "rip_acceptable_packet_loss": config["packet_loss_marker"]["motionsense_acceptable_packet_loss"]}
+
     else:
         raise ValueError("Incorrect sensor type")
 
@@ -228,14 +232,14 @@ def get_data_descriptor(algo_type: str, config: dict) -> dict:
     :param config:
     :return:
     """
-    if algo_type == config["algo_names"]["battery_marker"]:
+    if algo_type == config["algo_type"]["battery_marker"]:
         dd = {"phone_powered_off": config["labels"]["phone_powered_off"],
               "phone_battery_down": config["labels"]["phone_battery_down"],
               "autosesen_powered_off": config["labels"]["autosesen_powered_off"],
               "autosense_battery_down": config["labels"]["autosense_battery_down"],
               "motionsense_powered_off": config["labels"]["motionsense_powered_off"],
               "motionsense_battery_down": config["labels"]["motionsense_battery_down"]}
-    elif algo_type == config["algo_names"]["attachment_marker"]:
+    elif algo_type == config["algo_type"]["attachment_marker"]:
         dd = {"ecg_improper_attachment": config["labels"]["ecg_improper_attachment"],
               "ecg_off_body": config["labels"]["ecg_off_body"],
               "ecg_on_body": config["labels"]["ecg_on_body"],
@@ -245,10 +249,10 @@ def get_data_descriptor(algo_type: str, config: dict) -> dict:
               "motionsense_improper_attachment": config["labels"]["motionsense_improper_attachment"],
               "motionsense_off_body": config["labels"]["motionsense_off_body"],
               "motionsense__on_body": config["labels"]["motionsense_on_body"]}
-    elif algo_type == config["algo_names"]["sensor_unavailable_marker"]:
+    elif algo_type == config["algo_type"]["sensor_unavailable_marker"]:
         dd = {"autosense_unavailable": config["labels"]["autosense_unavailable"],
               "motionsense_unavailable": config["labels"]["motionsense_unavailable"]}
-    elif algo_type == config["algo_names"]["packet_loss_marker"]:
+    elif algo_type == config["algo_type"]["packet_loss_marker"]:
         dd = {"ecg_packet_loss": config["labels"]["ecg_packet_loss"],
               "rip_packet_loss": config["labels"]["rip_packet_loss"],
               "motionsense_packet_loss": config["labels"]["motionsense_packet_loss"]}

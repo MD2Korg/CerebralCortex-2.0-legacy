@@ -76,3 +76,4 @@ fabric.properties
 /build/
 /dist/
 /MD2K_Cerebral_Cortex.egg-info/
+/cerebralcortex/data_processor/data_diagnostic/__tmp/

@@ -29,15 +29,12 @@ from pyspark.sql import DataFrame
 from datetime import datetime
 from typing import List
 from cassandra.cluster import Cluster
+from cassandra.query import SimpleStatement
 from pytz import timezone
 
 from cerebralcortex.kernel.DataStoreEngine.Metadata.Metadata import Metadata
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 from cerebralcortex.kernel.datatypes.datastream import DataStream, DataPoint
-
-
-
-
 
 class LoadData:
 
@@ -65,22 +62,73 @@ class LoadData:
         if end_time != 'None':
             where_clause += " and start_time<=cast('" + end_time + "' as timestamp)"
 
+        # query datastream(mysql) for metadata
+        datastream_info = Metadata(self.CC_obj).get_stream_info(stream_id)
+
         if data_type == DataSet.COMPLETE:
-            df = self.load_data_from_cassandra(self.datapointTable, where_clause)
-            rdd = df.rdd
-            datapoints_rdd = rdd.map(self.map_dataframe_to_datapoint)
-            stream = self.map_datapoint_and_metadata_to_datastream(stream_id, datapoints_rdd)
+            dps = self.load_cassandra_data(stream_id, day)
+            rdd = self.CC_obj.sc.parallelize(dps)
+            data = rdd.map(self.row_to_datapoints)
+
+            # df = self.load_data_from_cassandra(self.datapointTable, where_clause)
+            # rdd = df.rdd
+            # datapoints_rdd = rdd.flatMap(self.tt)
+            # datapoints_rdd = rdd.map(self.map_dataframe_to_datapoint)
+
+            stream = self.map_datapoint_and_metadata_to_datastream(stream_id, datastream_info, data)
         elif data_type == DataSet.ONLY_DATA:
             df = self.load_data_from_cassandra(self.datapointTable, where_clause)
             rdd = df.rdd
             datapoints_rdd = rdd.map(self.map_dataframe_to_datapoint)
             return datapoints_rdd
         elif data_type == DataSet.ONLY_METADATA:
-            stream = self.map_datapoint_and_metadata_to_datastream(stream_id, None)
+            stream = self.map_datapoint_and_metadata_to_datastream(stream_id, datastream_info, None)
         else:
             raise ValueError("Invalid type parameter.")
 
         return stream
+
+    @staticmethod
+    def row_to_datapoints(rows):
+        dps = []
+        for row in rows:
+            try:
+                sample = json.loads(row[2])
+            except:
+                sample = row[2]
+            localtz = timezone("US/Central")
+            if row[0]:
+                start_time = localtz.localize(row[0])
+            else:
+                start_time = row[0]
+            if row[1]:
+                end_time = localtz.localize(row[1])
+            else:
+                end_time = row[1]
+            dps.append(DataPoint(start_time, end_time, sample))
+        return dps
+
+    def load_cassandra_data(self, stream_id: uuid, day:str):
+        """
+
+        :param stream_id:
+        :param datapoints:
+        :param batch_size:
+        """
+        cluster = Cluster([self.hostIP], port=self.hostPort)
+
+        session = cluster.connect('cerebralcortex')
+
+        query = "SELECT start_time,end_time, sample FROM data where identifier="+str(stream_id)+" and day='"+day+"'"  # users contains 100 rows
+        statement = SimpleStatement(query, fetch_size=600000)
+        data = []
+        for row in session.execute(statement):
+            data.append(row)
+
+        session.shutdown();
+        cluster.shutdown();
+
+        return [data]
 
     def get_stream_dataframe(self, stream_id: uuid, day:str=None, start_time: datetime = None, end_time: datetime = None,
                    data_type=DataSet.COMPLETE) -> dict:
@@ -245,6 +293,7 @@ class LoadData:
                             break
         yield filtered_datapoints
 
+
     @staticmethod
     def map_dataframe_to_datapoint(row: dict) -> DataPoint:
         # ast.literal_eval is used to convert strings into json, list, dict. it returns string if ast.literal_eval fails
@@ -255,16 +304,14 @@ class LoadData:
 
         return DataPoint(row["start_time"], row["end_time"], sample)
 
-    def map_datapoint_and_metadata_to_datastream(self, stream_id: int, data: object) -> DataStream:
+    @staticmethod
+    def map_datapoint_and_metadata_to_datastream(stream_id: int, datastream_info:dict, data: object) -> DataStream:
         """
         This method will map the datapoint and metadata to datastream object
         :param stream_id:
         :param data: list
         :return: datastream object
         """
-
-        # query datastream(mysql) for metadata
-        datastream_info = Metadata(self.CC_obj).get_stream_info(stream_id)
 
         ownerID = datastream_info[0]["owner"]
         name = datastream_info[0]["name"]
@@ -274,9 +321,9 @@ class LoadData:
         stream_type = datastream_info[0]["type"]
         start_time = datastream_info[0]["start_time"]
         end_time = datastream_info[0]["end_time"]
-
         return DataStream(stream_id, ownerID, name, data_descriptor, execution_context, annotations,
                           stream_type, start_time, end_time, data)
+
 
     def map_datapoint_and_metadata_to_dataframe(self, stream_id: int, data: DataFrame) -> dict:
         """

@@ -24,52 +24,59 @@
 
 import uuid
 from collections import OrderedDict
+
 import numpy as np
+
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.data_processor.data_diagnostic.post_processing import store
 from cerebralcortex.data_processor.data_diagnostic.util import merge_consective_windows
 from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 
-def ddd(val):
-    print(val)
-    return val*2;
-
-def battery_marker(stream_id: uuid, stream_name:str, owner_id, CC_obj: CerebralCortex, config: dict, start_time=None, end_time=None):
+def battery_marker(stream_id: uuid, stream_name:str, owner_id, dd_stream_name, CC: CerebralCortex, config: dict, start_time=None, end_time=None):
     """
     This algorithm uses battery percentages to decide whether phone was powered-off or battery was low.
     All the labeled data (st, et, label) with its metadata are then stored in a datastore.
     :param stream_id:
-    :param CC_obj:
+    :param CC:
     :param config:
     """
-    results = OrderedDict()
+    CC_driver = CC["driver"]
+    CC_worker = CC["worker"]
 
     #using stream_id, algo_name, and owner id to generate a unique stream ID for battery-marker
     battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+stream_name+owner_id))
 
-    stream_end_day = CC_obj.get_stream_start_end_time(battery_marker_stream_id)["end_time"]
-    if not stream_end_day:
-        stream_end_day = CC_obj.get_stream_start_end_time(stream_id)["end_time"]
+    stream_end_day = CC_driver.get_stream_start_end_time(battery_marker_stream_id)["end_time"]
 
-    stream = CC_obj.get_datastream(stream_id, data_type=DataSet.COMPLETE, day=stream_end_day, start_time=start_time, end_time=end_time)
+    if not stream_end_day:
+        stream_end_day = CC_driver.get_stream_start_end_time(stream_id)["end_time"]
+
+    stream = CC_driver.get_datastream(stream_id, data_type=DataSet.COMPLETE, day=stream_end_day, start_time=start_time, end_time=end_time)
 
     windowed_data = stream.data.map(lambda data: window(data, config['general']['window_size'], True))
-    windowed_data = window(stream["data"], config['general']['window_size'], True)
+    results = windowed_data.map(lambda data: process_windows(data, stream_name, config))
+    #sd = results.collect()
+    merged_windows = results.map(lambda  data: merge_consective_windows(data))
+
+    labelled_windows =  merged_windows.map(lambda data: mark_windows(battery_marker_stream_id, data, CC_worker, config))
+
+    input_streams = [{"owner_id":owner_id, "id": str(stream_id), "name": stream_name}]
+    output_stream = {"id":battery_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["battery_marker"]}
+    result = labelled_windows.map(lambda data: store(data, input_streams, output_stream, CC_worker, config))
+
+    result.count()
 
 
-
+def process_windows(windowed_data, stream_name, config):
+    results = OrderedDict()
     for key, data in windowed_data.items():
         dp = []
         for k in data:
             dp.append(float(k.sample))
 
         results[key] = battery(dp, stream_name, config)
-    merged_windows = merge_consective_windows(results)
-    labelled_windows = mark_windows(battery_marker_stream_id, merged_windows, CC_obj, config)
-    input_streams = [{"id": str(stream_id), "name": stream_name}]
-    store(input_streams, labelled_windows, CC_obj, config, config["algo_names"]["battery_marker"])
-
+    return results
 
 def battery(dp: list, stream_name: str, config: dict) -> str:
     """
@@ -105,7 +112,7 @@ def battery(dp: list, stream_name: str, config: dict) -> str:
         return "charged"
 
 
-def mark_windows(battery_marker_stream_id:uuid, merged_windows: list, CC_obj, config: dict) -> str:
+def mark_windows(battery_marker_stream_id:uuid, merged_windows: list, CC, config: dict) -> str:
     """
     label a window as sensor powerd-off or low battery
     :param dp:
@@ -121,7 +128,8 @@ def mark_windows(battery_marker_stream_id:uuid, merged_windows: list, CC_obj, co
             elif prev_wind and prev_wind.sample == "low":
                 merged_window.sample = config['labels']['battery_down']
             else:
-                rows = CC_obj.get_stream_samples(battery_marker_stream_id)
+                # TODO: pickle error, spark context in object
+                rows = CC.get_stream_samples(battery_marker_stream_id)
                 merged_window.sample = rows[len(rows)-1]
             labelled_windows.append(merged_window)
         else:

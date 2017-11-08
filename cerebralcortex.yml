@@ -18,7 +18,7 @@ mysql:
   port: 3306
   database: cerebralcortex
   db_user: root
-  db_pass: random_root_password
+  db_pass: pass
   datastream_table: stream
   kafka_offsets_table: kafka_offsets
   processing_module_table: processing_module
