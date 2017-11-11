@@ -61,10 +61,7 @@ def attachment_marker(stream_id: uuid, stream_name: str, owner_id: uuid, dd_stre
         size = stream.data.map(lambda data: len(data))
         if size.take(1)[0]>0:
             windowed_data = stream.data.map(lambda data: window(data, config['general']['window_size'], True))
-            md = windowed_data.collect()
-            process_windows(md[0], config)
             results = windowed_data.map(lambda data: process_windows(data, config))
-
             merged_windows = results.map(lambda  data: merge_consective_windows(data))
 
             input_streams = [{"owner_id":owner_id, "id": str(stream_id), "name": stream_name}]
