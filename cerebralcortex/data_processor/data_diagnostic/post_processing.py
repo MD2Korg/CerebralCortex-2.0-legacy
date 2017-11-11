@@ -41,29 +41,29 @@ def store(data: OrderedDict, input_streams: dict, output_streams: dict, CC_obj: 
     :param config:
     :param algo_type:
     """
+    if data:
+        #basic output stream info
+        owner = input_streams[0]["owner_id"]
+        dd_stream_id = output_streams["id"]
+        dd_stream_name = output_streams["name"]
+        stream_type = "ds"
 
-    #basic output stream info
-    owner = input_streams[0]["owner_id"]
-    dd_stream_id = output_streams["id"]
-    dd_stream_name = output_streams["name"]
-    stream_type = "ds"
+        #parent_stream_id = input_streams[0]["id"]
+        #parent_stream_name = input_streams[0]["name"]
 
-    #parent_stream_id = input_streams[0]["id"]
-    #parent_stream_name = input_streams[0]["name"]
+        result = process_data(dd_stream_name, input_streams, output_streams["algo_type"], config)
 
-    result = process_data(dd_stream_name, input_streams, output_streams["algo_type"], config)
+        data_descriptor = result["dd"]
+        execution_context = result["ec"]
+        annotations = result["anno"]
 
-    data_descriptor = result["dd"]
-    execution_context = result["ec"]
-    annotations = result["anno"]
+        #metadata = CC_obj.get_datastream(parent_stream_id, data_type=DataSet.ONLY_METADATA)
 
-    #metadata = CC_obj.get_datastream(parent_stream_id, data_type=DataSet.ONLY_METADATA)
+        ds = DataStream(identifier=dd_stream_id, owner=owner, name=dd_stream_name, data_descriptor=data_descriptor,
+                        execution_context=execution_context, annotations=annotations,
+                        stream_type=stream_type, data=data)
 
-    ds = DataStream(identifier=dd_stream_id, owner=owner, name=dd_stream_name, data_descriptor=data_descriptor,
-                    execution_context=execution_context, annotations=annotations,
-                    stream_type=stream_type, data=data)
-
-    CC_obj.save_datastream(ds,"datastream")
+        CC_obj.save_datastream(ds,"datastream")
 
 
 def process_data(dd_stream_name: str, input_streams: dict, algo_type: str, config: dict) -> dict:
@@ -155,27 +155,25 @@ def battery_data_marker(dd_stream_name: str, input_streams: dict, config: dict) 
     return {"ec": ec, "dd": data_descriptor, "anno": anno}
 
 
-def sensor_unavailable(sensor_type: str, input_streams: dict, config: dict) -> dict:
+def sensor_unavailable(dd_stream_name: str, input_streams: dict, config: dict) -> dict:
     """
 
-    :param sensor_type:
+    :param dd_stream_name:
     :param input_streams:
     :param config:
     :return:
     """
-    if sensor_type == config["sensor_types"]["autosense_ecg"]:
-        name = config["output_stream_names"]["ddt_autosense_unavailable"]
+    if dd_stream_name == config["stream_names"]["autosense_wireless_marker"]:
+        name = dd_stream_name
         input_param = {"window_size": config["general"]["window_size"],
-                       "sensor_unavailable_threshold": config["sensor_unavailable_marker"]["ecg"]}
-    elif sensor_type == config["sensor_types"]["autosense_rip"]:
-        name = config["output_stream_names"]["ddt_autosense_unavailable"]
+                       "sensor_unavailable_ecg_threshold": config["sensor_unavailable_marker"]["ecg"],
+                       "sensor_unavailable_rip_threshold": config["sensor_unavailable_marker"]["rip"]}
+    elif dd_stream_name == config["stream_names"]["motionsense_hrv_right_wireless_marker"] or dd_stream_name == config["stream_names"]["motionsense_hrv_left_wireless_marker"]:
+        name = dd_stream_name
         input_param = {"window_size": config["general"]["window_size"],
-                       "sensor_unavailable_threshold": config["sensor_unavailable_marker"]["rip"]}
-
-    elif sensor_type == config["sensor_types"]["motionsense_accel"]:
-        name = config["output_stream_names"]["ddt_motionsense_unavailable"]
-        input_param = {"window_size": config["general"]["window_size"],
-                       "sensor_unavailable_threshold": config["sensor_unavailable_marker"]["motionsense"]}
+                       "sensor_unavailable_motionsense_threshold": config["sensor_unavailable_marker"]["motionsense"],
+                       "sensor_unavailable_phone_threshold": config["sensor_unavailable_marker"]["phone"]
+                       }
     else:
         raise ValueError("Incorrect sensor type")
 
@@ -184,7 +182,7 @@ def sensor_unavailable(sensor_type: str, input_streams: dict, config: dict) -> d
 
     ec = get_execution_context(name, input_param, input_streams, method,
                                algo_description, config)
-    dd = get_data_descriptor(config["algo_names"]["sensor_unavailable_marker"], config)
+    dd = get_data_descriptor(config["algo_type"]["sensor_unavailable_marker"], config)
     anno = get_annotations()
     return {"ec": ec, "dd": dd, "anno": anno}
 

@@ -24,7 +24,7 @@
 
 import uuid
 from collections import OrderedDict
-
+from datetime import timedelta
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.data_processor.data_diagnostic.post_processing import store
 from cerebralcortex.data_processor.data_diagnostic.util import merge_consective_windows
@@ -33,7 +33,7 @@ from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 
 
-def packet_loss_marker(stream_id: uuid, CC_obj: CerebralCortex, config: dict, start_time=None, end_time=None):
+def packet_loss_marker(stream_id: uuid, stream_name: str, owner_id: uuid, dd_stream_name, phone_accel_stream_id, CC: CerebralCortex, config: dict):
     """
     Label a window as packet-loss if received packets are less than the expected packets.
     All the labeled data (st, et, label) with its metadata are then stored in a datastore.
@@ -41,37 +41,84 @@ def packet_loss_marker(stream_id: uuid, CC_obj: CerebralCortex, config: dict, st
     :param CC_obj:
     :param config:
     """
-    stream = CC_obj.get_datastream(stream_id, data_type=DataSet.COMPLETE, start_time=start_time, end_time=end_time)
-    stream_name = stream._name
-    results = OrderedDict()
 
-    if stream_name == config["sensor_types"]["autosense_ecg"]:
+    CC_driver = CC["driver"]
+    CC_worker = CC["worker"]
+
+    #using stream_id, data-diagnostic-stream-id, and owner id to generate a unique stream ID for battery-marker
+    packetloss_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+dd_stream_name+owner_id))
+
+    stream_end_days = CC_driver.get_stream_start_end_time(packetloss_marker_stream_id)["end_time"]
+
+    if not stream_end_days:
+        stream_end_days = []
+        stream_days = CC_driver.get_stream_start_end_time(stream_id)
+        days = stream_days["end_time"]-stream_days["start_time"]
+        for day in range(days.days+1):
+            stream_end_days.append((stream_days["start_time"]+timedelta(days=day)).strftime('%Y%m%d'))
+    else:
+        stream_end_days = [(stream_end_days+timedelta(days=1)).strftime('%Y%m%d')]
+
+    if stream_name == config["stream_names"]["autosense_ecg"]:
         sampling_rate = config["sampling_rate"]["ecg"]
         threshold_val = config["packet_loss_marker"]["ecg_acceptable_packet_loss"]
         label = config["labels"]["ecg_packet_loss"]
-        windowed_data = window(stream.data, config['general']['window_size'], False)
     elif stream_name == config["sensor_types"]["autosense_rip"]:
         sampling_rate = config["sampling_rate"]["rip"]
         threshold_val = config["packet_loss_marker"]["rip_acceptable_packet_loss"]
         label = config["labels"]["rip_packet_loss"]
-        windowed_data = window(stream.data, config['general']['window_size'], False)
-    elif stream_name == config["sensor_types"]["motionsense_accel"]:
-        sampling_rate = config["sampling_rate"]["motionsense"]
-        threshold_val = config["packet_loss_marker"]["motionsense_acceptable_packet_loss"]
-        label = config["labels"]["motionsense_packet_loss"]
-        motionsense_accel_magni = magnitude(stream)
-        windowed_data = window(motionsense_accel_magni.data, config['general']['window_size'], False)
-    else:
-        raise ValueError("Incorrect sensor type.")
+    elif stream_name == config["sensor_types"]["motionsense_hrv_accel_right"] or stream_name == config["sensor_types"]["motionsense_hrv_accel_left"]:
+        sampling_rate = config["sampling_rate"]["motionsense_accel"]
+        threshold_val = config["packet_loss_marker"]["motionsense_accel_acceptable_packet_loss"]
+        label = config["labels"]["motionsense_gyro_packet_loss"]
+    elif stream_name == config["sensor_types"]["motionsense_gyro_accel_right"] or stream_name == config["sensor_types"]["motionsense_gyro_accel_left"]:
+        sampling_rate = config["sampling_rate"]["motionsense_gyro"]
+        threshold_val = config["packet_loss_marker"]["motionsense_gyro_acceptable_packet_loss"]
+        label = config["labels"]["motionsense_gyro_packet_loss"]
 
-    for key, data in windowed_data.items():
+    for day in stream_end_days:
+        #load stream data to be diagnosed
+        stream = CC_driver.get_datastream(stream_id, day, data_type=DataSet.COMPLETE)
+        size = stream.data.map(lambda data: len(data))
+        if size.take(1)[0]>0:
 
-        available_packets = len(data)
-        expected_packets = sampling_rate * config['general']['window_size']
+            windowed_data = stream.data.map(lambda data: window(data, config['general']['window_size'], True))
 
-        if (available_packets / expected_packets) < threshold_val:
-            results[key] = label
+            results = windowed_data.map(lambda data: process_windows(data, sampling_rate, threshold_val, label, CC_worker, config))
+            merged_windows = results.map(lambda  data: merge_consective_windows(data))
 
-    merged_windows = merge_consective_windows(results)
-    input_streams = [{"id": str(stream_id), "name": stream_name}]
-    store(input_streams, merged_windows, CC_obj, config, config["algo_names"]["packet_loss_marker"])
+            input_streams = [{"owner_id":owner_id, "id": str(stream_id), "name": stream_name}]
+            output_stream = {"id":packetloss_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["packet_loss_marker"]}
+            result = merged_windows.map(lambda data: store(data, input_streams, output_stream, CC_worker, config))
+
+            result.count()
+
+
+    # stream = CC_obj.get_datastream(stream_id, data_type=DataSet.COMPLETE, start_time=start_time, end_time=end_time)
+    # stream_name = stream._name
+    # results = OrderedDict()
+    #
+    #
+    #
+    # for key, data in windowed_data.items():
+    #
+    #     available_packets = len(data)
+    #     expected_packets = sampling_rate * config['general']['window_size']
+    #
+    #     if (available_packets / expected_packets) < threshold_val:
+    #         results[key] = label
+    #
+    # merged_windows = merge_consective_windows(results)
+    # input_streams = [{"id": str(stream_id), "name": stream_name}]
+    # store(input_streams, merged_windows, CC_obj, config, config["algo_names"]["packet_loss_marker"])
+
+def process_windows(windowed_data, sampling_rate, threshold_val, label, CC, config):
+
+    results = OrderedDict()
+    expected_packets = sampling_rate*config["general"]["window_size"]
+
+    if windowed_data:
+        for key, data in windowed_data.items():
+            available_packets = len(data)
+            if (available_packets / expected_packets) < threshold_val:
+                results[key] = label

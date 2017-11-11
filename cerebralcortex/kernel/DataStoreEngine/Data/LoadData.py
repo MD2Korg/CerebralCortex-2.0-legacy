@@ -226,17 +226,28 @@ class LoadData:
 
         return annotation_stream
 
-    def get_stream_samples(self, stream_id):
-        rows = Metadata(self.CC_obj).get_stream_start_end_time(stream_id)
-        day = rows["end_time"]
-
+    def get_stream_samples(self, stream_id, day, start_time=None, end_time=None):
+        # rows = Metadata(self.CC_obj).get_stream_start_end_time(stream_id)
+        # day = rows["end_time"]
+        results = []
         cluster = Cluster([self.hostIP], port=self.hostPort)
         session = cluster.connect(self.keyspaceName)
 
-        rows = session.execute('SELECT sample from '+self.datapointTable+' where identifier="'+stream_id+'" and day="'+day+'"')
+        if start_time and end_time:
+            qry = "SELECT sample from "+self.datapointTable+" where identifier="+stream_id+" and day='"+day+"' and start_time>='"+str(start_time)+"' and start_time<='"+str(end_time)+"' ALLOW FILTERING"
+        elif start_time and not end_time:
+            qry = "SELECT sample from "+self.datapointTable+" where identifier="+stream_id+" and day='"+day+"' and start_time>='"+str(start_time)+"' ALLOW FILTERING"
+        elif not start_time and end_time:
+            qry = "SELECT sample from "+self.datapointTable+" where identifier="+stream_id+" and day='"+day+"' and start_time<='"+str(end_time)+"' ALLOW FILTERING"
+        else:
+            qry = "SELECT sample from "+self.datapointTable+" where identifier="+stream_id+" and day='"+day+"'"
+
+        rows = session.execute(qry)
+        for row in rows:
+            results.append(json.loads(row.sample))
         session.shutdown();
         cluster.shutdown();
-        return rows
+        return results
 
 
     def get_annotation_stream(self, input_stream_id: uuid, annotation_stream_id: uuid, annotation: str,

@@ -192,7 +192,7 @@ class LoadMetadata:
         if not stream_id:
             return None
 
-        qry = "select DATE_FORMAT(start_time,'%Y%m%d') as start_time, DATE_FORMAT(end_time,'%Y%m%d') as end_time from " + self.datastreamTable + " where identifier = %(identifier)s"
+        qry = "select start_time, end_time from " + self.datastreamTable + " where identifier = %(identifier)s"
         vals = {'identifier': str(stream_id)}
 
         self.cursor.execute(qry, vals)

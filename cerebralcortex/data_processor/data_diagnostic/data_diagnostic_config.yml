@@ -5,7 +5,8 @@ sampling_rate:
   rip: 21.33
   ecg: 64
   autosense_accel: 10.67
-  motionsense: 16
+  motionsense_accel: 25
+  motionsense_gyro: 25
   phone_battery: 1
   autosense_battery: 1
   motionsense_battery: 1
@@ -22,7 +23,9 @@ battery_marker:
 attachment_marker:
   ecg_on_body: 1000
   rip_on_body: 1000
-  motionsense_on_body: 0.00003
+  motionsense_improper_attachment: 0.5
+  motionsense_onbody: 0.5
+  motionsense_offbody: 0.05
   #these two parameters are only used with GSR. In future, we might not have GSR values.
   improper_attachment: 750
   gsr_off_body: 1800
@@ -31,12 +34,14 @@ packet_loss_marker:
   #min=0 and max=1.0
   ecg_acceptable_packet_loss: 0.33
   rip_acceptable_packet_loss: 0.33
-  motionsense_acceptable_packet_loss: 0.33
+  motionsense_accel_acceptable_packet_loss: 0.33
+  motionsense_gyro_acceptable_packet_loss: 0.33
 
 sensor_unavailable_marker:
   #Threshold to distinguish between a wireless disconnection and sensor-off
   autosense: 4000
-  motionsense: 0.005
+  motionsense: 0.022
+  phone: 0.014
 
 labels:
   autosense_unavailable: 4
@@ -49,12 +54,13 @@ labels:
   rip_off_body: 8
   rip_on_body: 9
   motionsense_improper_attachment: 10
-  motionsense_off_body: 8
-  motionsense_on_body: 9
+  motionsense_offbody: 8
+  motionsense_onbody: 9
   #packet loss labels
   ecg_packet_loss: 6
   rip_packet_loss: 6
-  motionsense_packet_loss: 6
+  motionsense_accel_packet_loss: 6
+  motionsense_gyro_packet_loss: 6
   #battery labels
   powered_off: 0
   battery_down: 10
@@ -70,22 +76,31 @@ sensor_types:
   motionsense_battery: motionsense_battery
   motionsense_accel: motionsense_accel
 
+
 stream_names:
   #INPUTS
   motionsense_hrv_accel_right: "ACCELEROMETER--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
   motionsense_hrv_accel_left: "ACCELEROMETER--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
-  motionsense_hrv_accel_quality_right: "DATA_QUALITY--ACCELEROMETER--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
-  motionsense_hrv_accel_quality_left: "DATA_QUALITY--ACCELEROMETER--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
+  motionsense_gyro_right: "GYROSCOPE--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
+  motionsense_gyro_left: "GYROSCOPE--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
+  motionsense_hrv_led_quality_right: "DATA_QUALITY--LED--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
+  motionsense_hrv_led_quality_left: "DATA_QUALITY--LED--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
+
+  motionsense_hrv_led_data_quality_right: "DATA_QUALITY--LED--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
+  motionsense_hrv_led_data_quality_left: "DATA_QUALITY--LED--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
 
   autosense_ecg: "ECG--org.md2k.autosense"
   autosense_rip: "RIP--org.md2k.autosense"
   autosense_accel_x: "ACCELEROMETER-X--org.md2k.autosense"
   autosense_accel_x: "ACCELEROMETER-Y--org.md2k.autosense"
   autosense_accel_x: "ACCELEROMETER-Z--org.md2k.autosense"
+  phone_accel: "ACCELEROMETER--org.md2k.phonesensor--PHONE"
   autosense_gyro: "GYRO--org.md2k.autosense"
 
   motionsense_hrv_battery_right: "BATTERY--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
   motionsense_hrv_battery_left: "BATTERY--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
+  motionsense_hrv_led_red_right: "LED--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
+  motionsense_hrv_led_red_left: "LED--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
   autosense_battery: "BATTERY--org.md2k.autosense"
   phone_battery: "BATTERY--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
 
@@ -94,6 +109,18 @@ stream_names:
   motionsense_hrv_battery_right_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--RIGHT_WRIST--BATTERY"
   motionsense_hrv_battery_left_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--LEFT_WRIST--BATTERY"
   autosense_battery_marker: "DATA-DIAGNOSTIC--AUTOSENSE--BATTERY"
+
+  motionsense_hrv_right_wireless_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--RIGHT_WRIST--WIRELESS-DISCONNECTION"
+  motionsense_hrv_left_wireless_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--LEFT_WRIST--WIRELESS-DISCONNECTION"
+  autosense_wireless_marker: "DATA-DIAGNOSTIC--AUTOSENSE--WIRELESS-DISCONNECTION"
+  motionsense_hrv_right_attachment_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--RIGHT_WRIST--IMPROPER-ATTACHMENT"
+  motionsense_hrv_left_attachment_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--LEFT_WRIST--IMPROPER-ATTACHMENT"
+
+  motionsense_hrv_accel_right_packetloss_marker: "DATA-DIAGNOSTIC--ACCELEROMETER-MOTION_SENSE_HRV--RIGHT_WRIST--PACKET-LOSS"
+  motionsense_hrv_accel_left_packetloss_marker: "DATA-DIAGNOSTIC--ACCELEROMETER-MOTION_SENSE_HRV--LEFT_WRIST--PACKET-LOSS"
+  motionsense_hrv_gyro_right_packetloss_marker: "DATA-DIAGNOSTIC--GYROSCOPE-MOTION_SENSE_HRV--RIGHT_WRIST--PACKET-LOSS"
+  motionsense_hrv_gyro_left_packetloss_marker: "DATA-DIAGNOSTIC--GYROSCOPE-MOTION_SENSE_HRV--LEFT_WRIST--PACKET-LOSS"
+
 
 
 algo_type:

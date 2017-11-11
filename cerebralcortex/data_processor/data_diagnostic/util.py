@@ -27,6 +27,7 @@ from collections import OrderedDict
 from numpy.linalg import norm
 from typing import List
 import math
+import json
 import numpy as np
 from cerebralcortex.kernel.datatypes.datastream import DataPoint
 
@@ -42,21 +43,22 @@ def merge_consective_windows(data: OrderedDict) -> List[DataPoint]:
     start = None
     end = None
     val = None
-    for key, val in data.items():
-        if element is None:
-            element = val
-            start = key[0]
-            end = key[1]
-        elif element == val:
-            element = val
-            end = key[1]
-        else:
-            merged_windows.append(DataPoint(start, end, element))  # [(export_data, end)] = element
-            element = val
-            start = key[0]
-            end = key[1]
-    if val is not None:
-        merged_windows.append(DataPoint(start, end, val))  # merged_windows[(export_data, end)] = val
+    if data:
+        for key, val in data.items():
+            if element is None:
+                element = val
+                start = key[0]
+                end = key[1]
+            elif element == val and (end-key[0]):
+                element = val
+                end = key[1]
+            else:
+                merged_windows.append(DataPoint(start, end, element))  # [(export_data, end)] = element
+                element = val
+                start = key[0]
+                end = key[1]
+        if val is not None:
+            merged_windows.append(DataPoint(start, end, val))  # merged_windows[(export_data, end)] = val
 
     return merged_windows
 
@@ -86,7 +88,7 @@ def outlier_detection(window_data: list) -> list:
     return normal_values
 
 
-def magnitude_motionsense(data: DataPoint) -> List:
+def magnitude_datapoints(data: DataPoint) -> List:
     """
 
     :param data:
@@ -97,6 +99,27 @@ def magnitude_motionsense(data: DataPoint) -> List:
         return []
 
     input_data = np.array([i.sample for i in data])
+    data = norm(input_data, axis=1).tolist()
+
+    return data
+
+def magnitude_list(data: List) -> List:
+    """
+
+    :param data:
+    :return:
+    """
+
+    if data is None or len(data) == 0:
+        return []
+
+    if isinstance(data,str):
+        try:
+            data = json.loads(data)
+        except:
+            data = data
+
+    input_data = np.array([i for i in data])
     data = norm(input_data, axis=1).tolist()
 
     return data

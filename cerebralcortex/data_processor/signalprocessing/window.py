@@ -59,13 +59,14 @@ def window_sliding(data: List[DataPoint],
                                        (st,et),[dp,dp,dp,dp...],
                                         ...]
     """
-    if data is None:
-        raise TypeError('data is not List[DataPoint]')
-
-    if len(data) == 0:
-        raise ValueError('The length of data is zero')
-
     windowed_datastream = OrderedDict()
+
+    if data is None or len(data) == 0:
+        return windowed_datastream
+        #raise TypeError('data is not List[DataPoint]')
+
+    #if len(data) == 0:
+        #raise ValueError('The length of data is zero')
 
     if all_windows:
         for _key, _data in create_all_windows(data, window_size, window_offset):
