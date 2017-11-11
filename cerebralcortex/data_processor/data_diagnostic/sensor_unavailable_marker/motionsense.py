@@ -26,8 +26,7 @@ import uuid
 from collections import OrderedDict
 from cerebralcortex.data_processor.signalprocessing.window import window
 import numpy as np
-from pytz import timezone
-from datetime import timedelta, datetime
+from datetime import timedelta
 from cerebralcortex.data_processor.data_diagnostic.util import magnitude_datapoints, magnitude_list
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.data_processor.data_diagnostic.post_processing import store
@@ -38,13 +37,8 @@ from cerebralcortex.data_processor.data_diagnostic.sensor_unavailable_marker imp
 
 def wireless_disconnection(stream_id: uuid, stream_name: str, owner_id: uuid, dd_stream_name, phone_accel_stream_id, CC: CerebralCortex, config: dict):
     """
-    Analyze whether a sensor was unavailable due to a wireless disconnection
-    or due to sensor powered off. This method automatically loads related
-    accelerometer streams of an owner. All the labeled data (st, et, label)
-    with its metadata are then stored in a datastore.
-    Note: If an owner owns more than one accelerometer (for example, more
-    than one motionsense accelerometer) then this might not work.
-    :param stream_id: stream_id should be of "battery-powered-off"
+
+    :param stream_id:
     :param CC:
     :param config:
     """
@@ -81,6 +75,7 @@ def wireless_disconnection(stream_id: uuid, stream_name: str, owner_id: uuid, dd
             result = merged_windows.map(lambda data: store(data, input_streams, output_stream, CC_worker, config))
 
             result.count()
+
 
 def process_windows(windowed_data, day, CC, phone_accel_stream_id, config):
 

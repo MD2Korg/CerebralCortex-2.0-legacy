@@ -85,26 +85,29 @@ def process_data(dd_stream_name: str, input_streams: dict, algo_type: str, confi
     return result
 
 
-def attachment_marker(stream_name: str, input_streams: dict, config: dict) -> dict:
+def attachment_marker(dd_stream_name: str, input_streams: dict, config: dict) -> dict:
     """
     :param generated_stream_id:
-    :param stream_name:
+    :param dd_stream_name:
     :param input_streams:
     :param config:
     :return:
     """
-    if stream_name == config["sensor_types"]["autosense_ecg"]:
-        name = config["output_stream_names"]["ddt_ecg_attachment"]
+    if dd_stream_name == config["stream_names"]["autosense_rip_attachment_marker"]:
+        name = dd_stream_name
         input_param = {"window_size": config["general"]["window_size"],
                        "ecg_vairance_threshold": config["attachment_marker"]["ecg_on_body"]}
-    elif stream_name == config["sensor_types"]["autosense_rip"]:
-        name = config["output_stream_names"]["ddt_rip_attachment"]
+    elif dd_stream_name == config["stream_names"]["autosense_ecg_attachment_marker"]:
+        name = dd_stream_name
         input_param = {"window_size": config["general"]["window_size"],
                        "rip_vairance_threshold": config["attachment_marker"]["rip_on_body"]}
-    elif stream_name == config["sensor_types"]["motionsense_accel"]:
-        name = config["output_stream_names"]["ddt_motionsense_attachment"]
+    elif dd_stream_name == config["stream_names"]["motionsense_hrv_right_attachment_marker"] or dd_stream_name == config["stream_names"]["motionsense_hrv_left_attachment_marker"]:
+        name = dd_stream_name
         input_param = {"window_size": config["general"]["window_size"],
-                       "motionsense_vairance_threshold": config["attachment_marker"]["motionsense_on_body"]}
+                       "motionsense_improper_attachment_threshold": config["attachment_marker"]["motionsense_improper_attachment"],
+                       "motionsense_onbody_threshold": config["attachment_marker"]["motionsense_onbody"],
+                       "motionsense_offbody_threshold": config["attachment_marker"]["motionsense_offbody"]
+                       }
     else:
         raise ValueError("Incorrect sensor type")
 
@@ -113,7 +116,7 @@ def attachment_marker(stream_name: str, input_streams: dict, config: dict) -> di
 
     ec = get_execution_context(name, input_param, input_streams, method,
                                algo_description, config)
-    dd = get_data_descriptor(config["algo_names"]["attachment_marker"], config)
+    dd = get_data_descriptor(config["algo_type"]["attachment_marker"], config)
     anno = get_annotations()
 
     return {"ec": ec, "dd": dd, "anno": anno}
@@ -164,12 +167,10 @@ def sensor_unavailable(dd_stream_name: str, input_streams: dict, config: dict) -
     :return:
     """
     if dd_stream_name == config["stream_names"]["autosense_wireless_marker"]:
-        name = dd_stream_name
         input_param = {"window_size": config["general"]["window_size"],
                        "sensor_unavailable_ecg_threshold": config["sensor_unavailable_marker"]["ecg"],
                        "sensor_unavailable_rip_threshold": config["sensor_unavailable_marker"]["rip"]}
     elif dd_stream_name == config["stream_names"]["motionsense_hrv_right_wireless_marker"] or dd_stream_name == config["stream_names"]["motionsense_hrv_left_wireless_marker"]:
-        name = dd_stream_name
         input_param = {"window_size": config["general"]["window_size"],
                        "sensor_unavailable_motionsense_threshold": config["sensor_unavailable_marker"]["motionsense"],
                        "sensor_unavailable_phone_threshold": config["sensor_unavailable_marker"]["phone"]
@@ -178,47 +179,46 @@ def sensor_unavailable(dd_stream_name: str, input_streams: dict, config: dict) -
         raise ValueError("Incorrect sensor type")
 
     algo_description = config["description"]["sensor_unavailable_marker"]
-    method = 'cerebralcortex.data_processor.data_diagnostic.packet_loss_marker'
+    method = 'cerebralcortex.data_processor.data_diagnostic.sensor_unavailable_marker'
 
-    ec = get_execution_context(name, input_param, input_streams, method,
+    ec = get_execution_context(dd_stream_name, input_param, input_streams, method,
                                algo_description, config)
     dd = get_data_descriptor(config["algo_type"]["sensor_unavailable_marker"], config)
     anno = get_annotations()
     return {"ec": ec, "dd": dd, "anno": anno}
 
 
-def packet_loss(sensor_type: str, input_streams: dict, config: dict) -> dict:
+def packet_loss(dd_stream_name: str, input_streams: dict, config: dict) -> dict:
     """
 
-    :param sensor_type:
+    :param dd_stream_name:
     :param input_streams:
     :param config:
     :return:
     """
-    if sensor_type == config["sensor_types"]["autosense_ecg"]:
-        name = config["output_stream_names"]["ddt_ecg_packet_loss"]
+    if dd_stream_name == config["stream_names"]["autosense_ecg_packetloss_marker"]:
         input_param = {"window_size": config["general"]["window_size"],
                        "ecg_acceptable_packet_loss": config["packet_loss_marker"]["ecg_acceptable_packet_loss"]}
 
-    elif sensor_type == config["sensor_types"]["autosense_rip"]:
-        name = config["output_stream_names"]["ddt_rip_packet_loss"]
+    elif dd_stream_name == config["stream_names"]["autosense_rip_packetloss_marker"]:
         input_param = {"window_size": config["general"]["window_size"],
                        "rip_acceptable_packet_loss": config["packet_loss_marker"]["rip_acceptable_packet_loss"]}
 
-    elif sensor_type == config["sensor_types"]["motionsense_accel"]:
-        name = config["output_stream_names"]["ddt_motionsense_packet_loss"]
+    elif dd_stream_name == config["stream_names"]["motionsense_hrv_accel_right_packetloss_marker"] or dd_stream_name == config["stream_names"]["motionsense_hrv_accel_left_packetloss_marker"]:
         input_param = {"window_size": config["general"]["window_size"],
-                       "rip_acceptable_packet_loss": config["packet_loss_marker"]["motionsense_acceptable_packet_loss"]}
-
+                       "rip_acceptable_packet_loss": config["packet_loss_marker"]["motionsense_accel_acceptable_packet_loss"]}
+    elif dd_stream_name == config["stream_names"]["motionsense_hrv_gyro_right_packetloss_marker"] or dd_stream_name == config["stream_names"]["motionsense_hrv_gyro_left_packetloss_marker"]:
+        input_param = {"window_size": config["general"]["window_size"],
+                       "rip_acceptable_packet_loss": config["packet_loss_marker"]["motionsense_gyro_acceptable_packet_loss"]}
     else:
         raise ValueError("Incorrect sensor type")
 
     algo_description = config["description"]["packet_loss_marker"]
-    method = 'cerebralcortex.data_processor.data_diagnostic.packet_loss_marker'
+    method = 'cerebralcortex.data_processor.data_diagnostic.packet_loss_marker.py'
 
-    ec = get_execution_context(name, input_param, input_streams, method,
+    ec = get_execution_context(dd_stream_name, input_param, input_streams, method,
                                algo_description, config)
-    dd = get_data_descriptor(config["algo_names"]["packet_loss_marker"], config)
+    dd = get_data_descriptor(config["algo_type"]["packet_loss_marker"], config)
     anno = get_annotations()
     return {"ec": ec, "dd": dd, "anno": anno}
 
@@ -245,15 +245,16 @@ def get_data_descriptor(algo_type: str, config: dict) -> dict:
               "rip_off_body": config["labels"]["rip_off_body"],
               "rip_on_body": config["labels"]["rip_on_body"],
               "motionsense_improper_attachment": config["labels"]["motionsense_improper_attachment"],
-              "motionsense_off_body": config["labels"]["motionsense_off_body"],
-              "motionsense__on_body": config["labels"]["motionsense_on_body"]}
+              "motionsense_off_body": config["labels"]["motionsense_offbody"],
+              "motionsense__on_body": config["labels"]["motionsense_onbody"]}
     elif algo_type == config["algo_type"]["sensor_unavailable_marker"]:
         dd = {"autosense_unavailable": config["labels"]["autosense_unavailable"],
               "motionsense_unavailable": config["labels"]["motionsense_unavailable"]}
     elif algo_type == config["algo_type"]["packet_loss_marker"]:
         dd = {"ecg_packet_loss": config["labels"]["ecg_packet_loss"],
               "rip_packet_loss": config["labels"]["rip_packet_loss"],
-              "motionsense_packet_loss": config["labels"]["motionsense_packet_loss"]}
+              "motionsense_accel_packet_loss": config["labels"]["motionsense_accel_packet_loss"],
+              "motionsense_gyro_packet_loss": config["labels"]["motionsense_gyro_packet_loss"]}
 
     return json.dumps(data_descriptor.get_data_descriptor("label", "window", dd))
 

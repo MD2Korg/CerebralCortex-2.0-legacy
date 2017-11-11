@@ -49,7 +49,7 @@ def merge_consective_windows(data: OrderedDict) -> List[DataPoint]:
                 element = val
                 start = key[0]
                 end = key[1]
-            elif element == val and (end-key[0]):
+            elif element == val and (end==key[0]):
                 element = val
                 end = key[1]
             else:

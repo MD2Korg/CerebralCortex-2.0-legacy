@@ -36,9 +36,7 @@ def attachment_marker(stream_id: uuid, stream_name: str, owner_id: uuid, dd_stre
     """
     Label sensor data as sensor-on-body, sensor-off-body, or improper-attachment.
     All the labeled data (st, et, label) with its metadata are then stored in a datastore
-    :param stream_id: UUID
-    :param CC_obj: CerebralCortex object
-    :param config: Data diagnostics configurations
+
     """
     CC_driver = CC["driver"]
     CC_worker = CC["worker"]
@@ -63,6 +61,8 @@ def attachment_marker(stream_id: uuid, stream_name: str, owner_id: uuid, dd_stre
         size = stream.data.map(lambda data: len(data))
         if size.take(1)[0]>0:
             windowed_data = stream.data.map(lambda data: window(data, config['general']['window_size'], True))
+            md = windowed_data.collect()
+            process_windows(md[0], config)
             results = windowed_data.map(lambda data: process_windows(data, config))
 
             merged_windows = results.map(lambda  data: merge_consective_windows(data))
@@ -86,18 +86,15 @@ def process_windows(windowed_data, config):
     label_offbody = config['labels']['motionsense_offbody']
 
     if windowed_data:
-        tmp = 0
         for key, data in windowed_data.items():
             one_minute_window = 0
-            ten_minutes_window = 0
             for k in data:
                 if k.sample==0:
                     one_minute_window +=1
-
             if (one_minute_window/20)>threshold_offbody and (one_minute_window/20)<threshold_improper_attachment:
                 results[key] = label_improper_attachment
-            elif (one_minute_window/20)>0.5:
+            elif (one_minute_window/20)>threshold_onbody:
                 results[key] = label_onbody
             else:
                 results[key] = label_offbody
-    return results
+        return results

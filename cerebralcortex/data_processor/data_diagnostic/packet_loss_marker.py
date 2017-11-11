@@ -33,7 +33,7 @@ from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 
 
-def packet_loss_marker(stream_id: uuid, stream_name: str, owner_id: uuid, dd_stream_name, phone_accel_stream_id, CC: CerebralCortex, config: dict):
+def packet_loss_marker(stream_id: uuid, stream_name: str, owner_id: uuid, dd_stream_name, CC: CerebralCortex, config: dict):
     """
     Label a window as packet-loss if received packets are less than the expected packets.
     All the labeled data (st, et, label) with its metadata are then stored in a datastore.
@@ -63,15 +63,15 @@ def packet_loss_marker(stream_id: uuid, stream_name: str, owner_id: uuid, dd_str
         sampling_rate = config["sampling_rate"]["ecg"]
         threshold_val = config["packet_loss_marker"]["ecg_acceptable_packet_loss"]
         label = config["labels"]["ecg_packet_loss"]
-    elif stream_name == config["sensor_types"]["autosense_rip"]:
+    elif stream_name == config["stream_names"]["autosense_rip"]:
         sampling_rate = config["sampling_rate"]["rip"]
         threshold_val = config["packet_loss_marker"]["rip_acceptable_packet_loss"]
         label = config["labels"]["rip_packet_loss"]
-    elif stream_name == config["sensor_types"]["motionsense_hrv_accel_right"] or stream_name == config["sensor_types"]["motionsense_hrv_accel_left"]:
+    elif stream_name == config["stream_names"]["motionsense_hrv_accel_right"] or stream_name == config["stream_names"]["motionsense_hrv_accel_left"]:
         sampling_rate = config["sampling_rate"]["motionsense_accel"]
         threshold_val = config["packet_loss_marker"]["motionsense_accel_acceptable_packet_loss"]
         label = config["labels"]["motionsense_gyro_packet_loss"]
-    elif stream_name == config["sensor_types"]["motionsense_gyro_accel_right"] or stream_name == config["sensor_types"]["motionsense_gyro_accel_left"]:
+    elif stream_name == config["stream_names"]["motionsense_hrv_gyro_right"] or stream_name == config["stream_names"]["motionsense_hrv_gyro_left"]:
         sampling_rate = config["sampling_rate"]["motionsense_gyro"]
         threshold_val = config["packet_loss_marker"]["motionsense_gyro_acceptable_packet_loss"]
         label = config["labels"]["motionsense_gyro_packet_loss"]
@@ -94,24 +94,6 @@ def packet_loss_marker(stream_id: uuid, stream_name: str, owner_id: uuid, dd_str
             result.count()
 
 
-    # stream = CC_obj.get_datastream(stream_id, data_type=DataSet.COMPLETE, start_time=start_time, end_time=end_time)
-    # stream_name = stream._name
-    # results = OrderedDict()
-    #
-    #
-    #
-    # for key, data in windowed_data.items():
-    #
-    #     available_packets = len(data)
-    #     expected_packets = sampling_rate * config['general']['window_size']
-    #
-    #     if (available_packets / expected_packets) < threshold_val:
-    #         results[key] = label
-    #
-    # merged_windows = merge_consective_windows(results)
-    # input_streams = [{"id": str(stream_id), "name": stream_name}]
-    # store(input_streams, merged_windows, CC_obj, config, config["algo_names"]["packet_loss_marker"])
-
 def process_windows(windowed_data, sampling_rate, threshold_val, label, CC, config):
 
     results = OrderedDict()
@@ -122,3 +104,4 @@ def process_windows(windowed_data, sampling_rate, threshold_val, label, CC, conf
             available_packets = len(data)
             if (available_packets / expected_packets) < threshold_val:
                 results[key] = label
+        return results

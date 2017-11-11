@@ -200,10 +200,10 @@ class StoreData:
                 insert_qry = insert_with_endtime_qry
             else:
                 insert_qry = insert_without_endtime_qry
+        # TODO: remove when final testing is done
             #batch.add(insert_qry, (stream_id, day, i.start_time, sample))
         #return batch
 
-        # TODO: remove when final testing is done
             if dp_number > 64500:
                 yield batch
                 batch = BatchStatement(consistency_level=ConsistencyLevel.QUORUM)

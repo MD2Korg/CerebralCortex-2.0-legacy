@@ -23,12 +23,13 @@ battery_marker:
 attachment_marker:
   ecg_on_body: 1000
   rip_on_body: 1000
-  motionsense_improper_attachment: 0.5
-  motionsense_onbody: 0.5
-  motionsense_offbody: 0.05
   #these two parameters are only used with GSR. In future, we might not have GSR values.
   improper_attachment: 750
   gsr_off_body: 1800
+  #motionsense
+  motionsense_improper_attachment: 0.33
+  motionsense_onbody: 0.33
+  motionsense_offbody: 0.05
 
 packet_loss_marker:
   #min=0 and max=1.0
@@ -44,45 +45,35 @@ sensor_unavailable_marker:
   phone: 0.014
 
 labels:
-  autosense_unavailable: 4
-  motionsense_unavailable: 4
-  #attachment labels
-  ecg_improper_attachment: 10
-  ecg_off_body: 8
-  ecg_on_body: 9
-  rip_improper_attachment: 10
-  rip_off_body: 8
-  rip_on_body: 9
-  motionsense_improper_attachment: 10
-  motionsense_offbody: 8
-  motionsense_onbody: 9
+  # sensor unavailable
+  autosense_unavailable: 1
+  motionsense_unavailable: 2
+  # attachment labels
+  ecg_improper_attachment: 21
+  ecg_off_body: 22
+  ecg_on_body: 23
+  rip_improper_attachment: 24
+  rip_off_body: 25
+  rip_on_body: 26
+  motionsense_improper_attachment: 27
+  motionsense_offbody: 28
+  motionsense_onbody: 29
   #packet loss labels
-  ecg_packet_loss: 6
-  rip_packet_loss: 6
-  motionsense_accel_packet_loss: 6
-  motionsense_gyro_packet_loss: 6
+  ecg_packet_loss: 41
+  rip_packet_loss: 42
+  motionsense_accel_packet_loss: 43
+  motionsense_gyro_packet_loss: 44
   #battery labels
-  powered_off: 0
-  battery_down: 10
-
-sensor_types:
-  phone_battery: phone_battery
-  autosense_battery: autosense_battery
-  autosense_rip: autosense_rip
-  autosense_ecg: autosense_ecg
-  autosense_accel_x: autosense_accel_x
-  autosense_accel_y: autosense_accel_y
-  autosense_accel_z: autosense_accel_z
-  motionsense_battery: motionsense_battery
-  motionsense_accel: motionsense_accel
+  powered_off: 61
+  battery_down: 62
 
 
 stream_names:
   #INPUTS
   motionsense_hrv_accel_right: "ACCELEROMETER--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
   motionsense_hrv_accel_left: "ACCELEROMETER--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
-  motionsense_gyro_right: "GYROSCOPE--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
-  motionsense_gyro_left: "GYROSCOPE--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
+  motionsense_hrv_gyro_right: "GYROSCOPE--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
+  motionsense_hrv_gyro_left: "GYROSCOPE--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
   motionsense_hrv_led_quality_right: "DATA_QUALITY--LED--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
   motionsense_hrv_led_quality_left: "DATA_QUALITY--LED--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
 
@@ -104,22 +95,33 @@ stream_names:
   autosense_battery: "BATTERY--org.md2k.autosense"
   phone_battery: "BATTERY--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
 
-  # OUTPUTS
+  #### OUTPUTS STREAM NAMES
+  # battery markers
   phone_battery_marker: "DATA-DIAGNOSTIC--PHONE-BATTERY"
   motionsense_hrv_battery_right_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--RIGHT_WRIST--BATTERY"
   motionsense_hrv_battery_left_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--LEFT_WRIST--BATTERY"
   autosense_battery_marker: "DATA-DIAGNOSTIC--AUTOSENSE--BATTERY"
 
+  # sensor unavailable marker
+  autosense_rip_wireless_marker: "DATA-DIAGNOSTIC--RIP--WIRELESS-DISCONNECTION"
+  autosense_ecg_wireless_marker: "DATA-DIAGNOSTIC--ECG-DISCONNECTION"
   motionsense_hrv_right_wireless_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--RIGHT_WRIST--WIRELESS-DISCONNECTION"
   motionsense_hrv_left_wireless_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--LEFT_WRIST--WIRELESS-DISCONNECTION"
   autosense_wireless_marker: "DATA-DIAGNOSTIC--AUTOSENSE--WIRELESS-DISCONNECTION"
-  motionsense_hrv_right_attachment_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--RIGHT_WRIST--IMPROPER-ATTACHMENT"
-  motionsense_hrv_left_attachment_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--LEFT_WRIST--IMPROPER-ATTACHMENT"
 
+  #packet loss markers
+  autosense_rip_packetloss_marker: "DATA-DIAGNOSTIC--RIP--PACKET-LOSS"
+  autosense_ecg_packetloss_marker: "DATA-DIAGNOSTIC--ECG--PACKET-LOSS"
   motionsense_hrv_accel_right_packetloss_marker: "DATA-DIAGNOSTIC--ACCELEROMETER-MOTION_SENSE_HRV--RIGHT_WRIST--PACKET-LOSS"
   motionsense_hrv_accel_left_packetloss_marker: "DATA-DIAGNOSTIC--ACCELEROMETER-MOTION_SENSE_HRV--LEFT_WRIST--PACKET-LOSS"
   motionsense_hrv_gyro_right_packetloss_marker: "DATA-DIAGNOSTIC--GYROSCOPE-MOTION_SENSE_HRV--RIGHT_WRIST--PACKET-LOSS"
   motionsense_hrv_gyro_left_packetloss_marker: "DATA-DIAGNOSTIC--GYROSCOPE-MOTION_SENSE_HRV--LEFT_WRIST--PACKET-LOSS"
+
+  #attachment markers
+  autosense_rip_attachment_marker: "DATA-DIAGNOSTIC--RIP--ATTACHMENT-MARKER"
+  autosense_ecg_attachment_marker: "DATA-DIAGNOSTIC--ECG--ATTACHMENT-MARKER"
+  motionsense_hrv_right_attachment_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--RIGHT_WRIST--IMPROPER-ATTACHMENT"
+  motionsense_hrv_left_attachment_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--LEFT_WRIST--IMPROPER-ATTACHMENT"
 
 
 
@@ -129,21 +131,6 @@ algo_type:
   sensor_unavailable_marker: sensor_unavailable
   packet_loss_marker: packet_loss
 
-output_stream_names:
-  ddt_ecg_attachment: ddt_ecg_attachment
-  ddt_rip_attachment: ddt_rip_attachment
-  ddt_motionsense_attachment: ddt_motionsense_attachment
-
-  ddt_phone_battery: ddt_phone_battery
-  ddt_autosense_battery: ddt_autosense_battery
-  ddt_motionsense_battery: ddt_motionsense_battery
-
-  ddt_autosense_unavailable: ddt_autosense_unavailable
-  ddt_motionsense_unavailable: ddt_motionsense_unavailable
-
-  ddt_ecg_packet_loss: ddt_ecg_packet_loss
-  ddt_rip_packet_loss: ddt_rip_packet_loss
-  ddt_motionsense_packet_loss: ddt_motionsense_packet_loss
 
 description:
   data_diagnostic: "Data-diagnostic module helps to identify the causes of missing data."
