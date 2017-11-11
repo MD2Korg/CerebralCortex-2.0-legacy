@@ -47,9 +47,9 @@ class DiagnoseData:
         streams = self.CC["driver"].get_participant_streams(participant_id)
         self.diagnose_queue(participant_id, streams)
 
-    def all_participants_data(self):
+    def all_participants_data(self, study_name):
         # get all participants' name-ids
-        participants = self.CC["driver"].get_all_participants("mperf")
+        participants = self.CC["driver"].get_all_participants(study_name)
 
         for participant in participants:
             # get all streams for a participant
@@ -96,4 +96,9 @@ class DiagnoseData:
 
 
 if __name__ == '__main__':
-    stream = DiagnoseData().one_participant_data("cd7c2cd6-d0a3-4680-9ba2-0c59d0d0c684")
+    # run with one participant
+    DiagnoseData().one_participant_data("cd7c2cd6-d0a3-4680-9ba2-0c59d0d0c684")
+
+    # run for all the participants in a study
+    #DiagnoseData().all_participants_data("mperf")
+

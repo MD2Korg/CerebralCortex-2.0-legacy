@@ -92,19 +92,19 @@ def attachment_marker(dd_stream_name: str, input_streams: dict, config: dict) ->
         input_param = {"window_size": config["general"]["window_size"],
                        "onbody_threshold": config["attachment_marker"]["rip_on_body"],
                        "improper_attachment":config["attachment_marker"]["improper_attachment"]}
-        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Attachment labels: Improper attachment: "+ config["labels"]["rip_improper_attachment"]+", Offbody: "+config["labels"]["rip_off_body"]+", Onbody: "+config["labels"]["rip_on_body"]}
+        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Attachment labels: Improper attachment: "+ str(config["labels"]["rip_improper_attachment"])+", Offbody: "+str(config["labels"]["rip_off_body"])+", Onbody: "+str(config["labels"]["rip_on_body"])}
     elif dd_stream_name == config["stream_names"]["autosense_ecg_attachment_marker"]:
         input_param = {"window_size": config["general"]["window_size"],
                        "ecg_vairance_threshold": config["attachment_marker"]["ecg_on_body"],
                        "improper_attachment":config["attachment_marker"]["improper_attachment"]}
-        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Attachment labels: Improper attachment: "+ config["labels"]["ecg_improper_attachment"]+", Offbody: "+config["labels"]["ecg_off_body"]+", Onbody: "+config["labels"]["ecg_on_body"]}
+        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Attachment labels: Improper attachment: "+ str(config["labels"]["ecg_improper_attachment"])+", Offbody: "+str(config["labels"]["ecg_off_body"])+", Onbody: "+str(config["labels"]["ecg_on_body"])}
     elif dd_stream_name == config["stream_names"]["motionsense_hrv_right_attachment_marker"] or dd_stream_name == config["stream_names"]["motionsense_hrv_left_attachment_marker"]:
         input_param = {"window_size": config["general"]["window_size"],
                        "motionsense_improper_attachment_threshold": config["attachment_marker"]["motionsense_improper_attachment"],
                        "motionsense_onbody_threshold": config["attachment_marker"]["motionsense_onbody"],
                        "motionsense_offbody_threshold": config["attachment_marker"]["motionsense_offbody"]
                        }
-        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Attachment labels: Improper attachment: "+ config["labels"]["motionsense_improper_attachment"]+", Offbody: "+config["labels"]["motionsense_offbody"]+", Onbody: "+config["labels"]["motionsense_onbody"]}
+        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Attachment labels: Improper attachment: "+ str(config["labels"]["motionsense_improper_attachment"])+", Offbody: "+str(config["labels"]["motionsense_offbody"])+", Onbody: "+str(config["labels"]["motionsense_onbody"])}
     else:
         raise ValueError("Incorrect sensor type")
 
@@ -139,7 +139,7 @@ def battery_data_marker(dd_stream_name: str, input_streams: dict, config: dict) 
     else:
         raise ValueError("Incorrect sensor type")
 
-    data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Labels - Powered off"+ config["labels"]["powered_off"]+", Battery down"+ config["labels"]["battery_down"]}
+    data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Labels - Powered off"+ str(config["labels"]["powered_off"])+", Battery down"+ str(config["labels"]["battery_down"])}
     algo_description = config["description"]["battery_data_marker"]
     method = 'cerebralcortex.data_processor.data_diagnostic.battery_data_marker.py'
     ec = get_execution_context(dd_stream_name, input_param, input_streams, method, algo_description, config)
@@ -159,13 +159,13 @@ def sensor_unavailable(dd_stream_name: str, input_streams: dict, config: dict) -
         input_param = {"window_size": config["general"]["window_size"],
                        "sensor_unavailable_ecg_threshold": config["sensor_unavailable_marker"]["ecg"],
                        "sensor_unavailable_rip_threshold": config["sensor_unavailable_marker"]["rip"]}
-        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "AutoSense unavailable label: "+ config["labels"]["autosense_unavailable"]}
+        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "AutoSense unavailable label: "+ str(config["labels"]["autosense_unavailable"])}
     elif dd_stream_name == config["stream_names"]["motionsense_hrv_right_wireless_marker"] or dd_stream_name == config["stream_names"]["motionsense_hrv_left_wireless_marker"]:
         input_param = {"window_size": config["general"]["window_size"],
                        "sensor_unavailable_motionsense_threshold": config["sensor_unavailable_marker"]["motionsense"],
                        "sensor_unavailable_phone_threshold": config["sensor_unavailable_marker"]["phone"]
                        }
-        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Motionsense unavailable label: "+ config["labels"]["motionsense_unavailable"]}
+        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Motionsense unavailable label: "+ str(config["labels"]["motionsense_unavailable"])}
     else:
         raise ValueError("Incorrect sensor type")
 
@@ -188,19 +188,19 @@ def packet_loss(dd_stream_name: str, input_streams: dict, config: dict) -> dict:
     if dd_stream_name == config["stream_names"]["autosense_ecg_packetloss_marker"]:
         input_param = {"window_size": config["general"]["window_size"],
                        "ecg_acceptable_packet_loss": config["packet_loss_marker"]["ecg_acceptable_packet_loss"]}
-        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Packet-Loss label: "+ config["labels"]["ecg_packet_loss"]}
+        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Packet-Loss label: "+ str(config["labels"]["ecg_packet_loss"])}
     elif dd_stream_name == config["stream_names"]["autosense_rip_packetloss_marker"]:
         input_param = {"window_size": config["general"]["window_size"],
                        "rip_acceptable_packet_loss": config["packet_loss_marker"]["rip_acceptable_packet_loss"]}
-        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Packet-Loss label: "+ config["labels"]["rip_packet_loss"]}
+        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Packet-Loss label: "+ str(config["labels"]["rip_packet_loss"])}
     elif dd_stream_name == config["stream_names"]["motionsense_hrv_accel_right_packetloss_marker"] or dd_stream_name == config["stream_names"]["motionsense_hrv_accel_left_packetloss_marker"]:
         input_param = {"window_size": config["general"]["window_size"],
                        "rip_acceptable_packet_loss": config["packet_loss_marker"]["motionsense_accel_acceptable_packet_loss"]}
-        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Packet-Loss label: "+ "motionsense_accel_packet_loss "+ config["labels"]["motionsense_accel_packet_loss"]}
+        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Packet-Loss label: "+ str(config["labels"]["motionsense_accel_packet_loss"])}
     elif dd_stream_name == config["stream_names"]["motionsense_hrv_gyro_right_packetloss_marker"] or dd_stream_name == config["stream_names"]["motionsense_hrv_gyro_left_packetloss_marker"]:
         input_param = {"window_size": config["general"]["window_size"],
                        "rip_acceptable_packet_loss": config["packet_loss_marker"]["motionsense_gyro_acceptable_packet_loss"]}
-        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Packet-Loss label: "+ config["labels"]["motionsense_gyro_packet_loss"]}
+        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Packet-Loss label: "+ str(config["labels"]["motionsense_gyro_packet_loss"])}
     else:
         raise ValueError("Incorrect sensor type")
 
