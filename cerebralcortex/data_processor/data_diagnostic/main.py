@@ -65,7 +65,6 @@ def all_participants_data(study_name):
 
 
 def diagnose_queue(participant_id, CC, config):
-    pass
     streams = CC.get_participant_streams(participant_id)
 
     # phone battery
