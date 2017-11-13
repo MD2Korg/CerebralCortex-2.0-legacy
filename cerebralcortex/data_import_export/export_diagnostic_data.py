@@ -29,7 +29,7 @@ from datetime import timedelta
 
 
 #create and load CerebralCortex object and configs
-configuration_file = os.path.join(os.path.dirname(__file__), '../../../../cerebralcortex.yml')
+configuration_file = os.path.join(os.path.dirname(__file__), '../../cerebralcortex.yml')
 CC_driver = CerebralCortex(configuration_file, master="local[*]", name="Data Diagnostic App", load_spark=True)
 CC_worker = CerebralCortex(configuration_file, master="local[*]", name="Data Diagnostic App", load_spark=False)
 
@@ -37,7 +37,7 @@ CC_worker = CerebralCortex(configuration_file, master="local[*]", name="Data Dia
 output_folder = "/home/ali/Desktop/DUMP/data/"
 
 # load data diagnostic configs
-config = Configuration(filepath="../data_diagnostic_config.yml").config
+config = Configuration(filepath="../data_processor/data_diagnostic/data_diagnostic_config.yml").config
 
 def one_participant_data(participant_ids=None):
     # get all streams for a participant

@@ -46,26 +46,26 @@ sensor_unavailable_marker:
 
 labels:
   # sensor unavailable
-  autosense_unavailable: "AUTOSENSE-UNAVAILABLE"
-  motionsense_unavailable: "MOTIONSENSE-UNAVAILABLE"
+  autosense_unavailable: [{"label":"AUTOSENSE-UNAVAILABLE"}]
+  motionsense_unavailable: [{"label":"MOTIONSENSE-UNAVAILABLE"}]
   # attachment labels
-  ecg_improper_attachment: "ECG-IMPROPER-ATTACHMENT"
-  ecg_off_body: "ECG-OFF-BODY"
-  ecg_on_body: "ECG-ON-BODY"
-  rip_improper_attachment: "RIP-IMPROPER-ATTACHMENT"
-  rip_off_body: "RIP-OFF-BODY"
-  rip_on_body: "RIP-ON-BODY"
-  motionsense_improper_attachment: "MOTIONSENSE-IMPROPER-ATTACHMENT"
-  motionsense_offbody: "MOTIONSENSE-OFF-BODY"
-  motionsense_onbody: "MOTIONSENSE-ON-BODY"
+  ecg_improper_attachment: [{"label":"ECG-IMPROPER-ATTACHMENT"}]
+  ecg_off_body: [{"label":"ECG-OFF-BODY"}]
+  ecg_on_body: [{"label":"ECG-ON-BODY"}]
+  rip_improper_attachment: [{"label":"RIP-IMPROPER-ATTACHMENT"}]
+  rip_off_body: [{"label":"RIP-OFF-BODY"}]
+  rip_on_body: [{"label":"RIP-ON-BODY"}]
+  motionsense_improper_attachment: [{"label":"MOTIONSENSE-IMPROPER-ATTACHMENT"}]
+  motionsense_offbody: [{"label":"MOTIONSENSE-OFF-BODY"}]
+  motionsense_onbody: [{"label":"MOTIONSENSE-ON-BODY"}]
   #packet loss labels
-  ecg_packet_loss: "ECG-PACKET-LOSS"
-  rip_packet_loss: "RIP-PACKET-LOSS"
-  motionsense_accel_packet_loss: "MOTIONSENSE-ACCELEROMETER-PACKET-LOSS"
-  motionsense_gyro_packet_loss: "MOTIONSENSE-GYRO-PACKET-LOSS"
+  ecg_packet_loss: [{"label":"ECG-PACKET-LOSS"}]
+  rip_packet_loss: [{"label":"RIP-PACKET-LOSS"}]
+  motionsense_accel_packet_loss: [{"label":"MOTIONSENSE-ACCELEROMETER-PACKET-LOSS"}]
+  motionsense_gyro_packet_loss: [{"label":"MOTIONSENSE-GYRO-PACKET-LOSS"}]
   #battery labels
-  powered_off: "POWERED-OFF"
-  battery_down: "BATTERY-DOWN"
+  powered_off: [{"label":"POWERED-OFF"}]
+  battery_down: [{"label":"BATTERY-DOWN"}]
 
 
 stream_names:
