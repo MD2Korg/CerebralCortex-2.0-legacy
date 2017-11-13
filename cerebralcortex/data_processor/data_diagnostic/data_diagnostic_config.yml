@@ -90,7 +90,7 @@ stream_names:
   motionsense_hrv_led_red_right: "LED--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
   motionsense_hrv_led_red_left: "LED--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
   autosense_battery: "BATTERY--org.md2k.autosense"
-  phone_battery: "BATTERY--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
+  phone_battery: "BATTERY--org.md2k.phonesensor--PHONE"
 
   #### OUTPUTS STREAM NAMES
   # battery markers
