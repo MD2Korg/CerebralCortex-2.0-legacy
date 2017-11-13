@@ -42,20 +42,26 @@ CC["worker"] = CerebralCortex(configuration_file, master="local[*]", name="Data 
 config = Configuration(filepath="data_diagnostic_config.yml").config
 
 
-def one_participant_data(participant_id=None):
+def one_participant_data(participant_ids=None):
     # get all streams for a participant
-    streams = CC["driver"].get_participant_streams(participant_id)
-    diagnose_queue(participant_id, streams)
+    if len(participant_ids)>0:
+        streams = CC["driver"].get_participant_streams(participant_ids)
+        diagnose_queue(participant_ids, streams)
+    else:
+        print("No participant is selected")
 
 
 def all_participants_data(study_name):
     # get all participants' name-ids
     CC_worker = CC["worker"]
     participants = CC["driver"].get_all_participants(study_name)
-    participants_rdd = CC["driver"].sc.parallelize(participants)
-    results = participants_rdd.map(
-        lambda participant: diagnose_queue(participant["identifier"], CC_worker, config))
-    print(results.count())
+    if len(participants)>0:
+        participants_rdd = CC["driver"].sc.parallelize(participants)
+        results = participants_rdd.map(
+            lambda participant: diagnose_queue(participant["identifier"], CC_worker, config))
+        results.count()
+    else:
+        print("No participant is selected")
 
 
 def diagnose_queue(participant_id, CC, config):
