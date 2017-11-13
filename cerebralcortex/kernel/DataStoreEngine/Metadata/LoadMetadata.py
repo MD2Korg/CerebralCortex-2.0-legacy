@@ -245,7 +245,7 @@ class LoadMetadata:
         rows = self.cursor.fetchall()
 
         if len(rows) == 0:
-            return None
+            return []
         else:
             for row in rows:
                 result[row["name"]] = row

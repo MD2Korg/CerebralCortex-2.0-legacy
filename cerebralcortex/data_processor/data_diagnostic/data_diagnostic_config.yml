@@ -46,8 +46,8 @@ sensor_unavailable_marker:
 
 labels:
   # sensor unavailable
-  autosense_unavailable: 1
-  motionsense_unavailable: 2
+  autosense_unavailable: "AUTOSENSE-UNAVAILABLE"
+  motionsense_unavailable: "MOTIONSENSE-UNAVAILABLE"
   # attachment labels
   ecg_improper_attachment: 21
   ecg_off_body: 22
