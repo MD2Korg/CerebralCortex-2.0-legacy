@@ -73,7 +73,7 @@ def export_data(participant_id, CC, config):
                 day_date = (val["start_time"]+timedelta(days=day)).strftime('%Y%m%d')
                 data = CC.get_cassandra_raw_data(val["identifier"], day_date)
                 write_to_bz2(output_folder+val["owner"]+"/", key+".csv", data)
-                print("done")
+                print("Participant ID: ", participant_id, " - Processed stream: ", key)
 
 def filter_stream_names(stream_names):
     filtered_names = {}
@@ -90,7 +90,8 @@ def write_to_bz2(directory, file_name, data):
 
     with open(directory+file_name, 'a+') as fp:
         for d in data:
-            fp.write(str(d[0])+","+str(d[1])+","+str(d[2])+"\n")
+            if "label" in d[2]:
+                fp.write(str(d[0])+","+str(d[1])+","+str(d[2])+"\n")
 
 
 if __name__ == '__main__':
