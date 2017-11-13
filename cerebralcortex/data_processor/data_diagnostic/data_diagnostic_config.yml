@@ -77,9 +77,6 @@ stream_names:
   motionsense_hrv_led_quality_right: "DATA_QUALITY--LED--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
   motionsense_hrv_led_quality_left: "DATA_QUALITY--LED--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
 
-  motionsense_hrv_led_data_quality_right: "DATA_QUALITY--LED--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
-  motionsense_hrv_led_data_quality_left: "DATA_QUALITY--LED--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
-
   autosense_ecg: "ECG--org.md2k.autosense"
   autosense_rip: "RIP--org.md2k.autosense"
   autosense_accel_x: "ACCELEROMETER-X--org.md2k.autosense"

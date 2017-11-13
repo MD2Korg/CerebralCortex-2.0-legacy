@@ -67,8 +67,9 @@ class LoadData:
 
         if data_type == DataSet.COMPLETE:
             dps = self.load_cassandra_data(stream_id, day)
-            rdd = self.CC_obj.sc.parallelize(dps)
-            data = rdd.map(self.row_to_datapoints)
+            #rdd = self.CC_obj.sc.parallelize(dps)
+            data = self.row_to_datapoints(dps)
+            #data = rdd.map(self.row_to_datapoints)
 
             # df = self.load_data_from_cassandra(self.datapointTable, where_clause)
             # rdd = df.rdd
@@ -88,24 +89,25 @@ class LoadData:
 
         return stream
 
-    @staticmethod
-    def row_to_datapoints(rows):
+
+    def row_to_datapoints(self, rows):
         dps = []
-        for row in rows:
-            try:
-                sample = json.loads(row[2])
-            except:
-                sample = row[2]
-            localtz = timezone("US/Central")
-            if row[0]:
-                start_time = localtz.localize(row[0])
-            else:
-                start_time = row[0]
-            if row[1]:
-                end_time = localtz.localize(row[1])
-            else:
-                end_time = row[1]
-            dps.append(DataPoint(start_time, end_time, sample))
+        if rows:
+            for row in rows:
+                try:
+                    sample = json.loads(row[2])
+                except:
+                    sample = row[2]
+                localtz = timezone(self.CC_obj.time_zone)
+                if row[0]:
+                    start_time = localtz.localize(row[0])
+                else:
+                    start_time = row[0]
+                if row[1]:
+                    end_time = localtz.localize(row[1])
+                else:
+                    end_time = row[1]
+                dps.append(DataPoint(start_time, end_time, sample))
         return dps
 
     def load_cassandra_data(self, stream_id: uuid, day:str):
@@ -120,7 +122,7 @@ class LoadData:
         session = cluster.connect('cerebralcortex')
 
         query = "SELECT start_time,end_time, sample FROM data where identifier="+str(stream_id)+" and day='"+day+"'"  # users contains 100 rows
-        statement = SimpleStatement(query, fetch_size=600000)
+        statement = SimpleStatement(query)
         data = []
         for row in session.execute(statement):
             data.append(row)
@@ -128,7 +130,7 @@ class LoadData:
         session.shutdown();
         cluster.shutdown();
 
-        return [data]
+        return data
 
     def get_stream_dataframe(self, stream_id: uuid, day:str=None, start_time: datetime = None, end_time: datetime = None,
                    data_type=DataSet.COMPLETE) -> dict:

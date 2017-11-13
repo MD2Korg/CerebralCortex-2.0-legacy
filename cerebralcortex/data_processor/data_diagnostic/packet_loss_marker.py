@@ -42,17 +42,14 @@ def packet_loss_marker(stream_id: uuid, stream_name: str, owner_id: uuid, dd_str
     :param config:
     """
 
-    CC_driver = CC["driver"]
-    CC_worker = CC["worker"]
-
     #using stream_id, data-diagnostic-stream-id, and owner id to generate a unique stream ID for battery-marker
     packetloss_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+dd_stream_name+owner_id))
 
-    stream_end_days = CC_driver.get_stream_start_end_time(packetloss_marker_stream_id)["end_time"]
+    stream_end_days = CC.get_stream_start_end_time(packetloss_marker_stream_id)["end_time"]
 
     if not stream_end_days:
         stream_end_days = []
-        stream_days = CC_driver.get_stream_start_end_time(stream_id)
+        stream_days = CC.get_stream_start_end_time(stream_id)
         days = stream_days["end_time"]-stream_days["start_time"]
         for day in range(days.days+1):
             stream_end_days.append((stream_days["start_time"]+timedelta(days=day)).strftime('%Y%m%d'))
@@ -78,20 +75,19 @@ def packet_loss_marker(stream_id: uuid, stream_name: str, owner_id: uuid, dd_str
 
     for day in stream_end_days:
         #load stream data to be diagnosed
-        stream = CC_driver.get_datastream(stream_id, day, data_type=DataSet.COMPLETE)
-        size = stream.data.map(lambda data: len(data))
-        if size.take(1)[0]>0:
+        stream = CC.get_datastream(stream_id, day, data_type=DataSet.COMPLETE)
 
-            windowed_data = stream.data.map(lambda data: window(data, config['general']['window_size'], True))
+        if len(stream.data)>0:
 
-            results = windowed_data.map(lambda data: process_windows(data, sampling_rate, threshold_val, label, CC_worker, config))
-            merged_windows = results.map(lambda  data: merge_consective_windows(data))
+            windowed_data = window(stream.data, config['general']['window_size'], True)
+
+            results = process_windows(windowed_data, sampling_rate, threshold_val, label, CC, config)
+            merged_windows = merge_consective_windows(results)
 
             input_streams = [{"owner_id":owner_id, "id": str(stream_id), "name": stream_name}]
             output_stream = {"id":packetloss_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["packet_loss_marker"]}
-            result = merged_windows.map(lambda data: store(data, input_streams, output_stream, CC_worker, config))
+            result = store(merged_windows, input_streams, output_stream, CC, config)
 
-            result.count()
 
 
 def process_windows(windowed_data, sampling_rate, threshold_val, label, CC, config):

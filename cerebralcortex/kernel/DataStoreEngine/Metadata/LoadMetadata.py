@@ -212,7 +212,7 @@ class LoadMetadata:
         """
         if not study_name:
             return None
-
+        results = []
         qry = 'SELECT identifier, username FROM '+ self.userTable +' where user_metadata->"$.study_name"=%(study_name)s'
 
         vals = {'study_name': str(study_name)}
@@ -223,7 +223,9 @@ class LoadMetadata:
         if len(rows) == 0:
             return None
         else:
-            return rows
+            for row in rows:
+                results.append(row)
+            return results
 
     def get_participant_streams(self, participant_id: uuid) -> dict:
 

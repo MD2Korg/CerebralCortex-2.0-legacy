@@ -41,39 +41,36 @@ def battery_marker(stream_id: uuid, stream_name:str, owner_id, dd_stream_name, C
     :param CC:
     :param config:
     """
-    CC_driver = CC["driver"]
-    CC_worker = CC["worker"]
 
     try:
         #using stream_id, data-diagnostic-stream-id, and owner id to generate a unique stream ID for battery-marker
         battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+dd_stream_name+owner_id))
 
-        stream_end_days = CC_driver.get_stream_start_end_time(battery_marker_stream_id)["end_time"]
+        stream_end_days = CC.get_stream_start_end_time(battery_marker_stream_id)["end_time"]
 
         if not stream_end_days:
-            stream_days = CC_driver.get_stream_start_end_time(stream_id)
+            stream_end_days = []
+            stream_days = CC.get_stream_start_end_time(stream_id)
             days = stream_days["end_time"]-stream_days["start_time"]
             for day in range(days.days+1):
-                stream_end_days = stream_days["start_time"]+timedelta(days=day)
-                stream_end_days = stream_end_days.strftime('%Y%m%d')
+                stream_end_days.append((stream_days["start_time"]+timedelta(days=day)).strftime('%Y%m%d'))
         else:
             stream_end_days = [(stream_end_days+timedelta(days=1)).strftime('%Y%m%d')]
 
         for day in stream_end_days:
-            stream = CC_driver.get_datastream(stream_id, data_type=DataSet.COMPLETE, day=day, start_time=start_time, end_time=end_time)
+            stream = CC.get_datastream(stream_id, data_type=DataSet.COMPLETE, day=day, start_time=start_time, end_time=end_time)
+            if len(stream.data)>0:
+                windowed_data = window(stream.data, config['general']['window_size'], True)
+                results = process_windows(windowed_data, stream_name, config)
 
-            windowed_data = stream.data.map(lambda data: window(data, config['general']['window_size'], True))
-            results = windowed_data.map(lambda data: process_windows(data, stream_name, config))
-            #sd = results.collect()
-            merged_windows = results.map(lambda  data: merge_consective_windows(data))
+                merged_windows = merge_consective_windows(results)
 
-            labelled_windows =  merged_windows.map(lambda data: mark_windows(battery_marker_stream_id, data, CC_worker, config))
+                labelled_windows =  mark_windows(battery_marker_stream_id, merged_windows, CC, config)
 
-            input_streams = [{"owner_id":owner_id, "id": str(stream_id), "name": stream_name}]
-            output_stream = {"id":battery_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["battery_marker"]}
-            result = labelled_windows.map(lambda data: store(data, input_streams, output_stream, CC_worker, config))
+                input_streams = [{"owner_id":owner_id, "id": str(stream_id), "name": stream_name}]
+                output_stream = {"id":battery_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["battery_marker"]}
+                store(labelled_windows, input_streams, output_stream, CC, config)
 
-            result.count()
     except Exception as e:
         print(e)
 
