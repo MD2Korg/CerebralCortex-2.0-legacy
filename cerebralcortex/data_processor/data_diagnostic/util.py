@@ -118,9 +118,15 @@ def magnitude_list(data: List) -> List:
             data = json.loads(data)
         except:
             data = data
-
-    input_data = np.array([i for i in data])
-    data = norm(input_data, axis=1).tolist()
+    try:
+        input_data = np.array([i for i in data])
+        data = norm(input_data, axis=1).tolist()
+    except Exception as e:
+        print("Error in calculating magnigutude ----> ")
+        print("Data: ", data)
+        print("NP Array: ", input_data)
+        print(e)
+        raise Exception
 
     return data
 

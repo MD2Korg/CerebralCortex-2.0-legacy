@@ -249,7 +249,11 @@ class LoadData:
             try:
                 sample = json.loads(row.sample)
             except Exception as e:
-                sample = row.sample
+                try:
+                    sample = float(row.sample)
+                except Exception as e:
+                    sample = row.sample
+                    print("Error in parsing string to float --> ", e, row)
                 print("Error in decoding json object --> ", e, row)
 
             results.append(sample)
