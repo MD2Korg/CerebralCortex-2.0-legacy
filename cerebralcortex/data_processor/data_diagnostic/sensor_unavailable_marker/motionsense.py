@@ -92,12 +92,16 @@ def process_windows(windowed_data, day, CC, phone_accel_stream_id, config):
                 # compute magnitude of the window
                 magnitude_vals = magnitude_datapoints(prev_data)
                 #get phone accel stream data
-                phone_accel_stream = CC.get_stream_samples(phone_accel_stream_id, day=day, start_time=key[0], end_time=key[1])
-                #compute phone accel data magnitude
-                phone_magnitude_vas = magnitude_list(phone_accel_stream)
-                #check if motionsense accel or phone accel magnitude variance is below than the threshold
-                if np.var(magnitude_vals) > motionsense_threshold or np.var(phone_magnitude_vas)> phone_threshold:
-                    results[key] = label
+                if phone_accel_stream_id:
+                    phone_accel_stream = CC.get_stream_samples(phone_accel_stream_id, day=day, start_time=key[0], end_time=key[1])
+                    #compute phone accel data magnitude
+                    phone_magnitude_vas = magnitude_list(phone_accel_stream)
+                    #check if motionsense accel or phone accel magnitude variance is below than the threshold
+                    if np.var(magnitude_vals) > motionsense_threshold or np.var(phone_magnitude_vas)> phone_threshold:
+                        results[key] = label
+                else:
+                    if np.var(magnitude_vals) > motionsense_threshold:
+                        results[key] = label
         return results
 
 

@@ -89,7 +89,10 @@ def diagnose_queue(participant_id, CC, config):
 
         ### Sensor unavailable - wireless disconnection
         if config["stream_names"]["motionsense_hrv_accel_right"] in streams:
-            phone_accel_stream_id = streams[config["stream_names"]["phone_accel"]]["identifier"]
+            if config["stream_names"]["phone_accel"] in streams:
+                phone_accel_stream_id = streams[config["stream_names"]["phone_accel"]]["identifier"]
+            else:
+                phone_accel_stream_id = None
             ms_wd(streams[config["stream_names"]["motionsense_hrv_accel_right"]]["identifier"],
                   streams[config["stream_names"]["motionsense_hrv_accel_right"]]["name"], participant_id,
                   config["stream_names"]["motionsense_hrv_right_wireless_marker"], phone_accel_stream_id, CC, config)
