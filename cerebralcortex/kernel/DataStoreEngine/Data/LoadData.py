@@ -246,7 +246,13 @@ class LoadData:
 
         rows = session.execute(qry)
         for row in rows:
-            results.append(json.loads(row.sample))
+            try:
+                sample = json.loads(row.sample)
+            except Exception as e:
+                sample = row.sample
+                print("Error in decoding json object --> ", e, row)
+
+            results.append(sample)
         session.shutdown();
         cluster.shutdown();
         return results
