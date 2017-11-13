@@ -87,7 +87,7 @@ def filter_stream_names(stream_names):
 def write_to_bz2(directory, file_name, data):
     if not os.path.exists(directory):
         os.makedirs(directory)
-
+    file_name = file_name.replace("IMPROPER-ATTACHMENT", "ATTACHMENT-MARKER")
     with open(directory+file_name, 'a+') as fp:
         for d in data:
             if "label" in d[2]:

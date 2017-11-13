@@ -51,7 +51,7 @@ class LoadData:
         start_time = str(start_time)
         end_time = str(end_time)
 
-        where_clause = "identifier='" + stream_id + "' and day='"+day+"'"
+        where_clause = "identifier=" + str(stream_id) + " and day='"+str(day)+"'"
 
         if stream_id == 'None':
             raise Exception("Identifier cannot be null.")
