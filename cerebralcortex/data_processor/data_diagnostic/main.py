@@ -68,7 +68,7 @@ def all_participants_data(study_name):
 
 def diagnose_queue(participant_id, CC, config):
     streams = CC.get_participant_streams(participant_id)
-    if len(streams):
+    if streams and len(streams)>0:
         # phone battery
         if config["stream_names"]["phone_battery"] in streams:
             battery_marker(streams[config["stream_names"]["phone_battery"]]["identifier"],

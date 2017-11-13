@@ -121,7 +121,7 @@ class LoadData:
 
         session = cluster.connect('cerebralcortex')
 
-        query = "SELECT start_time,end_time, sample FROM data where identifier="+str(stream_id)+" and day='"+day+"'"  # users contains 100 rows
+        query = "SELECT start_time,end_time, sample FROM data where identifier="+str(stream_id)+" and day='"+str(day)+"'"  # users contains 100 rows
         statement = SimpleStatement(query)
         data = []
         for row in session.execute(statement):

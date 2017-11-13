@@ -46,26 +46,26 @@ sensor_unavailable_marker:
 
 labels:
   # sensor unavailable
-  autosense_unavailable: 1
-  motionsense_unavailable: 2
+  autosense_unavailable: "AUTOSENSE-UNAVAILABLE"
+  motionsense_unavailable: "MOTIONSENSE-UNAVAILABLE"
   # attachment labels
-  ecg_improper_attachment: 21
-  ecg_off_body: 22
-  ecg_on_body: 23
-  rip_improper_attachment: 24
-  rip_off_body: 25
-  rip_on_body: 26
-  motionsense_improper_attachment: 27
-  motionsense_offbody: 28
-  motionsense_onbody: 29
+  ecg_improper_attachment: "ECG-IMPROPER-ATTACHMENT"
+  ecg_off_body: "ECG-OFF-BODY"
+  ecg_on_body: "ECG-ON-BODY"
+  rip_improper_attachment: "RIP-IMPROPER-ATTACHMENT"
+  rip_off_body: "RIP-OFF-BODY"
+  rip_on_body: "RIP-ON-BODY"
+  motionsense_improper_attachment: "MOTIONSENSE-IMPROPER-ATTACHMENT"
+  motionsense_offbody: "MOTIONSENSE-OFF-BODY"
+  motionsense_onbody: "MOTIONSENSE-ON-BODY"
   #packet loss labels
-  ecg_packet_loss: 41
-  rip_packet_loss: 42
-  motionsense_accel_packet_loss: 43
-  motionsense_gyro_packet_loss: 44
+  ecg_packet_loss: "ECG-PACKET-LOSS"
+  rip_packet_loss: "RIP-PACKET-LOSS"
+  motionsense_accel_packet_loss: "MOTIONSENSE-ACCELEROMETER-PACKET-LOSS"
+  motionsense_gyro_packet_loss: "MOTIONSENSE-GYRO-PACKET-LOSS"
   #battery labels
-  powered_off: 61
-  battery_down: 62
+  powered_off: "POWERED-OFF"
+  battery_down: "BATTERY-DOWN"
 
 
 stream_names:

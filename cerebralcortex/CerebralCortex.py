@@ -145,6 +145,15 @@ class CerebralCortex:
         """
         return Data(self).get_stream_dataframe(stream_identifier, start_time, end_time, data_type)
 
+    def get_cassandra_raw_data(self, stream_id: uuid, day:str) -> List:
+
+        """
+
+        :param stream_id:
+        :param day:
+        :return:
+        """
+        return Data(self).load_cassandra_data(stream_id, day)
 
     def save_datastream(self, datastream: DataStream, type):
         """
