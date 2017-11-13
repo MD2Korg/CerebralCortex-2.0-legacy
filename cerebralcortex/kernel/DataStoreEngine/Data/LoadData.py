@@ -97,7 +97,10 @@ class LoadData:
                 try:
                     sample = json.loads(row[2])
                 except:
-                    sample = row[2]
+                    try:
+                        sample = float(row[2])
+                    except:
+                        sample = row[2]
                 localtz = timezone(self.CC_obj.time_zone)
                 if row[0]:
                     start_time = localtz.localize(row[0])
