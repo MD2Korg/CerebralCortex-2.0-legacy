@@ -250,14 +250,21 @@ class LoadData:
         rows = session.execute(qry)
         for row in rows:
             try:
-                sample = json.loads(row.sample)
-            except Exception as e:
+                sample = row.sample.replace("\x00", "")
+            except:
+                sample = row.sample
+            try:
+                sample = json.loads(sample)
+            except:
                 try:
-                    sample = float(row.sample)
+                    sample = list(ast.literal_eval(sample))
                 except Exception as e:
-                    sample = row.sample
-                    print("Error in parsing string to float --> ", e, row)
-                print("Error in decoding json object --> ", e, row)
+                    try:
+                        sample = float(sample)
+                    except Exception as e:
+                        sample = row.sample
+                        print("Error in parsing string to float --> ", e, row)
+                    print("Error in decoding json object --> ", e, row)
 
             results.append(sample)
         session.shutdown();
