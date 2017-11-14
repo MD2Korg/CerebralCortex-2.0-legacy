@@ -25,7 +25,6 @@
 import ast
 import json
 import uuid
-from pyspark.sql import DataFrame
 from datetime import datetime
 from typing import List
 from cassandra.cluster import Cluster
@@ -358,7 +357,7 @@ class LoadData:
                           stream_type, start_time, end_time, data)
 
 
-    def map_datapoint_and_metadata_to_dataframe(self, stream_id: int, data: DataFrame) -> dict:
+    def map_datapoint_and_metadata_to_dataframe(self, stream_id: int, data: object) -> dict:
         """
         This method will map the datapoint and metadata to datastream object
         :param stream_id:

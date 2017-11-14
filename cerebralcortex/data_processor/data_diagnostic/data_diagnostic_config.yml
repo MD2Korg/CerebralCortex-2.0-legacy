@@ -12,7 +12,7 @@ sampling_rate:
   motionsense_battery: 1
 
 battery_marker:
-  phone_powered_off: 0 #min=0 and max=100
+  phone_powered_off: 30 #min=0 and max=100
   phone_battery_down: 10
   autosense_powered_off: 0 #Min=0 and Max=6
   autosense_battery_down: 0.5 #Min=0 and Max=6
@@ -70,27 +70,29 @@ labels:
 
 stream_names:
   #INPUTS
+  phone_battery: "BATTERY--org.md2k.phonesensor--PHONE"
+  phone_accel: "ACCELEROMETER--org.md2k.phonesensor--PHONE"
+  phone_gyro: "GYROSCOPE--org.md2k.phonesensor--PHONE"
+
+  motionsense_hrv_battery_right: "BATTERY--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
+  motionsense_hrv_battery_left: "BATTERY--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
   motionsense_hrv_accel_right: "ACCELEROMETER--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
   motionsense_hrv_accel_left: "ACCELEROMETER--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
   motionsense_hrv_gyro_right: "GYROSCOPE--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
   motionsense_hrv_gyro_left: "GYROSCOPE--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
   motionsense_hrv_led_quality_right: "DATA_QUALITY--LED--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
   motionsense_hrv_led_quality_left: "DATA_QUALITY--LED--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
+  motionsense_hrv_led_right: "LED--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
+  motionsense_hrv_led_left: "LED--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
 
+  autosense_battery: "BATTERY--org.md2k.autosense"
   autosense_ecg: "ECG--org.md2k.autosense"
   autosense_rip: "RIP--org.md2k.autosense"
   autosense_accel_x: "ACCELEROMETER-X--org.md2k.autosense"
   autosense_accel_x: "ACCELEROMETER-Y--org.md2k.autosense"
   autosense_accel_x: "ACCELEROMETER-Z--org.md2k.autosense"
-  phone_accel: "ACCELEROMETER--org.md2k.phonesensor--PHONE"
   autosense_gyro: "GYRO--org.md2k.autosense"
 
-  motionsense_hrv_battery_right: "BATTERY--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
-  motionsense_hrv_battery_left: "BATTERY--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
-  motionsense_hrv_led_red_right: "LED--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
-  motionsense_hrv_led_red_left: "LED--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
-  autosense_battery: "BATTERY--org.md2k.autosense"
-  phone_battery: "BATTERY--org.md2k.phonesensor--PHONE"
 
   #### OUTPUTS STREAM NAMES
   # battery markers
