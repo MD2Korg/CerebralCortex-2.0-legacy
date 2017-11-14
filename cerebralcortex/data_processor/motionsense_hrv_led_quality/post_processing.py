@@ -48,7 +48,9 @@ def store(data: OrderedDict, input_streams: dict, output_streams: dict, CC_obj: 
         dd_stream_name = output_streams["name"]
         stream_type = "ds"
 
-
+        data_descriptor = [{"NAME": "Data Quality (LED)", "DATA_TYPE": "int", "FREQUENCY": "0.33", "MAX_VALUE": "4", "MIN_VALUE": "0", "DESCRIPTION": "measures the Data Quality of LED. Values= GOOD(0), BAND_OFF(1), NOT_WORN(2), BAND_LOOSE(3), NOISE(4)"}]
+        execution_context = {"platform_metadata": {"NAME": "MotionSense HRV", "DEVICE_ID": ""}, "processing_module": {"name": "", "algorithm": [{"method": "", "authors": ["Nasir Ali", " Md Azim Ullah"], "version": "0.0.1", "reference": {"url": "http://md2k.org/"}, "description": ""}], "description": "", "input_streams": input_streams, "output_streams": output_streams, "input_parameters": {}}, "datasource_metadata": {"NAME": "Data Quality (LED)", "DATA_TYPE": "org.md2k.datakitapi.datatype.DataTypeInt", "FREQUENCY": "0.33", "DESCRIPTION": "measures the Data Quality of LED. Values= GOOD(0), BAND_OFF(1), NOT_WORN(2), BAND_LOOSE(3), NOISE(4)"}, "application_metadata": {"NAME": "MotionSense", "DESCRIPTION": "Collects data from the motion sense. Sensors supported: [Accelerometer, Gyroscope, Battery, LED, DataQuality]", "VERSION_NAME": "0.0.1", "VERSION_NUMBER": "2000500"}}
+        annotations = []
 
         ds = DataStream(identifier=dd_stream_id, owner=owner, name=dd_stream_name, data_descriptor=data_descriptor,
                         execution_context=execution_context, annotations=annotations,
