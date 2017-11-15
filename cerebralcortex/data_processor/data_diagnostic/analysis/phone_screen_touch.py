@@ -64,10 +64,10 @@ def phone_screen_touch_marker(stream_id: uuid, stream_name:str, owner_id, dd_str
                 results = process_windows(windowed_data, stream_name, config)
 
                 merged_windows = merge_consective_windows(results)
-
-                input_streams = [{"owner_id":owner_id, "id": str(stream_id), "name": stream_name}]
-                output_stream = {"id":screen_touch_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["app_availability_marker"]}
-                store(merged_windows, input_streams, output_stream, CC, config)
+                if len(merged_windows)>0:
+                    input_streams = [{"owner_id":owner_id, "id": str(stream_id), "name": stream_name}]
+                    output_stream = {"id":screen_touch_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["app_availability_marker"]}
+                    store(merged_windows, input_streams, output_stream, CC, config)
 
     except Exception as e:
         print(e)

@@ -67,9 +67,9 @@ def battery_marker(stream_id: uuid, stream_name:str, owner_id, dd_stream_name, C
                 results = process_windows(windowed_data, stream_name, config)
 
                 merged_windows = merge_consective_windows(results)
-
-                labelled_windows = mark_windows(battery_marker_stream_id, merged_windows, CC, config)
-                store(labelled_windows, input_streams, output_stream, CC, config)
+                if len(merged_windows)>0:
+                    labelled_windows = mark_windows(battery_marker_stream_id, merged_windows, CC, config)
+                    store(labelled_windows, input_streams, output_stream, CC, config)
 
     except Exception as e:
         print(e)

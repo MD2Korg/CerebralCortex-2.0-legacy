@@ -66,9 +66,10 @@ def wireless_disconnection(stream_id: uuid, stream_name: str, owner_id: uuid, dd
             results = process_windows(windowed_data, day, CC, phone_accel_stream_id, config)
             merged_windows = merge_consective_windows(results)
 
-            input_streams = [{"owner_id":owner_id, "id": str(stream_id), "name": stream_name}]
-            output_stream = {"id":wireless_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["sensor_unavailable_marker"]}
-            store(merged_windows, input_streams, output_stream, CC, config)
+            if len(merged_windows)>0:
+                input_streams = [{"owner_id":owner_id, "id": str(stream_id), "name": stream_name}]
+                output_stream = {"id":wireless_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["sensor_unavailable_marker"]}
+                store(merged_windows, input_streams, output_stream, CC, config)
 
 
 def process_windows(windowed_data, day, CC, phone_accel_stream_id, config):
