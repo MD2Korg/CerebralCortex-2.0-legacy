@@ -26,6 +26,7 @@ import os
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.configuration import Configuration
 from datetime import timedelta
+from pytz import timezone
 
 
 #create and load CerebralCortex object and configs
@@ -41,10 +42,12 @@ config = Configuration(filepath="../data_processor/data_diagnostic/data_diagnost
 
 def one_participant_data(participant_ids=None):
     # get all streams for a participant
+    export_data(participant_ids[0], "", CC_worker, config)
+
     if len(participant_ids)>0:
         participants_rdd = CC_driver.sc.parallelize(participant_ids)
         results = participants_rdd.map(
-            lambda participant: export_data(participant, CC_worker, config))
+            lambda participant: export_data(participant, "", CC_worker, config))
         results.count()
     else:
         print("No participant is selected")
@@ -57,13 +60,13 @@ def all_participants_data(study_name):
     if len(participants)>0:
         participants_rdd = CC_driver.sc.parallelize(participants)
         results = participants_rdd.map(
-            lambda participant: export_data(participant["identifier"], CC_worker, config))
+            lambda participant: export_data(participant["identifier"], participant["username"], CC_worker, config))
         results.count()
     else:
         print("No participant is selected")
 
 
-def export_data(participant_id, CC, config):
+def export_data(participant_id, participant_username, CC, config):
     streams = CC.get_participant_streams(participant_id)
     if streams and len(streams)>0:
         stream_names = filter_stream_names(streams)
@@ -72,7 +75,7 @@ def export_data(participant_id, CC, config):
             for day in range(days.days+1):
                 day_date = (val["start_time"]+timedelta(days=day)).strftime('%Y%m%d')
                 data = CC.get_cassandra_raw_data(val["identifier"], day_date)
-                write_to_bz2(output_folder+val["owner"]+"/", key+".csv", data)
+                write_to_bz2(output_folder+val["owner"]+"/", key+".csv", participant_username, data)
                 print("Participant ID: ", participant_id, " - Processed stream: ", key)
 
 def filter_stream_names(stream_names):
@@ -84,18 +87,30 @@ def filter_stream_names(stream_names):
 
 
 
-def write_to_bz2(directory, file_name, data):
+def write_to_bz2(directory, file_name, participant_username, data):
     if not os.path.exists(directory):
         os.makedirs(directory)
+    if str(participant_username).startswith("mperf_1"):
+        localtz = timezone('US/Eastern')
+    elif str(participant_username).startswith("mperf_5"):
+        localtz = timezone('US/Central')
+    elif str(participant_username).startswith("mperf_9"):
+        localtz = timezone('US/Pacific')
+    else:
+        localtz = timezone('US/Pacific')
+
     file_name = file_name.replace("IMPROPER-ATTACHMENT", "ATTACHMENT-MARKER")
     with open(directory+file_name, 'a+') as fp:
         for d in data:
-            fp.write(str(d[0])+","+str(d[1])+","+str(d[2])+"\n")
+            if "label" in d[2] or "touch" in d[2] or "no-touch" in d[2]:
+                start_time = localtz.localize(d[0])
+                end_time =  localtz.localize(d[1])
+                fp.write(str(start_time)+","+str(end_time)+","+str(d[2])+"\n")
 
 
 if __name__ == '__main__':
     # run with one participant
-    #one_participant_data(["cd7c2cd6-d0a3-4680-9ba2-0c59d0d0c684"])
+    one_participant_data(["cd7c2cd6-d0a3-4680-9ba2-0c59d0d0c684"])
 
     # run for all the participants in a study
-    all_participants_data("mperf")
+    #all_participants_data("mperf")
