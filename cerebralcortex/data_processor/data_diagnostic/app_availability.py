@@ -79,7 +79,7 @@ def process_windows(windowed_data, config):
         dp = []
         for k in data:
             try:
-                sample = float(k.sample)
+                sample = float(k.sample[0])
                 dp.append(sample)
             except:
                 pass
