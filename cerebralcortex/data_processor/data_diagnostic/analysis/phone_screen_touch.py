@@ -61,7 +61,7 @@ def phone_screen_touch_marker(stream_id: uuid, stream_name:str, owner_id, dd_str
             stream = CC.get_datastream(stream_id, data_type=DataSet.COMPLETE, day=day, start_time=start_time, end_time=end_time)
             if len(stream.data)>0:
                 windowed_data = window(stream.data, config['general']['window_size'], True)
-                results = process_windows(windowed_data, stream_name, config)
+                results = process_windows(windowed_data)
 
                 merged_windows = merge_consective_windows(results)
                 if len(merged_windows)>0:
@@ -73,7 +73,7 @@ def phone_screen_touch_marker(stream_id: uuid, stream_name:str, owner_id, dd_str
         print(e)
 
 
-def process_windows(windowed_data, stream_name, config):
+def process_windows(windowed_data):
     results = OrderedDict()
     for key, data in windowed_data.items():
         dp = []
