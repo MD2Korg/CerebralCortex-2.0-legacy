@@ -22,7 +22,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
+import os, shutil
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.configuration import Configuration
 from datetime import timedelta
@@ -35,14 +35,16 @@ CC_driver = CerebralCortex(configuration_file, master="local[*]", name="Data Dia
 CC_worker = CerebralCortex(configuration_file, master="local[*]", name="Data Diagnostic App", load_spark=False)
 
 #output folder path
-output_folder = "/home/ali/Desktop/DUMP/data/"
+output_folder = "/home/ali/Desktop/DUMP/data/tmp/"
+
+shutil.rmtree(output_folder)
 
 # load data diagnostic configs
 config = Configuration(filepath="../data_processor/data_diagnostic/data_diagnostic_config.yml").config
 
 def one_participant_data(participant_ids=None):
     # get all streams for a participant
-    export_data(participant_ids[0], "", CC_worker, config)
+    #export_data(participant_ids[0], "", CC_worker, config)
 
     if len(participant_ids)>0:
         participants_rdd = CC_driver.sc.parallelize(participant_ids)
