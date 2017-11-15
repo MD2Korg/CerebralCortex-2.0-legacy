@@ -59,16 +59,16 @@ def battery_marker(stream_id: uuid, stream_name:str, owner_id, dd_stream_name, C
 
         for day in stream_end_days:
             stream = CC.get_datastream(stream_id, data_type=DataSet.COMPLETE, day=day, start_time=start_time, end_time=end_time)
+            input_streams = [{"owner_id":owner_id, "id": str(stream_id), "name": stream_name}]
+            output_stream = {"id":battery_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["battery_marker"]}
+
             if len(stream.data)>0:
                 windowed_data = window(stream.data, config['general']['window_size'], True)
                 results = process_windows(windowed_data, stream_name, config)
 
                 merged_windows = merge_consective_windows(results)
 
-                labelled_windows =  mark_windows(battery_marker_stream_id, merged_windows, CC, config)
-
-                input_streams = [{"owner_id":owner_id, "id": str(stream_id), "name": stream_name}]
-                output_stream = {"id":battery_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["battery_marker"]}
+                labelled_windows = mark_windows(battery_marker_stream_id, merged_windows, CC, config)
                 store(labelled_windows, input_streams, output_stream, CC, config)
 
     except Exception as e:

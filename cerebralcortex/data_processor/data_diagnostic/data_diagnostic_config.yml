@@ -19,6 +19,8 @@ battery_marker:
   motionsense_powered_off: 1 #min= and max=
   motionsense_battery_down: 10 #min= and max=
 
+sensor_failure:
+  threshold: 0.00003
 
 attachment_marker:
   ecg_on_body: 1000
@@ -45,6 +47,11 @@ sensor_unavailable_marker:
   phone: 0.014
 
 labels:
+  # sensor failure
+  motionsense_failure: [{"label":"MOTIONSENSE-SENSOR-FAILURE"}]
+  phone_sensor_failure: [{"label":"PHONE-SENSOR-FAILURE"}]
+  autosense_sensor_failure: [{"label":"AUTOSENSE-SENSOR-FAILURE"}]
+
   # sensor unavailable
   autosense_unavailable: [{"label":"AUTOSENSE-UNAVAILABLE"}]
   autosense_available: [{"label":"AUTOSENSE-AVAILABLE"}]
@@ -64,11 +71,13 @@ labels:
   motionsense_improper_attachment: [{"label":"MOTIONSENSE-IMPROPER-ATTACHMENT"}]
   motionsense_offbody: [{"label":"MOTIONSENSE-OFF-BODY"}]
   motionsense_onbody: [{"label":"MOTIONSENSE-ON-BODY"}]
+
   #packet loss labels
   ecg_packet_loss: [{"label":"ECG-PACKET-LOSS"}]
   rip_packet_loss: [{"label":"RIP-PACKET-LOSS"}]
   motionsense_accel_packet_loss: [{"label":"MOTIONSENSE-ACCELEROMETER-PACKET-LOSS"}]
   motionsense_gyro_packet_loss: [{"label":"MOTIONSENSE-GYRO-PACKET-LOSS"}]
+
   #battery labels
   powered_off: [{"label":"POWERED-OFF"}]
   battery_down: [{"label":"BATTERY-DOWN"}]
@@ -99,8 +108,17 @@ stream_names:
   autosense_accel_x: "ACCELEROMETER-Z--org.md2k.autosense"
   autosense_gyro: "GYRO--org.md2k.autosense"
 
+  # not part of core data-diagnostics
+  phone_screen_touch: "TOUCH_SCREEN--org.md2k.phonesensor--PHONE"
+
 
   #### OUTPUTS STREAM NAMES
+  # sensor failure
+  motionsense_hrv_right_sensor_failure_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--RIGHT_WRIST--SENSOR-FAILURE"
+  motionsense_hrv_left_sensor_failure_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--LEFT_WRIST--SENSOR-FAILURE"
+  phone_sensor_failure_marker: "DATA-DIAGNOSTIC--PHONE--SENSOR-FAILURE"
+  autosense_sensor_failure_marker: "DATA-DIAGNOSTIC--AUTOSENSE--SENSOR-FAILURE"
+
   # battery markers
   phone_battery_marker: "DATA-DIAGNOSTIC--PHONE-BATTERY"
   motionsense_hrv_battery_right_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--RIGHT_WRIST--BATTERY"
@@ -128,8 +146,11 @@ stream_names:
   #attachment markers
   autosense_rip_attachment_marker: "DATA-DIAGNOSTIC--RIP--ATTACHMENT-MARKER"
   autosense_ecg_attachment_marker: "DATA-DIAGNOSTIC--ECG--ATTACHMENT-MARKER"
-  motionsense_hrv_right_attachment_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--RIGHT_WRIST--IMPROPER-ATTACHMENT"
-  motionsense_hrv_left_attachment_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--LEFT_WRIST--IMPROPER-ATTACHMENT"
+  motionsense_hrv_right_attachment_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--RIGHT_WRIST--ATTACHMENT"
+  motionsense_hrv_left_attachment_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--LEFT_WRIST--ATTACHMENT"
+
+  # not part of core data-diagnostics
+  phone_screen_touch_marker: "DATA-DIAGNOSTIC--TOUCH_SCREEN--PHONE"
 
 
 
@@ -139,6 +160,8 @@ algo_type:
   app_availability_marker: app_availability_marker
   sensor_unavailable_marker: sensor_unavailable
   packet_loss_marker: packet_loss
+  sensor_failure: sensor_failure
+  phone_screen_touch: phone_screen_touch
 
 
 description:
@@ -147,6 +170,9 @@ description:
   battery_data_marker: "Battery data marker uses battery levels to determine whether the battery was down or device was powered off."
   packet_loss_marker: "Packet loss marker algorithm marks a window as packet-loss if received packets in a window is less than the acceptable packet loss threshold."
   sensor_unavailable_marker: "Sensor unavailable algorithm uses battery-off stream to analyze whether battery was actually powered off or a person walked away from the phone."
+  app_availability_marker : "Phone battery data is continuously collected. If there is any missing mobile phone battery data then it would be considered as mobile app unavailable."
+  sensor_failure: "Sensor is considered as failed if one of the sensors fails to capture signals."
+  phone_screen_touch: "This algorithm is not part of data diagnostic core suite. This stream contains the duration when a participant was active on phone."
 
 
 

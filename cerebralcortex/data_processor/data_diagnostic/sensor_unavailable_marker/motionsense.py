@@ -77,7 +77,6 @@ def process_windows(windowed_data, day, CC, phone_accel_stream_id, config):
 
     motionsense_threshold = config['sensor_unavailable_marker']['motionsense']
     phone_threshold = config['sensor_unavailable_marker']['phone']
-    label = config['labels']['motionsense_unavailable']
 
     if windowed_data:
         for key, data in windowed_data.items():
@@ -107,8 +106,3 @@ def process_windows(windowed_data, day, CC, phone_accel_stream_id, config):
                     else:
                         results[key] = config['labels']['motionsense_available']
         return results
-
-
-
-
-

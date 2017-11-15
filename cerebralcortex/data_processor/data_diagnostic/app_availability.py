@@ -86,7 +86,7 @@ def process_windows(windowed_data, stream_name, config):
 
 def app_availability(dp: list, stream_name: str, config: dict) -> str:
     """
-    label a window as sensor powerd-off or low battery
+
     :param dp:
     :param config:
     :return:

@@ -38,7 +38,7 @@ def attachment_marker(stream_id: uuid, stream_name: str, owner_id: uuid, dd_stre
     All the labeled data (st, et, label) with its metadata are then stored in a datastore
 
     """
-
+    # TODO: quality streams could be multiple so find the one computed with CC
     #using stream_id, data-diagnostic-stream-id, and owner id to generate a unique stream ID for battery-marker
     attachment_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+dd_stream_name+owner_id))
 

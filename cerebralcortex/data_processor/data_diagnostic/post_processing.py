@@ -77,6 +77,12 @@ def process_data(dd_stream_name: str, input_streams: dict, algo_type: str, confi
         result = sensor_unavailable(dd_stream_name, input_streams, config)
     elif algo_type == config["algo_type"]["packet_loss_marker"]:
         result = packet_loss(dd_stream_name, input_streams, config)
+    elif algo_type == config["algo_type"]["app_availability_marker"]:
+        result = app_unavailable(dd_stream_name, input_streams, config)
+    elif algo_type == config["algo_type"]["sensor_failure"]:
+        result = sensor_failure(dd_stream_name, input_streams, config)
+    elif algo_type == config["algo_type"]["phone_screen_touch"]:
+        result = phone_screen_touch(dd_stream_name, input_streams, config)
     return result
 
 
@@ -171,6 +177,69 @@ def sensor_unavailable(dd_stream_name: str, input_streams: dict, config: dict) -
 
     algo_description = config["description"]["sensor_unavailable_marker"]
     method = 'cerebralcortex.data_processor.data_diagnostic.sensor_unavailable_marker'
+    ec = get_execution_context(dd_stream_name, input_param, input_streams, method,
+                               algo_description, config)
+    anno = get_annotations()
+    return {"ec": ec, "dd": data_descriptor, "anno": anno}
+
+def app_unavailable(dd_stream_name: str, input_streams: dict, config: dict) -> dict:
+    """
+
+    :param dd_stream_name:
+    :param input_streams:
+    :param config:
+    :return:
+    """
+    input_param = {"window_size": config["general"]["window_size"],
+                       "app_availability_marker_battery_threshold": "1"}
+    data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "mobile phone availability: "+ str(config["labels"]["app_unavailable"])+", "+ str(config["labels"]["app_available"])}
+
+    algo_description = config["description"]["app_availability_marker"]
+    method = 'cerebralcortex.data_processor.data_diagnostic.app_availability.py'
+    ec = get_execution_context(dd_stream_name, input_param, input_streams, method,
+                               algo_description, config)
+    anno = get_annotations()
+    return {"ec": ec, "dd": data_descriptor, "anno": anno}
+
+def phone_screen_touch(dd_stream_name: str, input_streams: dict, config: dict) -> dict:
+    """
+
+    :param dd_stream_name:
+    :param input_streams:
+    :param config:
+    :return:
+    """
+    input_param = {"window_size": config["general"]["window_size"]}
+    data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Participant's active and inactive periods on phone: labels: touch, no-touch"}
+
+    algo_description = config["description"]["phone_screen_touch"]
+    method = 'cerebralcortex.data_processor.data_diagnostic.util.phone_screen_touch.py'
+    ec = get_execution_context(dd_stream_name, input_param, input_streams, method,
+                               algo_description, config)
+    anno = get_annotations()
+    return {"ec": ec, "dd": data_descriptor, "anno": anno}
+
+def sensor_failure(dd_stream_name: str, input_streams: dict, config: dict) -> dict:
+    """
+
+    :param dd_stream_name:
+    :param input_streams:
+    :param config:
+    :return:
+    """
+    input_param = {"window_size": "21600"}
+    if dd_stream_name==config["stream_names"]["motionsense_hrv_right_sensor_failure_marker"] or dd_stream_name==config["stream_names"]["motionsense_hrv_left_sensor_failure_marker"]:
+        label = config["labels"]["motionsense_failure"]
+    elif dd_stream_name==dd_stream_name==config["stream_names"]["phone_sensor_failure_marker"]:
+        label = config["labels"]["phone_sensor_failure"]
+    elif dd_stream_name==dd_stream_name==config["stream_names"]["autosense_sensor_failure_marker"]:
+        label = config["labels"]["autosense_sensor_failure"]
+    else:
+        raise ValueError("Incorrect sensor type")
+
+    data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "sensor failure detection: "+ str(label)}
+    algo_description = config["description"]["sensor_failure"]
+    method = 'cerebralcortex.data_processor.data_diagnostic.sensor_failure'
     ec = get_execution_context(dd_stream_name, input_param, input_streams, method,
                                algo_description, config)
     anno = get_annotations()
