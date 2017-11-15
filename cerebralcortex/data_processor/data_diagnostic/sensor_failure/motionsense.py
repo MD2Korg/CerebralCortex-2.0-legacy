@@ -89,7 +89,11 @@ def process_windows(windowed_data, config):
     for key, data in windowed_data.items():
         dp = []
         for k in data:
-            dp.append(float(k.sample[0]))
+            try:
+                sample = float(k.sample[0])
+            except:
+                pass
+            dp.append(sample)
         signal_var = np.var(dp)
         if signal_var < config["sensor_failure"]["threshold"]:
             total_failures +=1
