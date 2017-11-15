@@ -61,7 +61,7 @@ def mobile_app_availability_marker(stream_id: uuid, stream_name:str, owner_id, d
             stream = CC.get_datastream(stream_id, data_type=DataSet.COMPLETE, day=day, start_time=start_time, end_time=end_time)
             if len(stream.data)>0:
                 windowed_data = window(stream.data, config['general']['window_size'], True)
-                results = process_windows(windowed_data, stream_name, config)
+                results = process_windows(windowed_data, config)
 
                 merged_windows = merge_consective_windows(results)
                 if len(merged_windows)>0:
@@ -73,7 +73,7 @@ def mobile_app_availability_marker(stream_id: uuid, stream_name:str, owner_id, d
         print(e)
 
 
-def process_windows(windowed_data, stream_name, config):
+def process_windows(windowed_data, config):
     results = OrderedDict()
     for key, data in windowed_data.items():
         dp = []
@@ -83,21 +83,24 @@ def process_windows(windowed_data, stream_name, config):
                 dp.append(sample)
             except:
                 pass
-        results[key] = app_availability(dp, stream_name, config)
+        results[key] = app_availability(dp, config)
     return results
 
 
-def app_availability(dp: list, stream_name: str, config: dict) -> str:
+def app_availability(dp: list, config: dict) -> str:
     """
 
     :param dp:
     :param config:
     :return:
     """
-    if not dp:
+    if len(dp)<1:
         dp_sample_avg = 0
     else:
-        dp_sample_avg = np.median(dp)
+        try:
+            dp_sample_avg = np.median(dp)
+        except:
+            dp_sample_avg=0
 
     if dp_sample_avg < 1:
         return config['labels']['app_unavailable']
