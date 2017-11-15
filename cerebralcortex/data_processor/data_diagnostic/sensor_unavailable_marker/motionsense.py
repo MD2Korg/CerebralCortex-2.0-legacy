@@ -86,6 +86,7 @@ def process_windows(windowed_data, day, CC, phone_accel_stream_id, config):
 
             if dps:
                 prev_data = dps
+                results[key] = config['labels']['motionsense_available']
             else:
 
                 # compute magnitude of the window
@@ -98,11 +99,7 @@ def process_windows(windowed_data, day, CC, phone_accel_stream_id, config):
                     #check if motionsense accel or phone accel magnitude variance is below than the threshold
                     if np.var(magnitude_vals) > motionsense_threshold or np.var(phone_magnitude_vas)> phone_threshold:
                         results[key] = config['labels']['motionsense_unavailable']
-                    else:
-                        results[key] = config['labels']['motionsense_available']
                 else:
                     if np.var(magnitude_vals) > motionsense_threshold:
                         results[key] = config['labels']['motionsense_unavailable']
-                    else:
-                        results[key] = config['labels']['motionsense_available']
         return results

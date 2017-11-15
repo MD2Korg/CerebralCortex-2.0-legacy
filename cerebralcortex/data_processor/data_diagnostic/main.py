@@ -26,11 +26,11 @@ import os
 
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.configuration import Configuration
+from cerebralcortex.data_processor.data_diagnostic.analysis.phone_screen_touch import phone_screen_touch_marker
 from cerebralcortex.data_processor.data_diagnostic.app_availability import mobile_app_availability_marker
 from cerebralcortex.data_processor.data_diagnostic.attachment_marker.motionsense import \
     attachment_marker as ms_attachment_marker
 from cerebralcortex.data_processor.data_diagnostic.battery_data_marker import battery_marker
-from cerebralcortex.data_processor.data_diagnostic.util.phone_screen_touch import phone_screen_touch_marker
 from cerebralcortex.data_processor.data_diagnostic.packet_loss_marker import packet_loss_marker
 from cerebralcortex.data_processor.data_diagnostic.sensor_failure.motionsense import sensor_failure_marker
 from cerebralcortex.data_processor.data_diagnostic.sensor_unavailable_marker.motionsense import \
