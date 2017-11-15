@@ -29,9 +29,12 @@ from cerebralcortex.configuration import Configuration
 from cerebralcortex.data_processor.data_diagnostic.attachment_marker.motionsense import \
     attachment_marker as ms_attachment_marker
 from cerebralcortex.data_processor.data_diagnostic.battery_data_marker import battery_marker
+from cerebralcortex.data_processor.data_diagnostic.app_unavailable import mobile_app_availability_marker
 from cerebralcortex.data_processor.data_diagnostic.packet_loss_marker import packet_loss_marker
 from cerebralcortex.data_processor.data_diagnostic.sensor_unavailable_marker.motionsense import \
     wireless_disconnection as ms_wd
+
+
 
 #create and load CerebralCortex object and configs
 configuration_file = os.path.join(os.path.dirname(__file__), '../../../cerebralcortex.yml')
@@ -74,6 +77,12 @@ def diagnose_queue(participant_id, CC, config):
             battery_marker(streams[config["stream_names"]["phone_battery"]]["identifier"],
                            streams[config["stream_names"]["phone_battery"]]["name"], participant_id,
                            config["stream_names"]["phone_battery_marker"], CC, config)
+
+            # mobile phone availability marker
+            mobile_app_availability_marker(streams[config["stream_names"]["phone_battery"]]["identifier"],
+                           streams[config["stream_names"]["phone_battery"]]["name"], participant_id,
+                           config["stream_names"]["app_availability_marker"], CC, config)
+
         # autosense battery
         if config["stream_names"]["autosense_battery"] in streams:
             battery_marker(streams[config["stream_names"]["autosense_battery"]]["identifier"],

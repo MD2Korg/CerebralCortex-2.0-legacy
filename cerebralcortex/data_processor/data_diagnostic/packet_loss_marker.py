@@ -86,7 +86,7 @@ def packet_loss_marker(stream_id: uuid, stream_name: str, owner_id: uuid, dd_str
 
             input_streams = [{"owner_id":owner_id, "id": str(stream_id), "name": stream_name}]
             output_stream = {"id":packetloss_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["packet_loss_marker"]}
-            result = store(merged_windows, input_streams, output_stream, CC, config)
+            store(merged_windows, input_streams, output_stream, CC, config)
 
 
 
@@ -98,6 +98,6 @@ def process_windows(windowed_data, sampling_rate, threshold_val, label, CC, conf
     if windowed_data:
         for key, data in windowed_data.items():
             available_packets = len(data)
-            if (available_packets / expected_packets) < threshold_val:
+            if (available_packets / expected_packets) < threshold_val and (available_packets / expected_packets) > 0.1:
                 results[key] = label
         return results

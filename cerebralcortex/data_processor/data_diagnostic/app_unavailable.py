@@ -33,10 +33,10 @@ from cerebralcortex.data_processor.data_diagnostic.util import merge_consective_
 from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 
-def battery_marker(stream_id: uuid, stream_name:str, owner_id, dd_stream_name, CC: CerebralCortex, config: dict, start_time=None, end_time=None):
+def mobile_app_availability_marker(stream_id: uuid, stream_name:str, owner_id, dd_stream_name, CC: CerebralCortex, config: dict, start_time=None, end_time=None):
     """
-    This algorithm uses battery percentages to decide whether phone was powered-off or battery was low.
-    All the labeled data (st, et, label) with its metadata are then stored in a datastore.
+    This algorithm uses phone battery percentages to decide whether mobile app was available or unavailable.
+    Theoretically, phone battery data shall be collected 24/7.
     :param stream_id:
     :param CC:
     :param config:
@@ -44,9 +44,9 @@ def battery_marker(stream_id: uuid, stream_name:str, owner_id, dd_stream_name, C
 
     try:
         #using stream_id, data-diagnostic-stream-id, and owner id to generate a unique stream ID for battery-marker
-        battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+dd_stream_name+owner_id))
+        app_availability_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+dd_stream_name+owner_id+"mobile app availability marker"))
 
-        stream_end_days = CC.get_stream_start_end_time(battery_marker_stream_id)["end_time"]
+        stream_end_days = CC.get_stream_start_end_time(app_availability_marker_stream_id)["end_time"]
 
         if not stream_end_days:
             stream_end_days = []
@@ -65,11 +65,9 @@ def battery_marker(stream_id: uuid, stream_name:str, owner_id, dd_stream_name, C
 
                 merged_windows = merge_consective_windows(results)
 
-                labelled_windows =  mark_windows(battery_marker_stream_id, merged_windows, CC, config)
-
                 input_streams = [{"owner_id":owner_id, "id": str(stream_id), "name": stream_name}]
-                output_stream = {"id":battery_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["battery_marker"]}
-                store(labelled_windows, input_streams, output_stream, CC, config)
+                output_stream = {"id":app_availability_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["app_availability_marker"]}
+                store(merged_windows, input_streams, output_stream, CC, config)
 
     except Exception as e:
         print(e)
@@ -82,10 +80,11 @@ def process_windows(windowed_data, stream_name, config):
         for k in data:
             dp.append(float(k.sample))
 
-        results[key] = battery(dp, stream_name, config)
+        results[key] = app_availability(dp, stream_name, config)
     return results
 
-def battery(dp: list, stream_name: str, config: dict) -> str:
+
+def app_availability(dp: list, stream_name: str, config: dict) -> str:
     """
     label a window as sensor powerd-off or low battery
     :param dp:
@@ -97,47 +96,7 @@ def battery(dp: list, stream_name: str, config: dict) -> str:
     else:
         dp_sample_avg = np.median(dp)
 
-    if stream_name== config["stream_names"]["phone_battery"]:
-        sensor_battery_down = config['battery_marker']['phone_battery_down']
-        sensor_battery_off = config['battery_marker']['phone_powered_off']
-    elif stream_name== config["stream_names"]["autosense_battery"]:
-        sensor_battery_down = config['battery_marker']['autosense_battery_down']
-        sensor_battery_off = config['battery_marker']['autosense_powered_off']
-        # Values (Min=0 and Max=6) in battery voltage.
-        dp_sample_avg = (dp_sample_avg / 4096) * 3 * 2
-    elif stream_name == config["stream_names"]["motionsense_hrv_battery_right"] or stream_name == config["stream_names"]["motionsense_hrv_battery_left"]:
-        sensor_battery_down = config['battery_marker']['motionsense_battery_down']
-        sensor_battery_off = config['battery_marker']['motionsense_powered_off']
-    else:
-        raise ValueError("Unknow sensor-battery type")
-
     if dp_sample_avg < 1:
-        return "no-data"
-    elif dp_sample_avg < sensor_battery_down and dp_sample_avg > 1:
-        return "low"
-    elif dp_sample_avg > sensor_battery_off:
-        return "charged"
-
-
-def mark_windows(battery_marker_stream_id:uuid, merged_windows: list, CC, config: dict) -> str:
-    """
-    label a window as sensor powerd-off or low battery
-    :param dp:
-    :param config:
-    :return:
-    """
-    prev_wind = None
-    labelled_windows = []
-    for merged_window in merged_windows:
-        if merged_window.sample == "no-data":
-            if prev_wind and prev_wind.sample == "charged":
-                merged_window.sample = config['labels']['powered_off']
-            elif prev_wind and prev_wind.sample == "low":
-                merged_window.sample = config['labels']['battery_down']
-            else:
-                rows = CC.get_stream_samples(battery_marker_stream_id)
-                merged_window.sample = rows[len(rows)-1]
-            labelled_windows.append(merged_window)
-        else:
-            prev_wind = merged_window
-    return labelled_windows
+        return config['labels']['app_unavailable']
+    else:
+        return config['labels']['app_available']

@@ -47,7 +47,13 @@ sensor_unavailable_marker:
 labels:
   # sensor unavailable
   autosense_unavailable: [{"label":"AUTOSENSE-UNAVAILABLE"}]
+  autosense_available: [{"label":"AUTOSENSE-AVAILABLE"}]
   motionsense_unavailable: [{"label":"MOTIONSENSE-UNAVAILABLE"}]
+  motionsense_available: [{"label":"MOTIONSENSE-AVAILABLE"}]
+  # mobile app unavailable
+  app_unavailable: [{"label":"MOBILE-APP-UNAVAILABLE"}]
+  app_available: [{"label":"MOBILE-APP-AVAILABLE"}]
+
   # attachment labels
   ecg_improper_attachment: [{"label":"ECG-IMPROPER-ATTACHMENT"}]
   ecg_off_body: [{"label":"ECG-OFF-BODY"}]
@@ -108,6 +114,9 @@ stream_names:
   motionsense_hrv_left_wireless_marker: "DATA-DIAGNOSTIC--MOTION_SENSE_HRV--LEFT_WRIST--WIRELESS-DISCONNECTION"
   autosense_wireless_marker: "DATA-DIAGNOSTIC--AUTOSENSE--WIRELESS-DISCONNECTION"
 
+  # mobile app availability marker
+  app_availability_marker: "DATA-DIAGNOSTIC--MOBILE-PHONE-APP-AVAILABILITY"
+
   #packet loss markers
   autosense_rip_packetloss_marker: "DATA-DIAGNOSTIC--RIP--PACKET-LOSS"
   autosense_ecg_packetloss_marker: "DATA-DIAGNOSTIC--ECG--PACKET-LOSS"
@@ -127,6 +136,7 @@ stream_names:
 algo_type:
   battery_marker: battery
   attachment_marker: attachment
+  app_availability_marker: app_availability_marker
   sensor_unavailable_marker: sensor_unavailable
   packet_loss_marker: packet_loss
 
