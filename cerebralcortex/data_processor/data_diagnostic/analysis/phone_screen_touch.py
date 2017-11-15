@@ -78,7 +78,12 @@ def process_windows(windowed_data, stream_name, config):
     for key, data in windowed_data.items():
         dp = []
         for k in data:
-            dp.append(float(k.sample))
+            try:
+                sample = float(k.sample)
+            except:
+                pass
+            dp.append(sample)
+
 
         if len(dp)>0:
             results[key] = "touch"
