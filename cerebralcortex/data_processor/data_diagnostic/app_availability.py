@@ -81,9 +81,9 @@ def process_windows(windowed_data, stream_name, config):
             try:
                 sample = float(k.sample)
                 dp.append(sample)
-                results[key] = app_availability(dp, stream_name, config)
             except:
                 pass
+        results[key] = app_availability(dp, stream_name, config)
     return results
 
 

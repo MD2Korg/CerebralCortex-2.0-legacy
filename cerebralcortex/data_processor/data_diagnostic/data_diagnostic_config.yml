@@ -20,7 +20,7 @@ battery_marker:
   motionsense_battery_down: 10 #min= and max=
 
 sensor_failure:
-  threshold: 0.00003
+  threshold: 0.000003
 
 attachment_marker:
   ecg_on_body: 1000

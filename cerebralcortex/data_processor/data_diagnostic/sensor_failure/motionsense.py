@@ -65,14 +65,14 @@ def sensor_failure_marker(accel_stream_id: uuid, gyro_stream_id, owner_id: uuid,
         result = []
         if len(accel_stream.data)>0 and len(gyro_stream.data)>0:
             # 6 hours window 21600
-            windowed_data_accel = window(accel_stream.data, 21600, True)
+            windowed_data_accel = window(accel_stream.data, 3600, True)
             results_accel = process_windows(windowed_data_accel, config)
 
-            windowed_data_gyro = window(gyro_stream.data, 21600, True)
+            windowed_data_gyro = window(gyro_stream.data, 3600, True)
             results_gyro = process_windows(windowed_data_gyro, config)
 
             # if sensor failure period is more than 12 hours then mark it as a sensor failure
-            if (results_accel>1 and results_gyro<1) or (results_accel<1 and results_gyro>1):
+            if (results_accel>12 and results_gyro<2) or (results_accel<2 and results_gyro>12):
                 start_time = accel_stream.data[0].start_time
                 end_time = accel_stream.data[len(accel_stream.data)-1].start_time
                 sample = config["labels"]["motionsense_failure"]
@@ -92,10 +92,11 @@ def process_windows(windowed_data, config):
             try:
                 sample = float(k.sample[0])
                 dp.append(sample)
-                signal_var = np.var(dp)
-                if signal_var < config["sensor_failure"]["threshold"]:
-                    total_failures +=1
             except:
                 pass
+
+        signal_var = np.var(dp)
+        if signal_var < config["sensor_failure"]["threshold"]:
+            total_failures +=1
 
     return total_failures

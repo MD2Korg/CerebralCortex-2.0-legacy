@@ -80,9 +80,10 @@ def process_windows(windowed_data):
         for k in data:
             try:
                 sample = float(k.sample)
+                dp.append(sample)
             except:
                 pass
-            dp.append(sample)
+
 
 
         if len(dp)>0:
