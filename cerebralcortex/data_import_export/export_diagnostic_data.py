@@ -90,13 +90,12 @@ def write_to_bz2(directory, file_name, data):
     file_name = file_name.replace("IMPROPER-ATTACHMENT", "ATTACHMENT-MARKER")
     with open(directory+file_name, 'a+') as fp:
         for d in data:
-            if "label" in d[2]:
-                fp.write(str(d[0])+","+str(d[1])+","+str(d[2])+"\n")
+            fp.write(str(d[0])+","+str(d[1])+","+str(d[2])+"\n")
 
 
 if __name__ == '__main__':
     # run with one participant
-    # DiagnoseData().one_participant_data(["cd7c2cd6-d0a3-4680-9ba2-0c59d0d0c684"])
+    #one_participant_data(["cd7c2cd6-d0a3-4680-9ba2-0c59d0d0c684"])
 
     # run for all the participants in a study
     all_participants_data("mperf")
