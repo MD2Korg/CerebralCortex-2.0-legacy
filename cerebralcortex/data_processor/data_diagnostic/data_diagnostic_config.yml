@@ -51,7 +51,7 @@ stream_names:
   phone_battery: "BATTERY--org.md2k.phonesensor--PHONE"
   phone_accel: "ACCELEROMETER--org.md2k.phonesensor--PHONE"
   phone_gyro: "GYROSCOPE--org.md2k.phonesensor--PHONE"
-
+  phone_physical_activity: "ACTIVITY_TYPE--org.md2k.phonesensor--PHONE"
   motionsense_hrv_battery_right: "BATTERY--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"
   motionsense_hrv_battery_left: "BATTERY--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST"
   motionsense_hrv_accel_right: "ACCELEROMETER--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST"

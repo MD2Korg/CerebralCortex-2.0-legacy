@@ -26,54 +26,50 @@ import uuid
 from collections import OrderedDict
 from cerebralcortex.data_processor.signalprocessing.window import window
 import numpy as np
-from datetime import timedelta
+from cerebralcortex.data_processor.data_diagnostic.util import get_stream_days
 from cerebralcortex.data_processor.data_diagnostic.util import magnitude_datapoints, magnitude_list
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.data_processor.data_diagnostic.post_processing import store
 from cerebralcortex.data_processor.data_diagnostic.util import merge_consective_windows
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
-from cerebralcortex.data_processor.data_diagnostic.sensor_unavailable_marker import filter_battery_off_windows
+from typing import List
 
 
-def wireless_disconnection(stream_id: uuid, stream_name: str, owner_id: uuid, dd_stream_name, phone_accel_stream_id, CC: CerebralCortex, config: dict):
+def wireless_disconnection(raw_stream_id: uuid, stream_name: str, owner_id: uuid, dd_stream_name,
+                           phone_physical_activity, CC: CerebralCortex, config: dict):
     """
-
-    :param stream_id:
+    Mark missing data as wireless disconnection if a participate walks away from phone or sensor
+    :param raw_stream_id:
+    :param stream_name:
+    :param owner_id:
+    :param dd_stream_name:
+    :param phone_physical_activity:
     :param CC:
     :param config:
     """
 
-    #using stream_id, data-diagnostic-stream-id, and owner id to generate a unique stream ID for battery-marker
-    wireless_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+dd_stream_name+owner_id))
+    # using stream_id, data-diagnostic-stream-id, and owner id to generate a unique stream ID for battery-marker
+    wireless_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(raw_stream_id + dd_stream_name + owner_id))
 
-    stream_end_days = CC.get_stream_start_end_time(wireless_marker_stream_id)["end_time"]
+    stream_days = get_stream_days(raw_stream_id, wireless_marker_stream_id, CC)
 
-    if not stream_end_days:
-        stream_end_days = []
-        stream_days = CC.get_stream_start_end_time(stream_id)
-        days = stream_days["end_time"]-stream_days["start_time"]
-        for day in range(days.days+1):
-            stream_end_days.append((stream_days["start_time"]+timedelta(days=day)).strftime('%Y%m%d'))
-    else:
-        stream_end_days = [(stream_end_days+timedelta(days=1)).strftime('%Y%m%d')]
+    for day in stream_days:
+        # load stream data to be diagnosed
+        raw_stream = CC.get_datastream(raw_stream_id, day, data_type=DataSet.COMPLETE)
+        if len(raw_stream.data) > 0:
 
-    for day in stream_end_days:
-        #load stream data to be diagnosed
-        stream = CC.get_datastream(stream_id, day, data_type=DataSet.COMPLETE)
-        if len(stream.data)>0:
-
-            windowed_data = window(stream.data, config['general']['window_size'], True)
-            results = process_windows(windowed_data, day, CC, phone_accel_stream_id, config)
+            windowed_data = window(raw_stream.data, config['general']['window_size'], True)
+            results = process_windows(windowed_data, day, CC, phone_physical_activity, config)
             merged_windows = merge_consective_windows(results)
 
-            if len(merged_windows)>0:
-                input_streams = [{"owner_id":owner_id, "id": str(stream_id), "name": stream_name}]
-                output_stream = {"id":wireless_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["sensor_unavailable_marker"]}
+            if len(merged_windows) > 0:
+                input_streams = [{"owner_id": owner_id, "id": str(raw_stream_id), "name": stream_name}]
+                output_stream = {"id": wireless_marker_stream_id, "name": dd_stream_name,
+                                 "algo_type": config["algo_type"]["sensor_unavailable_marker"]}
                 store(merged_windows, input_streams, output_stream, CC, config)
 
 
-def process_windows(windowed_data, day, CC, phone_accel_stream_id, config):
-
+def process_windows(windowed_data, day, CC, phone_physical_activity, config):
     results = OrderedDict()
 
     motionsense_threshold = config['sensor_unavailable_marker']['motionsense']
@@ -92,15 +88,31 @@ def process_windows(windowed_data, day, CC, phone_accel_stream_id, config):
 
                 # compute magnitude of the window
                 magnitude_vals = magnitude_datapoints(prev_data)
-                #get phone accel stream data
-                if phone_accel_stream_id:
-                    phone_accel_stream = CC.get_stream_samples(phone_accel_stream_id, day=day, start_time=key[0], end_time=key[1])
-                    #compute phone accel data magnitude
-                    phone_magnitude_vas = magnitude_list(phone_accel_stream)
-                    #check if motionsense accel or phone accel magnitude variance is below than the threshold
-                    if np.var(magnitude_vals) > motionsense_threshold or np.var(phone_magnitude_vas)> phone_threshold:
+                # get phone accel stream data
+                if phone_physical_activity:
+                    phone_physical_activity_data = CC.get_stream_samples(phone_physical_activity, day=day,
+                                                                           start_time=key[0], end_time=key[1])
+                    # compute phone accel data magnitude
+                    if np.var(magnitude_vals) > motionsense_threshold or get_total_walking_episodes(phone_physical_activity_data)>20: #if 20 seconds contain as physical activity
                         results[key] = config['labels']['motionsense_unavailable']
                 else:
                     if np.var(magnitude_vals) > motionsense_threshold:
                         results[key] = config['labels']['motionsense_unavailable']
         return results
+
+
+def get_total_walking_episodes(phone_physical_activity: List) -> int:
+    """
+
+    :param phone_physical_activity:
+    :return:
+    """
+    total = 0
+    for walking in phone_physical_activity:
+        try:
+            walking = int(walking)
+        except Exception as e:
+            print(e)
+        if walking and (walking == 3 or walking == 4):  # 3: walking, 4:running
+            total += 1
+    return total

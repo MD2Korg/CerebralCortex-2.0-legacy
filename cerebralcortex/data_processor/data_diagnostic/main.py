@@ -123,27 +123,29 @@ def diagnose_pipeline(participant_id: uuid, CC: CerebralCortex, config: dict):
                                       "right",participant_id,
                                       config["stream_names"]["motionsense_hrv_right_sensor_failure_marker"], CC, config)
 
-            if config["stream_names"]["phone_accel"] in streams:
-                phone_accel_stream_id = streams[config["stream_names"]["phone_accel"]]["identifier"]
+            if config["stream_names"]["phone_physical_activity"] in streams:
+                phone_physical_activity = streams[config["stream_names"]["phone_physical_activity"]]["identifier"]
             else:
-                phone_accel_stream_id = None
+                phone_physical_activity = None
             ms_wd(streams[config["stream_names"]["motionsense_hrv_accel_right"]]["identifier"],
                   streams[config["stream_names"]["motionsense_hrv_accel_right"]]["name"], participant_id,
-                  config["stream_names"]["motionsense_hrv_right_wireless_marker"], phone_accel_stream_id, CC, config)
+                  config["stream_names"]["motionsense_hrv_right_wireless_marker"], phone_physical_activity, CC, config)
 
         if config["stream_names"]["motionsense_hrv_accel_left"] in streams:
             if config["stream_names"]["motionsense_hrv_gyro_left"]:
-                sensor_failure_marker(streams[config["stream_names"]["motionsense_hrv_accel_left"]]["identifier"],
+                sensor_failure_marker(streams[config["stream_names"]["motionsense_hrv_left_attachment_marker"]]["identifier"],
+                                      streams[config["stream_names"]["motionsense_hrv_accel_left"]]["identifier"],
                                       streams[config["stream_names"]["motionsense_hrv_gyro_left"]]["identifier"],
-                                      participant_id,
+                                      "left",participant_id,
                                       config["stream_names"]["motionsense_hrv_left_sensor_failure_marker"], CC, config)
+
             if config["stream_names"]["phone_accel"] in streams:
-                phone_accel_stream_id = streams[config["stream_names"]["phone_accel"]]["identifier"]
+                phone_physical_activity = streams[config["stream_names"]["phone_accel"]]["identifier"]
             else:
-                phone_accel_stream_id = None
+                phone_physical_activity = None
             ms_wd(streams[config["stream_names"]["motionsense_hrv_accel_left"]]["identifier"],
                   streams[config["stream_names"]["motionsense_hrv_accel_left"]]["name"], participant_id,
-                  config["stream_names"]["motionsense_hrv_left_wireless_marker"], phone_accel_stream_id, CC, config)
+                  config["stream_names"]["motionsense_hrv_left_wireless_marker"], phone_physical_activity, CC, config)
 
         ### Attachment marker
         if config["stream_names"]["motionsense_hrv_led_quality_right"] in streams:

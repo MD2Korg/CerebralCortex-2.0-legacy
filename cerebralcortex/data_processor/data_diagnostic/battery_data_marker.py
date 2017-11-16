@@ -127,7 +127,7 @@ def battery(dp: List, stream_name: str, config: dict) -> str:
         return "charged"
 
 
-def mark_windows(battery_marker_stream_id:uuid, merged_windows: list, CC, config: dict) -> str:
+def mark_windows(battery_marker_stream_id:uuid, merged_windows: List, CC, config: dict) -> str:
     """
     label a window as sensor powerd-off or low battery
     :param dp:
