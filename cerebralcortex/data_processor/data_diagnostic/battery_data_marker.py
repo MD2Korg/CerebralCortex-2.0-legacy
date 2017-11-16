@@ -26,6 +26,7 @@ import uuid
 from collections import OrderedDict
 
 import numpy as np
+from typing import List
 from cerebralcortex.data_processor.data_diagnostic.util import get_stream_days
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.data_processor.data_diagnostic.post_processing import store
@@ -51,35 +52,45 @@ def battery_marker(raw_stream_id: uuid, stream_name:str, owner_id, dd_stream_nam
         for day in stream_days:
             stream = CC.get_datastream(raw_stream_id, data_type=DataSet.COMPLETE, day=day)
 
-            input_streams = [{"owner_id":owner_id, "id": str(raw_stream_id), "name": stream_name}]
-            output_stream = {"id":battery_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["battery_marker"]}
-
             if len(stream.data)>0:
                 windowed_data = window(stream.data, config['general']['window_size'], True)
                 results = process_windows(windowed_data, stream_name, config)
 
                 merged_windows = merge_consective_windows(results)
                 if len(merged_windows)>0:
+                    input_streams = [{"owner_id":owner_id, "id": str(raw_stream_id), "name": stream_name}]
+                    output_stream = {"id":battery_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["battery_marker"]}
                     labelled_windows = mark_windows(battery_marker_stream_id, merged_windows, CC, config)
                     store(labelled_windows, input_streams, output_stream, CC, config)
     except Exception as e:
         print(e)
 
 
-def process_windows(windowed_data, stream_name, config):
+def process_windows(windowed_data: OrderedDict, stream_name: str, config: dict) -> OrderedDict:
+    """
+    :param windowed_data:
+    :param stream_name:
+    :param config:
+    :return:
+    """
     results = OrderedDict()
     try:
         for key, data in windowed_data.items():
             dp = []
             for k in data:
-                dp.append(float(k.sample[0]))
+                try:
+                    sample = float(k.sample[0])
+                    dp.append(sample)
+                except Exception as e:
+                    print(e)
 
             results[key] = battery(dp, stream_name, config)
     except Exception as e:
         print(e)
     return results
 
-def battery(dp: list, stream_name: str, config: dict) -> str:
+
+def battery(dp: List, stream_name: str, config: dict) -> str:
     """
     label a window as sensor powerd-off or low battery
     :param dp:
