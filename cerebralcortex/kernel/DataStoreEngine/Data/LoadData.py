@@ -47,25 +47,23 @@ class LoadData:
         :param data_type: this parameter accepts only three types (i.e., all, data, metadata)
         :return: spark dataframe
         """
-        start_time = str(start_time)
-        end_time = str(end_time)
 
         where_clause = "identifier=" + str(stream_id) + " and day='"+str(day)+"'"
 
-        if stream_id == 'None':
+        if stream_id:
             raise Exception("Identifier cannot be null.")
 
-        if start_time != 'None':
+        if start_time:
             where_clause += " and start_time>=cast('" + start_time + "' as timestamp)"
 
-        if end_time != 'None':
+        if end_time:
             where_clause += " and start_time<=cast('" + end_time + "' as timestamp)"
 
         # query datastream(mysql) for metadata
         datastream_info = Metadata(self.CC_obj).get_stream_info(stream_id)
 
         if data_type == DataSet.COMPLETE:
-            dps = self.load_cassandra_data(stream_id, day)
+            dps = self.load_cassandra_data(stream_id, day, where_clause=where_clause)
             #rdd = self.CC_obj.sc.parallelize(dps)
             data = self.row_to_datapoints(dps)
             #data = rdd.map(self.row_to_datapoints)
@@ -77,10 +75,13 @@ class LoadData:
 
             stream = self.map_datapoint_and_metadata_to_datastream(stream_id, datastream_info, data)
         elif data_type == DataSet.ONLY_DATA:
-            df = self.load_data_from_cassandra(self.datapointTable, where_clause)
-            rdd = df.rdd
-            datapoints_rdd = rdd.map(self.map_dataframe_to_datapoint)
-            return datapoints_rdd
+            dps = self.load_cassandra_data(stream_id, day, where_clause=where_clause)
+            data = self.row_to_datapoints(dps)
+
+            # df = self.load_data_from_cassandra(self.datapointTable, where_clause)
+            # rdd = df.rdd
+            # datapoints_rdd = rdd.map(self.map_dataframe_to_datapoint)
+            return data
         elif data_type == DataSet.ONLY_METADATA:
             stream = self.map_datapoint_and_metadata_to_datastream(stream_id, datastream_info, None)
         else:
@@ -112,7 +113,7 @@ class LoadData:
                 dps.append(DataPoint(start_time, end_time, sample))
         return dps
 
-    def load_cassandra_data(self, stream_id: uuid, day:str):
+    def load_cassandra_data(self, stream_id: uuid, day:str, where_clause=None):
         """
 
         :param stream_id:
@@ -123,7 +124,7 @@ class LoadData:
 
         session = cluster.connect('cerebralcortex')
 
-        query = "SELECT start_time,end_time, sample FROM data where identifier="+str(stream_id)+" and day='"+str(day)+"'"  # users contains 100 rows
+        query = "SELECT start_time,end_time, sample FROM data "+where_clause  # users contains 100 rows
         statement = SimpleStatement(query)
         data = []
         for row in session.execute(statement):

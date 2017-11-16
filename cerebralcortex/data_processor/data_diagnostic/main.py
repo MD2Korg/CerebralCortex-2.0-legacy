@@ -117,10 +117,12 @@ def diagnose_pipeline(participant_id: uuid, CC: CerebralCortex, config: dict):
         ### Sensor unavailable - wireless disconnection
         if config["stream_names"]["motionsense_hrv_accel_right"] in streams:
             if config["stream_names"]["motionsense_hrv_gyro_right"]:
-                sensor_failure_marker(streams[config["stream_names"]["motionsense_hrv_accel_right"]]["identifier"],
+                sensor_failure_marker(streams[config["stream_names"]["motionsense_hrv_right_attachment_marker"]]["identifier"],
+                                      streams[config["stream_names"]["motionsense_hrv_accel_right"]]["identifier"],
                                       streams[config["stream_names"]["motionsense_hrv_gyro_right"]]["identifier"],
-                                      participant_id,
+                                      "right",participant_id,
                                       config["stream_names"]["motionsense_hrv_right_sensor_failure_marker"], CC, config)
+
             if config["stream_names"]["phone_accel"] in streams:
                 phone_accel_stream_id = streams[config["stream_names"]["phone_accel"]]["identifier"]
             else:

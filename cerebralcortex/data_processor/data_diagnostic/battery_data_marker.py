@@ -79,6 +79,7 @@ def process_windows(windowed_data: OrderedDict, stream_name: str, config: dict) 
             dp = []
             for k in data:
                 try:
+                    # TODO: it might not work with autosense/motionsense
                     sample = float(k.sample[0])
                     dp.append(sample)
                 except Exception as e:
