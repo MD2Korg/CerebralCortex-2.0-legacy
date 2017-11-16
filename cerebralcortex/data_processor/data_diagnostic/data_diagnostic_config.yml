@@ -46,43 +46,6 @@ sensor_unavailable_marker:
   motionsense: 0.022
   phone: 0.014
 
-labels:
-  # sensor failure
-  motionsense_failure: [{"label":"MOTIONSENSE-SENSOR-FAILURE"}]
-  phone_sensor_failure: [{"label":"PHONE-SENSOR-FAILURE"}]
-  autosense_sensor_failure: [{"label":"AUTOSENSE-SENSOR-FAILURE"}]
-
-  # sensor unavailable
-  autosense_unavailable: [{"label":"AUTOSENSE-UNAVAILABLE"}]
-  autosense_available: [{"label":"AUTOSENSE-AVAILABLE"}]
-  motionsense_unavailable: [{"label":"MOTIONSENSE-UNAVAILABLE"}]
-  motionsense_available: [{"label":"MOTIONSENSE-AVAILABLE"}]
-  # mobile app unavailable
-  app_unavailable: [{"label":"MOBILE-APP-UNAVAILABLE"}]
-  app_available: [{"label":"MOBILE-APP-AVAILABLE"}]
-
-  # attachment labels
-  ecg_improper_attachment: [{"label":"ECG-IMPROPER-ATTACHMENT"}]
-  ecg_off_body: [{"label":"ECG-OFF-BODY"}]
-  ecg_on_body: [{"label":"ECG-ON-BODY"}]
-  rip_improper_attachment: [{"label":"RIP-IMPROPER-ATTACHMENT"}]
-  rip_off_body: [{"label":"RIP-OFF-BODY"}]
-  rip_on_body: [{"label":"RIP-ON-BODY"}]
-  motionsense_improper_attachment: [{"label":"MOTIONSENSE-IMPROPER-ATTACHMENT"}]
-  motionsense_offbody: [{"label":"MOTIONSENSE-OFF-BODY"}]
-  motionsense_onbody: [{"label":"MOTIONSENSE-ON-BODY"}]
-
-  #packet loss labels
-  ecg_packet_loss: [{"label":"ECG-PACKET-LOSS"}]
-  rip_packet_loss: [{"label":"RIP-PACKET-LOSS"}]
-  motionsense_accel_packet_loss: [{"label":"MOTIONSENSE-ACCELEROMETER-PACKET-LOSS"}]
-  motionsense_gyro_packet_loss: [{"label":"MOTIONSENSE-GYRO-PACKET-LOSS"}]
-
-  #battery labels
-  powered_off: [{"label":"POWERED-OFF"}]
-  battery_down: [{"label":"BATTERY-DOWN"}]
-
-
 stream_names:
   #INPUTS
   phone_battery: "BATTERY--org.md2k.phonesensor--PHONE"
@@ -152,14 +115,49 @@ stream_names:
   # not part of core data-diagnostics
   phone_screen_touch_marker: "DATA-DIAGNOSTIC--TOUCH_SCREEN--PHONE"
 
+labels:
+  # sensor failure
+  motionsense_failure: [{"label":"MOTIONSENSE-SENSOR-FAILURE"}]
+  phone_sensor_failure: [{"label":"PHONE-SENSOR-FAILURE"}]
+  autosense_sensor_failure: [{"label":"AUTOSENSE-SENSOR-FAILURE"}]
+
+  # sensor unavailable
+  autosense_unavailable: [{"label":"AUTOSENSE-UNAVAILABLE"}]
+  autosense_available: [{"label":"AUTOSENSE-AVAILABLE"}]
+  motionsense_unavailable: [{"label":"MOTIONSENSE-UNAVAILABLE"}]
+  motionsense_available: [{"label":"MOTIONSENSE-AVAILABLE"}]
+  # mobile app unavailable
+  app_unavailable: [{"label":"MOBILE-APP-UNAVAILABLE"}]
+  app_available: [{"label":"MOBILE-APP-AVAILABLE"}]
+
+  # attachment labels
+  ecg_improper_attachment: [{"label":"ECG-IMPROPER-ATTACHMENT"}]
+  ecg_off_body: [{"label":"ECG-OFF-BODY"}]
+  ecg_on_body: [{"label":"ECG-ON-BODY"}]
+  rip_improper_attachment: [{"label":"RIP-IMPROPER-ATTACHMENT"}]
+  rip_off_body: [{"label":"RIP-OFF-BODY"}]
+  rip_on_body: [{"label":"RIP-ON-BODY"}]
+  motionsense_improper_attachment: [{"label":"MOTIONSENSE-IMPROPER-ATTACHMENT"}]
+  motionsense_offbody: [{"label":"MOTIONSENSE-OFF-BODY"}]
+  motionsense_onbody: [{"label":"MOTIONSENSE-ON-BODY"}]
+
+  #packet loss labels
+  ecg_packet_loss: [{"label":"ECG-PACKET-LOSS"}]
+  rip_packet_loss: [{"label":"RIP-PACKET-LOSS"}]
+  motionsense_accel_packet_loss: [{"label":"MOTIONSENSE-ACCELEROMETER-PACKET-LOSS"}]
+  motionsense_gyro_packet_loss: [{"label":"MOTIONSENSE-GYRO-PACKET-LOSS"}]
+
+  #battery labels
+  powered_off: [{"label":"POWERED-OFF"}]
+  battery_down: [{"label":"BATTERY-DOWN"}]
 
 
 algo_type:
   battery_marker: battery
   attachment_marker: attachment
-  app_availability_marker: app_availability_marker
   sensor_unavailable_marker: sensor_unavailable
   packet_loss_marker: packet_loss
+  app_availability_marker: app_availability_marker
   sensor_failure: sensor_failure
   phone_screen_touch: phone_screen_touch
 

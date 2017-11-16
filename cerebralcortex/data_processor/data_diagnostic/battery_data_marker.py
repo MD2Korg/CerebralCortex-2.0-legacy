@@ -26,40 +26,32 @@ import uuid
 from collections import OrderedDict
 
 import numpy as np
-from datetime import timedelta
+from cerebralcortex.data_processor.data_diagnostic.util import get_stream_days
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.data_processor.data_diagnostic.post_processing import store
 from cerebralcortex.data_processor.data_diagnostic.util import merge_consective_windows
 from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 
-def battery_marker(stream_id: uuid, stream_name:str, owner_id, dd_stream_name, CC: CerebralCortex, config: dict, start_time=None, end_time=None):
+def battery_marker(raw_stream_id: uuid, stream_name:str, owner_id, dd_stream_name, CC: CerebralCortex, config: dict, start_time=None, end_time=None):
     """
-    This algorithm uses battery percentages to decide whether phone was powered-off or battery was low.
+    This algorithm uses battery percentages to decide whether device was powered-off or battery was low.
     All the labeled data (st, et, label) with its metadata are then stored in a datastore.
-    :param stream_id:
+    :param raw_stream_id:
     :param CC:
     :param config:
     """
 
     try:
         #using stream_id, data-diagnostic-stream-id, and owner id to generate a unique stream ID for battery-marker
-        battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+dd_stream_name+owner_id))
+        battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(raw_stream_id + dd_stream_name + owner_id))
 
-        stream_end_days = CC.get_stream_start_end_time(battery_marker_stream_id)["end_time"]
+        stream_days = get_stream_days(raw_stream_id, battery_marker_stream_id, CC)
 
-        if not stream_end_days:
-            stream_end_days = []
-            stream_days = CC.get_stream_start_end_time(stream_id)
-            days = stream_days["end_time"]-stream_days["start_time"]
-            for day in range(days.days+1):
-                stream_end_days.append((stream_days["start_time"]+timedelta(days=day)).strftime('%Y%m%d'))
-        else:
-            stream_end_days = [(stream_end_days+timedelta(days=1)).strftime('%Y%m%d')]
+        for day in stream_days:
+            stream = CC.get_datastream(raw_stream_id, data_type=DataSet.COMPLETE, day=day)
 
-        for day in stream_end_days:
-            stream = CC.get_datastream(stream_id, data_type=DataSet.COMPLETE, day=day, start_time=start_time, end_time=end_time)
-            input_streams = [{"owner_id":owner_id, "id": str(stream_id), "name": stream_name}]
+            input_streams = [{"owner_id":owner_id, "id": str(raw_stream_id), "name": stream_name}]
             output_stream = {"id":battery_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["battery_marker"]}
 
             if len(stream.data)>0:
@@ -70,19 +62,21 @@ def battery_marker(stream_id: uuid, stream_name:str, owner_id, dd_stream_name, C
                 if len(merged_windows)>0:
                     labelled_windows = mark_windows(battery_marker_stream_id, merged_windows, CC, config)
                     store(labelled_windows, input_streams, output_stream, CC, config)
-
     except Exception as e:
         print(e)
 
 
 def process_windows(windowed_data, stream_name, config):
     results = OrderedDict()
-    for key, data in windowed_data.items():
-        dp = []
-        for k in data:
-            dp.append(float(k.sample))
+    try:
+        for key, data in windowed_data.items():
+            dp = []
+            for k in data:
+                dp.append(float(k.sample[0]))
 
-        results[key] = battery(dp, stream_name, config)
+            results[key] = battery(dp, stream_name, config)
+    except Exception as e:
+        print(e)
     return results
 
 def battery(dp: list, stream_name: str, config: dict) -> str:
@@ -97,20 +91,22 @@ def battery(dp: list, stream_name: str, config: dict) -> str:
     else:
         dp_sample_avg = np.median(dp)
 
-    if stream_name== config["stream_names"]["phone_battery"]:
-        sensor_battery_down = config['battery_marker']['phone_battery_down']
-        sensor_battery_off = config['battery_marker']['phone_powered_off']
-    elif stream_name== config["stream_names"]["autosense_battery"]:
-        sensor_battery_down = config['battery_marker']['autosense_battery_down']
-        sensor_battery_off = config['battery_marker']['autosense_powered_off']
-        # Values (Min=0 and Max=6) in battery voltage.
-        dp_sample_avg = (dp_sample_avg / 4096) * 3 * 2
-    elif stream_name == config["stream_names"]["motionsense_hrv_battery_right"] or stream_name == config["stream_names"]["motionsense_hrv_battery_left"]:
-        sensor_battery_down = config['battery_marker']['motionsense_battery_down']
-        sensor_battery_off = config['battery_marker']['motionsense_powered_off']
-    else:
-        raise ValueError("Unknow sensor-battery type")
-
+    try:
+        if stream_name== config["stream_names"]["phone_battery"]:
+            sensor_battery_down = config['battery_marker']['phone_battery_down']
+            sensor_battery_off = config['battery_marker']['phone_powered_off']
+        elif stream_name== config["stream_names"]["autosense_battery"]:
+            sensor_battery_down = config['battery_marker']['autosense_battery_down']
+            sensor_battery_off = config['battery_marker']['autosense_powered_off']
+            # Values (Min=0 and Max=6) in battery voltage.
+            dp_sample_avg = (dp_sample_avg / 4096) * 3 * 2
+        elif stream_name == config["stream_names"]["motionsense_hrv_battery_right"] or stream_name == config["stream_names"]["motionsense_hrv_battery_left"]:
+            sensor_battery_down = config['battery_marker']['motionsense_battery_down']
+            sensor_battery_off = config['battery_marker']['motionsense_powered_off']
+        else:
+            raise ValueError("Unknow sensor-battery type")
+    except Exception as e:
+        print(e)
     if dp_sample_avg < 1:
         return "no-data"
     elif dp_sample_avg < sensor_battery_down and dp_sample_avg > 1:
@@ -126,18 +122,25 @@ def mark_windows(battery_marker_stream_id:uuid, merged_windows: list, CC, config
     :param config:
     :return:
     """
-    prev_wind = None
+    prev_wind_sample = None
     labelled_windows = []
-    for merged_window in merged_windows:
-        if merged_window.sample == "no-data":
-            if prev_wind and prev_wind.sample == "charged":
-                merged_window.sample = config['labels']['powered_off']
-            elif prev_wind and prev_wind.sample == "low":
-                merged_window.sample = config['labels']['battery_down']
+    try:
+        for merged_window in merged_windows:
+            if merged_window.sample == "no-data":
+                if prev_wind_sample and prev_wind_sample == "charged":
+                    merged_window.sample = config['labels']['powered_off']
+                elif prev_wind_sample and prev_wind_sample == "low":
+                    merged_window.sample = config['labels']['battery_down']
+                else:
+                    # get last stored battery marker stream if there is no previous window available for the day.
+                    rows = CC.get_stream_samples(battery_marker_stream_id)
+                    yesterday_sample = rows[len(rows)-1]
+                    merged_window.sample = yesterday_sample
+                    prev_wind_sample = yesterday_sample
+
+                labelled_windows.append(merged_window)
             else:
-                rows = CC.get_stream_samples(battery_marker_stream_id)
-                merged_window.sample = rows[len(rows)-1]
-            labelled_windows.append(merged_window)
-        else:
-            prev_wind = merged_window
+                prev_wind_sample = merged_window.sample
+    except Exception as e:
+        print(e)
     return labelled_windows

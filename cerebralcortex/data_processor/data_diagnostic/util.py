@@ -28,7 +28,10 @@ from numpy.linalg import norm
 from typing import List
 import math
 import json
+import uuid
+from datetime import timedelta
 import numpy as np
+from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.kernel.datatypes.datastream import DataPoint
 
 
@@ -49,7 +52,7 @@ def merge_consective_windows(data: OrderedDict) -> List[DataPoint]:
                 element = val
                 start = key[0]
                 end = key[1]
-            elif element == val and (end==key[0]):
+            elif element == val and (end == key[0]):
                 element = val
                 end = key[1]
             else:
@@ -88,6 +91,24 @@ def outlier_detection(window_data: list) -> list:
     return normal_values
 
 
+def get_stream_days(raw_stream_id: uuid, dd_stream_id: uuid, CC: CerebralCortex) -> List:
+    """
+    Returns a list of days that needs be diagnosed for a participant
+    :param raw_stream_id:
+    :param dd_stream_id:
+    """
+    dd_stream_days = CC.get_stream_start_end_time(dd_stream_id)["end_time"]
+
+    if not dd_stream_days:
+        stream_days = CC.get_stream_start_end_time(raw_stream_id)
+        days = stream_days["end_time"]-stream_days["start_time"]
+        for day in range(days.days+1):
+            stream_days.append((stream_days["start_time"]+timedelta(days=day)).strftime('%Y%m%d'))
+    else:
+        stream_days = [(dd_stream_days+timedelta(days=1)).strftime('%Y%m%d')]
+    return stream_days
+
+
 def magnitude_datapoints(data: DataPoint) -> List:
     """
 
@@ -103,6 +124,7 @@ def magnitude_datapoints(data: DataPoint) -> List:
 
     return data
 
+
 def magnitude_list(data: List) -> List:
     """
 
@@ -113,7 +135,7 @@ def magnitude_list(data: List) -> List:
     if data is None or len(data) == 0:
         return []
 
-    if isinstance(data,str):
+    if isinstance(data, str):
         try:
             data = json.loads(data)
         except:
@@ -129,6 +151,7 @@ def magnitude_list(data: List) -> List:
         raise Exception
 
     return data
+
 
 def magnitude_autosense_v1(accel_x: float, accel_y: float, accel_z: float) -> list:
     """

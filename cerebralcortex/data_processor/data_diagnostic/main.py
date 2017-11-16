@@ -23,7 +23,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-
+from typing import List
+import uuid
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.configuration import Configuration
 from cerebralcortex.data_processor.data_diagnostic.analysis.phone_screen_touch import phone_screen_touch_marker
@@ -45,37 +46,55 @@ CC_worker = CerebralCortex(configuration_file, master="local[*]", name="Data Dia
 config = Configuration(filepath="data_diagnostic_config.yml").config
 
 
-def one_participant_data(participant_ids=None):
+def one_participant_data(participant_id: uuid = None):
     # get all streams for a participant
-    if len(participant_ids) > 0:
-        participants_rdd = CC_driver.sc.parallelize(participant_ids)
+    """
+    Diagnose one participant data only
+    :param participant_id: list containing only one
+    """
+    if participant_id:
+        participants_rdd = CC_driver.sc.parallelize([participant_id])
         results = participants_rdd.map(
-            lambda participant: diagnose_queue(participant, CC_worker, config))
+            lambda participant: diagnose_pipeline(participant, CC_worker, config))
         results.count()
     else:
-        print("No participant is selected")
+        print("Participant cannot be empty.")
 
 
-def all_participants_data(study_name):
+def all_participants_data(study_name: str):
+    """
+    Diagnose all participants' data
+    :param study_name:
+    """
     # get all participants' name-ids
     participants = CC_driver.get_all_participants(study_name)
 
     if len(participants) > 0:
         participants_rdd = CC_driver.sc.parallelize(participants)
         results = participants_rdd.map(
-            lambda participant: diagnose_queue(participant["identifier"], CC_worker, config))
+            lambda participant: diagnose_pipeline(participant["identifier"], CC_worker, config))
         results.count()
     else:
-        print("No participant is selected")
+        print(study_name,"- Study contains no participant.")
 
-def diagnose_queue(participant_id, CC, config):
+
+def diagnose_pipeline(participant_id: uuid, CC: CerebralCortex, config: dict):
+    """
+    Contains pipeline execution of all the diagnosis algorithms
+    :param participant_id:
+    :param CC:
+    :param config:
+    """
+
+    #get all the streams belong to a participant
     streams = CC.get_participant_streams(participant_id)
     if streams and len(streams) > 0:
+
         # phone battery
         if config["stream_names"]["phone_battery"] in streams:
-            # battery_marker(streams[config["stream_names"]["phone_battery"]]["identifier"],
-            #                streams[config["stream_names"]["phone_battery"]]["name"], participant_id,
-            #                config["stream_names"]["phone_battery_marker"], CC, config)
+            battery_marker(streams[config["stream_names"]["phone_battery"]]["identifier"],
+                           streams[config["stream_names"]["phone_battery"]]["name"], participant_id,
+                           config["stream_names"]["phone_battery_marker"], CC, config)
 
             # mobile phone availability marker
             mobile_app_availability_marker(streams[config["stream_names"]["phone_battery"]]["identifier"],
@@ -83,10 +102,10 @@ def diagnose_queue(participant_id, CC, config):
                                            config["stream_names"]["app_availability_marker"], CC, config)
 
         # autosense battery
-        # if config["stream_names"]["autosense_battery"] in streams:
-        #     battery_marker(streams[config["stream_names"]["autosense_battery"]]["identifier"],
-        #                    streams[config["stream_names"]["autosense_battery"]]["name"], participant_id,
-        #                    config["stream_names"]["autosense_battery_marker"], CC, config)
+        if config["stream_names"]["autosense_battery"] in streams:
+            battery_marker(streams[config["stream_names"]["autosense_battery"]]["identifier"],
+                           streams[config["stream_names"]["autosense_battery"]]["name"], participant_id,
+                           config["stream_names"]["autosense_battery_marker"], CC, config)
 
         # TODO: Motionsense battery values are not available.
         # TODO: Uncomment following code when the motionsense battery values are available
@@ -96,69 +115,69 @@ def diagnose_queue(participant_id, CC, config):
         #     battery_marker(streams[config["stream_names"]["motionsense_hrv_battery_left"]]["identifier"], streams[config["stream_names"]["motionsense_hrv_battery_left"]]["name"], participant_id,  config["stream_names"]["motionsense_hrv_battery_left_marker"], CC, config)
 
         ### Sensor unavailable - wireless disconnection
-        # if config["stream_names"]["motionsense_hrv_accel_right"] in streams:
-        #     if config["stream_names"]["motionsense_hrv_gyro_right"]:
-        #         sensor_failure_marker(streams[config["stream_names"]["motionsense_hrv_accel_right"]]["identifier"],
-        #                               streams[config["stream_names"]["motionsense_hrv_gyro_right"]]["identifier"],
-        #                               participant_id,
-        #                               config["stream_names"]["motionsense_hrv_right_sensor_failure_marker"], CC, config)
-        #     if config["stream_names"]["phone_accel"] in streams:
-        #         phone_accel_stream_id = streams[config["stream_names"]["phone_accel"]]["identifier"]
-        #     else:
-        #         phone_accel_stream_id = None
-        #     ms_wd(streams[config["stream_names"]["motionsense_hrv_accel_right"]]["identifier"],
-        #           streams[config["stream_names"]["motionsense_hrv_accel_right"]]["name"], participant_id,
-        #           config["stream_names"]["motionsense_hrv_right_wireless_marker"], phone_accel_stream_id, CC, config)
+        if config["stream_names"]["motionsense_hrv_accel_right"] in streams:
+            if config["stream_names"]["motionsense_hrv_gyro_right"]:
+                sensor_failure_marker(streams[config["stream_names"]["motionsense_hrv_accel_right"]]["identifier"],
+                                      streams[config["stream_names"]["motionsense_hrv_gyro_right"]]["identifier"],
+                                      participant_id,
+                                      config["stream_names"]["motionsense_hrv_right_sensor_failure_marker"], CC, config)
+            if config["stream_names"]["phone_accel"] in streams:
+                phone_accel_stream_id = streams[config["stream_names"]["phone_accel"]]["identifier"]
+            else:
+                phone_accel_stream_id = None
+            ms_wd(streams[config["stream_names"]["motionsense_hrv_accel_right"]]["identifier"],
+                  streams[config["stream_names"]["motionsense_hrv_accel_right"]]["name"], participant_id,
+                  config["stream_names"]["motionsense_hrv_right_wireless_marker"], phone_accel_stream_id, CC, config)
 
-        # if config["stream_names"]["motionsense_hrv_accel_left"] in streams:
-        #     if config["stream_names"]["motionsense_hrv_gyro_left"]:
-        #         sensor_failure_marker(streams[config["stream_names"]["motionsense_hrv_accel_left"]]["identifier"],
-        #                               streams[config["stream_names"]["motionsense_hrv_gyro_left"]]["identifier"],
-        #                               participant_id,
-        #                               config["stream_names"]["motionsense_hrv_left_sensor_failure_marker"], CC, config)
-        #     if config["stream_names"]["phone_accel"] in streams:
-        #         phone_accel_stream_id = streams[config["stream_names"]["phone_accel"]]["identifier"]
-        #     else:
-        #         phone_accel_stream_id = None
-        #     ms_wd(streams[config["stream_names"]["motionsense_hrv_accel_left"]]["identifier"],
-        #           streams[config["stream_names"]["motionsense_hrv_accel_left"]]["name"], participant_id,
-        #           config["stream_names"]["motionsense_hrv_left_wireless_marker"], phone_accel_stream_id, CC, config)
+        if config["stream_names"]["motionsense_hrv_accel_left"] in streams:
+            if config["stream_names"]["motionsense_hrv_gyro_left"]:
+                sensor_failure_marker(streams[config["stream_names"]["motionsense_hrv_accel_left"]]["identifier"],
+                                      streams[config["stream_names"]["motionsense_hrv_gyro_left"]]["identifier"],
+                                      participant_id,
+                                      config["stream_names"]["motionsense_hrv_left_sensor_failure_marker"], CC, config)
+            if config["stream_names"]["phone_accel"] in streams:
+                phone_accel_stream_id = streams[config["stream_names"]["phone_accel"]]["identifier"]
+            else:
+                phone_accel_stream_id = None
+            ms_wd(streams[config["stream_names"]["motionsense_hrv_accel_left"]]["identifier"],
+                  streams[config["stream_names"]["motionsense_hrv_accel_left"]]["name"], participant_id,
+                  config["stream_names"]["motionsense_hrv_left_wireless_marker"], phone_accel_stream_id, CC, config)
 
         ### Attachment marker
-        # if config["stream_names"]["motionsense_hrv_led_quality_right"] in streams:
-        #     ms_attachment_marker(streams[config["stream_names"]["motionsense_hrv_led_quality_right"]]["identifier"],
-        #                          streams[config["stream_names"]["motionsense_hrv_led_quality_right"]]["name"],
-        #                          participant_id, config["stream_names"]["motionsense_hrv_right_attachment_marker"], CC,
-        #                          config)
-        # if config["stream_names"]["motionsense_hrv_led_quality_left"] in streams:
-        #     ms_attachment_marker(streams[config["stream_names"]["motionsense_hrv_led_quality_left"]]["identifier"],
-        #                          streams[config["stream_names"]["motionsense_hrv_led_quality_left"]]["name"],
-        #                          participant_id, config["stream_names"]["motionsense_hrv_left_attachment_marker"], CC,
-        #                          config)
-        #
-        # ### Packet-loss marker
-        # if config["stream_names"]["motionsense_hrv_accel_right"] in streams:
-        #     packet_loss_marker(streams[config["stream_names"]["motionsense_hrv_accel_right"]]["identifier"],
-        #                        streams[config["stream_names"]["motionsense_hrv_accel_right"]]["name"], participant_id,
-        #                        config["stream_names"]["motionsense_hrv_accel_right_packetloss_marker"], CC, config)
-        # if config["stream_names"]["motionsense_hrv_accel_left"] in streams:
-        #     packet_loss_marker(streams[config["stream_names"]["motionsense_hrv_accel_left"]]["identifier"],
-        #                        streams[config["stream_names"]["motionsense_hrv_accel_left"]]["name"], participant_id,
-        #                        config["stream_names"]["motionsense_hrv_accel_left_packetloss_marker"], CC, config)
-        # if config["stream_names"]["motionsense_hrv_gyro_right"] in streams:
-        #     packet_loss_marker(streams[config["stream_names"]["motionsense_hrv_gyro_right"]]["identifier"],
-        #                        streams[config["stream_names"]["motionsense_hrv_gyro_right"]]["name"], participant_id,
-        #                        config["stream_names"]["motionsense_hrv_gyro_right_packetloss_marker"], CC, config)
-        #
-        # if config["stream_names"]["motionsense_hrv_gyro_left"] in streams:
-        #     packet_loss_marker(streams[config["stream_names"]["motionsense_hrv_gyro_left"]]["identifier"],
-        #                        streams[config["stream_names"]["motionsense_hrv_gyro_left"]]["name"], participant_id,
-        #                        config["stream_names"]["motionsense_hrv_gyro_left_packetloss_marker"], CC, config)
+        if config["stream_names"]["motionsense_hrv_led_quality_right"] in streams:
+            ms_attachment_marker(streams[config["stream_names"]["motionsense_hrv_led_quality_right"]]["identifier"],
+                                 streams[config["stream_names"]["motionsense_hrv_led_quality_right"]]["name"],
+                                 participant_id, config["stream_names"]["motionsense_hrv_right_attachment_marker"], CC,
+                                 config)
+        if config["stream_names"]["motionsense_hrv_led_quality_left"] in streams:
+            ms_attachment_marker(streams[config["stream_names"]["motionsense_hrv_led_quality_left"]]["identifier"],
+                                 streams[config["stream_names"]["motionsense_hrv_led_quality_left"]]["name"],
+                                 participant_id, config["stream_names"]["motionsense_hrv_left_attachment_marker"], CC,
+                                 config)
 
-        # if config["stream_names"]["phone_screen_touch"] in streams:
-        #     phone_screen_touch_marker(streams[config["stream_names"]["phone_screen_touch"]]["identifier"],
-        #                        streams[config["stream_names"]["phone_screen_touch"]]["name"], participant_id,
-        #                        config["stream_names"]["phone_screen_touch_marker"], CC, config)
+        ### Packet-loss marker
+        if config["stream_names"]["motionsense_hrv_accel_right"] in streams:
+            packet_loss_marker(streams[config["stream_names"]["motionsense_hrv_accel_right"]]["identifier"],
+                               streams[config["stream_names"]["motionsense_hrv_accel_right"]]["name"], participant_id,
+                               config["stream_names"]["motionsense_hrv_accel_right_packetloss_marker"], CC, config)
+        if config["stream_names"]["motionsense_hrv_accel_left"] in streams:
+            packet_loss_marker(streams[config["stream_names"]["motionsense_hrv_accel_left"]]["identifier"],
+                               streams[config["stream_names"]["motionsense_hrv_accel_left"]]["name"], participant_id,
+                               config["stream_names"]["motionsense_hrv_accel_left_packetloss_marker"], CC, config)
+        if config["stream_names"]["motionsense_hrv_gyro_right"] in streams:
+            packet_loss_marker(streams[config["stream_names"]["motionsense_hrv_gyro_right"]]["identifier"],
+                               streams[config["stream_names"]["motionsense_hrv_gyro_right"]]["name"], participant_id,
+                               config["stream_names"]["motionsense_hrv_gyro_right_packetloss_marker"], CC, config)
+
+        if config["stream_names"]["motionsense_hrv_gyro_left"] in streams:
+            packet_loss_marker(streams[config["stream_names"]["motionsense_hrv_gyro_left"]]["identifier"],
+                               streams[config["stream_names"]["motionsense_hrv_gyro_left"]]["name"], participant_id,
+                               config["stream_names"]["motionsense_hrv_gyro_left_packetloss_marker"], CC, config)
+
+        if config["stream_names"]["phone_screen_touch"] in streams:
+            phone_screen_touch_marker(streams[config["stream_names"]["phone_screen_touch"]]["identifier"],
+                                      streams[config["stream_names"]["phone_screen_touch"]]["name"], participant_id,
+                                      config["stream_names"]["phone_screen_touch_marker"], CC, config)
 
 
 if __name__ == '__main__':
