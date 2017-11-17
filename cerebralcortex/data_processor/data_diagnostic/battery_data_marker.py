@@ -33,6 +33,7 @@ from cerebralcortex.data_processor.data_diagnostic.post_processing import store
 from cerebralcortex.data_processor.data_diagnostic.util import merge_consective_windows
 from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
+from cerebralcortex.data_processor.data_diagnostic.post_processing import get_execution_context, get_annotations
 
 def battery_marker(raw_stream_id: uuid, stream_name:str, owner_id, dd_stream_name, CC: CerebralCortex, config: dict, start_time=None, end_time=None):
     """
@@ -61,7 +62,8 @@ def battery_marker(raw_stream_id: uuid, stream_name:str, owner_id, dd_stream_nam
                     input_streams = [{"owner_id":owner_id, "id": str(raw_stream_id), "name": stream_name}]
                     output_stream = {"id":battery_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["battery_marker"]}
                     labelled_windows = mark_windows(battery_marker_stream_id, merged_windows, CC, config)
-                    store(labelled_windows, input_streams, output_stream, CC, config)
+                    metadata = get_metadata(dd_stream_name, input_streams, config)
+                    store(labelled_windows, input_streams, output_stream, metadata, CC, config)
     except Exception as e:
         print(e)
 
@@ -156,3 +158,33 @@ def mark_windows(battery_marker_stream_id:uuid, merged_windows: List, CC, config
     except Exception as e:
         print(e)
     return labelled_windows
+
+def get_metadata(dd_stream_name: str, input_streams: dict, config: dict) -> dict:
+    """
+
+    :param dd_stream_name:
+    :param input_streams:
+    :param config:
+    :return:
+    """
+    if dd_stream_name == config["stream_names"]["phone_battery_marker"]:
+        input_param = {"window_size": config["general"]["window_size"],
+                       "phone_powered_off_threshold": config["battery_marker"]["phone_powered_off"],
+                       "phone_battery_down_threshold": config["battery_marker"]["phone_battery_down"]}
+    elif dd_stream_name == config["stream_names"]["autosense_battery_marker"]:
+        input_param = {"window_size": config["general"]["window_size"],
+                       "autosense_powered_off_threshold": config["battery_marker"]["autosense_powered_off"],
+                       "autosense_battery_down_threshold": config["battery_marker"]["autosense_battery_down"]}
+    elif dd_stream_name == config["stream_names"]["motionsense_hrv_battery_right_marker"] or dd_stream_name == config["stream_names"]["motionsense_hrv_battery_left_marker"]:
+        input_param = {"window_size": config["general"]["window_size"],
+                       "motionsense_powered_off_threshold": config["battery_marker"]["motionsense_powered_off"],
+                       "motionsense_battery_down_threshold": config["battery_marker"]["motionsense_battery_down"]}
+    else:
+        raise ValueError("Incorrect sensor type")
+
+    data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Labels - Powered off"+ str(config["labels"]["powered_off"])+", Battery down"+ str(config["labels"]["battery_down"])}
+    algo_description = config["description"]["battery_data_marker"]
+    method = 'cerebralcortex.data_processor.data_diagnostic.battery_data_marker.py'
+    ec = get_execution_context(dd_stream_name, input_param, input_streams, method, algo_description, config)
+    anno = get_annotations()
+    return {"ec": ec, "dd": data_descriptor, "anno": anno}

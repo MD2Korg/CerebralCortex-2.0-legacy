@@ -33,6 +33,7 @@ from cerebralcortex.data_processor.data_diagnostic.post_processing import store
 from cerebralcortex.data_processor.data_diagnostic.util import merge_consective_windows
 from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
+from cerebralcortex.data_processor.data_diagnostic.post_processing import get_execution_context, get_annotations
 
 
 def mobile_app_availability_marker(raw_stream_id: uuid, stream_name:str, owner_id, dd_stream_name, CC: CerebralCortex, config: dict, start_time=None, end_time=None):
@@ -60,7 +61,8 @@ def mobile_app_availability_marker(raw_stream_id: uuid, stream_name:str, owner_i
                 if len(merged_windows)>0:
                     input_streams = [{"owner_id":owner_id, "id": str(raw_stream_id), "name": stream_name}]
                     output_stream = {"id":app_availability_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["app_availability_marker"]}
-                    store(merged_windows, input_streams, output_stream, CC, config)
+                    metadata = get_metadata(dd_stream_name, input_streams, config)
+                    store(merged_windows, input_streams, output_stream, metadata, CC, config)
 
     except Exception as e:
         print(e)
@@ -105,3 +107,23 @@ def app_availability(dp: List, config: dict) -> str:
         return config['labels']['app_unavailable']
     else:
         return config['labels']['app_available']
+
+
+def get_metadata(dd_stream_name: str, input_streams: dict, config: dict) -> dict:
+    """
+
+    :param dd_stream_name:
+    :param input_streams:
+    :param config:
+    :return:
+    """
+    input_param = {"window_size": config["general"]["window_size"],
+                   "app_availability_marker_battery_threshold": "1"}
+    data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "mobile phone availability: "+ str(config["labels"]["app_unavailable"])+", "+ str(config["labels"]["app_available"])}
+
+    algo_description = config["description"]["app_availability_marker"]
+    method = 'cerebralcortex.data_processor.data_diagnostic.app_availability.py'
+    ec = get_execution_context(dd_stream_name, input_param, input_streams, method,
+                               algo_description, config)
+    anno = get_annotations()
+    return {"ec": ec, "dd": data_descriptor, "anno": anno}

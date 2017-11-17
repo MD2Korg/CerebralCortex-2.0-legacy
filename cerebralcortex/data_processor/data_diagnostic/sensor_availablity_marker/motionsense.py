@@ -33,9 +33,11 @@ from cerebralcortex.data_processor.data_diagnostic.post_processing import store
 from cerebralcortex.data_processor.data_diagnostic.util import merge_consective_windows
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 from typing import List
+from cerebralcortex.data_processor.data_diagnostic.post_processing import get_execution_context, get_annotations
+from cerebralcortex.data_processor.data_diagnostic.post_processing import get_execution_context, get_annotations
 
 
-def wireless_disconnection(raw_stream_id: uuid, stream_name: str, owner_id: uuid, dd_stream_name,
+def sensor_availability(raw_stream_id: uuid, stream_name: str, owner_id: uuid, dd_stream_name,
                            phone_physical_activity, CC: CerebralCortex, config: dict):
     """
     Mark missing data as wireless disconnection if a participate walks away from phone or sensor
@@ -66,7 +68,8 @@ def wireless_disconnection(raw_stream_id: uuid, stream_name: str, owner_id: uuid
                 input_streams = [{"owner_id": owner_id, "id": str(raw_stream_id), "name": stream_name}]
                 output_stream = {"id": wireless_marker_stream_id, "name": dd_stream_name,
                                  "algo_type": config["algo_type"]["sensor_unavailable_marker"]}
-                store(merged_windows, input_streams, output_stream, CC, config)
+                metadata = get_metadata(dd_stream_name, input_streams, config)
+                store(merged_windows, input_streams, output_stream, metadata, CC, config)
 
 
 def process_windows(windowed_data, day, CC, phone_physical_activity, config):
@@ -116,3 +119,33 @@ def get_total_walking_episodes(phone_physical_activity: List) -> int:
         if walking and (walking == 3 or walking == 4):  # 3: walking, 4:running
             total += 1
     return total
+
+
+def get_metadata(dd_stream_name: str, input_streams: dict, config: dict) -> dict:
+    """
+
+    :param dd_stream_name:
+    :param input_streams:
+    :param config:
+    :return:
+    """
+    if dd_stream_name == config["stream_names"]["autosense_wireless_marker"]:
+        input_param = {"window_size": config["general"]["window_size"],
+                       "sensor_unavailable_ecg_threshold": config["sensor_unavailable_marker"]["ecg"],
+                       "sensor_unavailable_rip_threshold": config["sensor_unavailable_marker"]["rip"]}
+        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "AutoSense unavailable label: "+ str(config["labels"]["autosense_unavailable"])}
+    elif dd_stream_name == config["stream_names"]["motionsense_hrv_right_wireless_marker"] or dd_stream_name == config["stream_names"]["motionsense_hrv_left_wireless_marker"]:
+        input_param = {"window_size": config["general"]["window_size"],
+                       "sensor_unavailable_motionsense_threshold": config["sensor_unavailable_marker"]["motionsense"],
+                       "sensor_unavailable_phone_threshold": config["sensor_unavailable_marker"]["phone"]
+                       }
+        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Motionsense unavailable label: "+ str(config["labels"]["motionsense_unavailable"])}
+    else:
+        raise ValueError("Incorrect sensor type")
+
+    algo_description = config["description"]["sensor_unavailable_marker"]
+    method = 'cerebralcortex.data_processor.data_diagnostic.sensor_unavailable_marker'
+    ec = get_execution_context(dd_stream_name, input_param, input_streams, method,
+                               algo_description, config)
+    anno = get_annotations()
+    return {"ec": ec, "dd": data_descriptor, "anno": anno}

@@ -31,6 +31,7 @@ from cerebralcortex.data_processor.data_diagnostic.util import merge_consective_
 from cerebralcortex.data_processor.data_diagnostic.util import get_stream_days
 from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
+from cerebralcortex.data_processor.data_diagnostic.post_processing import get_execution_context, get_annotations
 
 
 def packet_loss_marker(raw_stream_id: uuid, stream_name: str, owner_id: uuid, dd_stream_name, CC: CerebralCortex, config: dict):
@@ -77,7 +78,8 @@ def packet_loss_marker(raw_stream_id: uuid, stream_name: str, owner_id: uuid, dd
             if len(merged_windows)>0:
                 input_streams = [{"owner_id":owner_id, "id": str(raw_stream_id), "name": stream_name}]
                 output_stream = {"id":packetloss_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["packet_loss_marker"]}
-                store(merged_windows, input_streams, output_stream, CC, config)
+                metadata = get_metadata(dd_stream_name, input_streams, config)
+                store(merged_windows, input_streams, output_stream, metadata, CC, config)
 
 
 def process_windows(windowed_data: OrderedDict, sampling_rate: float, threshold_val: float, label: str, config: dict) -> OrderedDict:
@@ -99,3 +101,39 @@ def process_windows(windowed_data: OrderedDict, sampling_rate: float, threshold_
             if (available_packets / expected_packets) < threshold_val and (available_packets / expected_packets) > 0.1:
                 results[key] = label
         return results
+
+
+def get_metadata(dd_stream_name: str, input_streams: dict, config: dict) -> dict:
+    """
+
+    :param dd_stream_name:
+    :param input_streams:
+    :param config:
+    :return:
+    """
+    if dd_stream_name == config["stream_names"]["autosense_ecg_packetloss_marker"]:
+        input_param = {"window_size": config["general"]["window_size"],
+                       "ecg_acceptable_packet_loss": config["packet_loss_marker"]["ecg_acceptable_packet_loss"]}
+        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Packet-Loss label: "+ str(config["labels"]["ecg_packet_loss"])}
+    elif dd_stream_name == config["stream_names"]["autosense_rip_packetloss_marker"]:
+        input_param = {"window_size": config["general"]["window_size"],
+                       "rip_acceptable_packet_loss": config["packet_loss_marker"]["rip_acceptable_packet_loss"]}
+        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Packet-Loss label: "+ str(config["labels"]["rip_packet_loss"])}
+    elif dd_stream_name == config["stream_names"]["motionsense_hrv_accel_right_packetloss_marker"] or dd_stream_name == config["stream_names"]["motionsense_hrv_accel_left_packetloss_marker"]:
+        input_param = {"window_size": config["general"]["window_size"],
+                       "rip_acceptable_packet_loss": config["packet_loss_marker"]["motionsense_accel_acceptable_packet_loss"]}
+        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Packet-Loss label: "+ str(config["labels"]["motionsense_accel_packet_loss"])}
+    elif dd_stream_name == config["stream_names"]["motionsense_hrv_gyro_right_packetloss_marker"] or dd_stream_name == config["stream_names"]["motionsense_hrv_gyro_left_packetloss_marker"]:
+        input_param = {"window_size": config["general"]["window_size"],
+                       "rip_acceptable_packet_loss": config["packet_loss_marker"]["motionsense_gyro_acceptable_packet_loss"]}
+        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Packet-Loss label: "+ str(config["labels"]["motionsense_gyro_packet_loss"])}
+    else:
+        raise ValueError("Incorrect sensor type")
+
+    algo_description = config["description"]["packet_loss_marker"]
+    method = 'cerebralcortex.data_processor.data_diagnostic.packet_loss_marker.py'
+
+    ec = get_execution_context(dd_stream_name, input_param, input_streams, method,
+                               algo_description, config)
+    anno = get_annotations()
+    return {"ec": ec, "dd": data_descriptor, "anno": anno}

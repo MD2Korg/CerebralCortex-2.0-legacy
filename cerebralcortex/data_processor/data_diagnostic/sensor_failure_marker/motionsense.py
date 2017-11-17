@@ -32,7 +32,7 @@ from cerebralcortex.data_processor.data_diagnostic.util import get_stream_days
 import numpy as np
 from typing import List
 from cerebralcortex.kernel.datatypes.datapoint import DataPoint
-from cerebralcortex.data_processor.signalprocessing.window import window
+from cerebralcortex.data_processor.data_diagnostic.post_processing import get_execution_context, get_annotations
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 
 
@@ -68,21 +68,23 @@ def sensor_failure_marker(attachment_marker_stream_id: uuid, mshrv_accel_id:uuid
                     key = marker_window.start_time, marker_window.end_time
 
                     # if sensor failure period is more than 12 hours then mark it as a sensor failure
-                    if (results_accel>0 and results_gyro<1):
+                    if results_accel>0 and results_gyro<1:
                         sample = "MOTIONSENE-HRV-"+str(wrist)+"ACCELEROMETER-FAILURE"
                         results[key].append(DataPoint(marker_window.start_time, marker_window.end_time, sample))
-                    elif (results_accel<1 and results_gyro>0):
+                    elif results_accel<1 and results_gyro>0:
                         sample = "MOTIONSENE-HRV-"+str(wrist)+"GYRO-FAILURE"
                         results[key].append(DataPoint(marker_window.start_time, marker_window.end_time, sample))
 
                     merged_windows = merge_consective_windows(results)
 
                 if len(results)>0:
-                    input_streams = [{"owner_id":owner_id, "id": str(attachment_marker_stream_id), "name": attachment_marker_stream.name, "id": str(gyro_stream_id), "name": gyro_stream.name}]
+                    input_streams = [{"owner_id":owner_id, "id": str(attachment_marker_stream_id), "name": attachment_marker_stream.name}]
                     output_stream = {"id":sensor_failure_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["sensor_failure"]}
-                    store(merged_windows, input_streams, output_stream, CC, config)
+                    metadata = get_metadata(dd_stream_name, input_streams, config)
+                    store(merged_windows, input_streams, output_stream, metadata, CC, config)
     except Exception as e:
         print(e)
+
 
 def process_windows(windowed_data: List, config: dict) -> int:
     """
@@ -106,3 +108,29 @@ def process_windows(windowed_data: List, config: dict) -> int:
             total_failures +=1
 
     return total_failures
+
+def get_metadata(dd_stream_name: str, input_streams: dict, config: dict) -> dict:
+    """
+
+    :param dd_stream_name:
+    :param input_streams:
+    :param config:
+    :return:
+    """
+    input_param = {"window_size": "21600"}
+    if dd_stream_name==config["stream_names"]["motionsense_hrv_right_sensor_failure_marker"] or dd_stream_name==config["stream_names"]["motionsense_hrv_left_sensor_failure_marker"]:
+        label = config["labels"]["motionsense_failure"]
+    elif dd_stream_name==dd_stream_name==config["stream_names"]["phone_sensor_failure_marker"]:
+        label = config["labels"]["phone_sensor_failure"]
+    elif dd_stream_name==dd_stream_name==config["stream_names"]["autosense_sensor_failure_marker"]:
+        label = config["labels"]["autosense_sensor_failure"]
+    else:
+        raise ValueError("Incorrect sensor type")
+
+    data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "sensor failure detection: "+ str(label)}
+    algo_description = config["description"]["sensor_failure"]
+    method = 'cerebralcortex.data_processor.data_diagnostic.sensor_failure'
+    ec = get_execution_context(dd_stream_name, input_param, input_streams, method,
+                               algo_description, config)
+    anno = get_annotations()
+    return {"ec": ec, "dd": data_descriptor, "anno": anno}
