@@ -24,21 +24,22 @@
 
 import uuid
 from collections import OrderedDict
-from cerebralcortex.data_processor.signalprocessing.window import window
+from typing import List
+
 import numpy as np
+
+from cerebralcortex.CerebralCortex import CerebralCortex
+from cerebralcortex.data_processor.data_diagnostic.post_processing import get_execution_context, get_annotations
+from cerebralcortex.data_processor.data_diagnostic.post_processing import store
 from cerebralcortex.data_processor.data_diagnostic.util import get_stream_days
 from cerebralcortex.data_processor.data_diagnostic.util import magnitude_datapoints
-from cerebralcortex.CerebralCortex import CerebralCortex
-from cerebralcortex.data_processor.data_diagnostic.post_processing import store
 from cerebralcortex.data_processor.data_diagnostic.util import merge_consective_windows
+from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
-from typing import List
-from cerebralcortex.data_processor.data_diagnostic.post_processing import get_execution_context, get_annotations
-from cerebralcortex.data_processor.data_diagnostic.post_processing import get_execution_context, get_annotations
 
 
 def sensor_availability(raw_stream_id: uuid, stream_name: str, owner_id: uuid, dd_stream_name,
-                           phone_physical_activity, CC: CerebralCortex, config: dict):
+                        phone_physical_activity, CC: CerebralCortex, config: dict):
     """
     Mark missing data as wireless disconnection if a participate walks away from phone or sensor
     :param raw_stream_id:
@@ -94,9 +95,10 @@ def process_windows(windowed_data, day, CC, phone_physical_activity, config):
                 # get phone accel stream data
                 if phone_physical_activity:
                     phone_physical_activity_data = CC.get_stream_samples(phone_physical_activity, day=day,
-                                                                           start_time=key[0], end_time=key[1])
+                                                                         start_time=key[0], end_time=key[1])
                     # compute phone accel data magnitude
-                    if np.var(magnitude_vals) > motionsense_threshold or get_total_walking_episodes(phone_physical_activity_data)>20: #if 20 seconds contain as physical activity
+                    if np.var(magnitude_vals) > motionsense_threshold or get_total_walking_episodes(
+                            phone_physical_activity_data) > 20:  # if 20 seconds contain as physical activity
                         results[key] = config['labels']['motionsense_unavailable']
                 else:
                     if np.var(magnitude_vals) > motionsense_threshold:
@@ -133,13 +135,18 @@ def get_metadata(dd_stream_name: str, input_streams: dict, config: dict) -> dict
         input_param = {"window_size": config["general"]["window_size"],
                        "sensor_unavailable_ecg_threshold": config["sensor_unavailable_marker"]["ecg"],
                        "sensor_unavailable_rip_threshold": config["sensor_unavailable_marker"]["rip"]}
-        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "AutoSense unavailable label: "+ str(config["labels"]["autosense_unavailable"])}
-    elif dd_stream_name == config["stream_names"]["motionsense_hrv_right_wireless_marker"] or dd_stream_name == config["stream_names"]["motionsense_hrv_left_wireless_marker"]:
+        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int",
+                           "DESCRIPTION": "AutoSense unavailable label: " + str(
+                               config["labels"]["autosense_unavailable"])}
+    elif dd_stream_name == config["stream_names"]["motionsense_hrv_right_wireless_marker"] or dd_stream_name == \
+            config["stream_names"]["motionsense_hrv_left_wireless_marker"]:
         input_param = {"window_size": config["general"]["window_size"],
                        "sensor_unavailable_motionsense_threshold": config["sensor_unavailable_marker"]["motionsense"],
                        "sensor_unavailable_phone_threshold": config["sensor_unavailable_marker"]["phone"]
                        }
-        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int", "DESCRIPTION": "Motionsense unavailable label: "+ str(config["labels"]["motionsense_unavailable"])}
+        data_descriptor = {"NAME": dd_stream_name, "DATA_TYPE": "int",
+                           "DESCRIPTION": "Motionsense unavailable label: " + str(
+                               config["labels"]["motionsense_unavailable"])}
     else:
         raise ValueError("Incorrect sensor type")
 

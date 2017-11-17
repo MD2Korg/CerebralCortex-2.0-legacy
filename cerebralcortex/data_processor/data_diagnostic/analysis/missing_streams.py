@@ -60,14 +60,18 @@ def missing_streams(owner_id):
     required_streams.append(config["stream_names"]["motionsense_hrv_led_left"])
 
     available_streams = CC.get_participant_streams(owner_id)
-    if(len(available_streams))>0:
+    if (len(available_streams)) > 0:
         for required_stream in required_streams:
             if required_stream in available_streams:
-                total_days = available_streams[required_stream]["end_time"] - available_streams[required_stream]["start_time"]
-                write_to_file(owner_id, required_stream, available_streams[required_stream]["start_time"], available_streams[required_stream]["end_time"], total_days)
+                total_days = available_streams[required_stream]["end_time"] - available_streams[required_stream][
+                    "start_time"]
+                write_to_file(owner_id, required_stream, available_streams[required_stream]["start_time"],
+                              available_streams[required_stream]["end_time"], total_days)
             else:
-                total_days = get_start_end_time(available_streams, "end_time")-get_start_end_time(available_streams, "start_time")
+                total_days = get_start_end_time(available_streams, "end_time") - get_start_end_time(available_streams,
+                                                                                                    "start_time")
                 write_to_file(owner_id, required_stream, "MISSING", "MISSING", total_days)
+
 
 def get_start_end_time(available_streams, start_end):
     _time = []
@@ -76,12 +80,13 @@ def get_start_end_time(available_streams, start_end):
     return min(_time)
 
 
-
 def write_to_file(owner_id, stream_name, start_time, end_time, total_days):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     with open(output_folder + file_name, 'a+') as fp:
-        fp.write(str(owner_id) + ", " + str(stream_name) + ", " + str(start_time) + ", " + str(end_time)+", "+str(total_days).replace("day,", "-").replace("days,","-") + "\n")
+        fp.write(str(owner_id) + ", " + str(stream_name) + ", " + str(start_time) + ", " + str(end_time) + ", " + str(
+            total_days).replace("day,", "-").replace("days,", "-") + "\n")
+
 
 def write_to_file_header():
     if not os.path.exists(output_folder):
@@ -89,9 +94,11 @@ def write_to_file_header():
     with open(output_folder + file_name, 'a+') as fp:
         fp.write("PARTICIPANT ID, STREAM NAME, START TIME, END TIME, EXPECTED TIME (Day(s)-Time)\n")
 
+
 def gen_test_data(id, start_time, end_time, sample):
-    for i in range(1,10):
+    for i in range(1, 10):
         write_to_file("0000cc98-2e38-3c34-800b-7048d6cdf09f", )
+
 
 if __name__ == '__main__':
     # run for all the participants in a study

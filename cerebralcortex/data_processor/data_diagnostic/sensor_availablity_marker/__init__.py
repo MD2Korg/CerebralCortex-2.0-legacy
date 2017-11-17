@@ -23,10 +23,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import uuid
-from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
-from cerebralcortex.CerebralCortex import CerebralCortex
 
-def filter_battery_off_windows(stream_id: uuid, stream_name: str, main_stream_windows: dict, owner_id: uuid, config: dict, CC_obj: CerebralCortex) -> dict:
+from cerebralcortex.CerebralCortex import CerebralCortex
+from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
+
+
+def filter_battery_off_windows(stream_id: uuid, stream_name: str, main_stream_windows: dict, owner_id: uuid,
+                               config: dict, CC_obj: CerebralCortex) -> dict:
     """
 
     :param stream_id:
@@ -40,31 +43,36 @@ def filter_battery_off_windows(stream_id: uuid, stream_name: str, main_stream_wi
 
     start_time = ""
     end_time = ""
-    #load phone battery data
-    phone_battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+config["stream_name"]["phone_battery"]+owner_id))
-    phone_battery_marker_stream = CC_obj.get_datastream(phone_battery_marker_stream_id, data_type=DataSet.ONLY_DATA, start_time=start_time,
+    # load phone battery data
+    phone_battery_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS,
+                                                str(stream_id + config["stream_name"]["phone_battery"] + owner_id))
+    phone_battery_marker_stream = CC_obj.get_datastream(phone_battery_marker_stream_id, data_type=DataSet.ONLY_DATA,
+                                                        start_time=start_time,
                                                         end_time=end_time)
 
-    #load sensor battery data
+    # load sensor battery data
     if stream_name == config["stream_names"]["autosense_ecg"] or stream_name == config["stream_names"]["autosense_rip"]:
-        sensor_battery_marker_stream = CC_obj.get_datastream(phone_battery_marker_stream_id, data_type=DataSet.ONLY_DATA, start_time=start_time,
+        sensor_battery_marker_stream = CC_obj.get_datastream(phone_battery_marker_stream_id,
+                                                             data_type=DataSet.ONLY_DATA, start_time=start_time,
                                                              end_time=end_time)
     elif stream_name == config["stream_names"]["motionsense_hrv_accel_right"]:
-        sensor_battery_marker_stream = CC_obj.get_datastream(phone_battery_marker_stream_id, data_type=DataSet.ONLY_DATA, start_time=start_time,
+        sensor_battery_marker_stream = CC_obj.get_datastream(phone_battery_marker_stream_id,
+                                                             data_type=DataSet.ONLY_DATA, start_time=start_time,
                                                              end_time=end_time)
     elif stream_name == config["stream_names"]["motionsense_hrv_accel_left"]:
-        sensor_battery_marker_stream = CC_obj.get_datastream(phone_battery_marker_stream_id, data_type=DataSet.ONLY_DATA, start_time=start_time,
+        sensor_battery_marker_stream = CC_obj.get_datastream(phone_battery_marker_stream_id,
+                                                             data_type=DataSet.ONLY_DATA, start_time=start_time,
                                                              end_time=end_time)
     battery_marker = 0
     results = None
     for key, data in main_stream_windows.items():
         for phone_key, phone_data in phone_battery_marker_stream.items():
-            if phone_key.start_time <= key.start_time and phone_key.end_time>=key.end_time:
+            if phone_key.start_time <= key.start_time and phone_key.end_time >= key.end_time:
                 battery_marker = 1
         for sensor_key, sensor_data in sensor_battery_marker_stream.items():
-            if sensor_key.start_time <= key.start_time and sensor_key.end_time>=key.end_time:
+            if sensor_key.start_time <= key.start_time and sensor_key.end_time >= key.end_time:
                 battery_marker = 1
 
-        if battery_marker!=1:
+        if battery_marker != 1:
             results[key] = data
     return results

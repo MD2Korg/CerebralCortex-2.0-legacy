@@ -22,20 +22,20 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import math
 import uuid
 from collections import OrderedDict
 from datetime import timedelta
 
 import numpy as np
+from cerebralcortex.data_processor.data_diagnostic.sensor_unavailable_marker import filter_battery_off_windows
 
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.data_processor.data_diagnostic.post_processing import store
+from cerebralcortex.data_processor.data_diagnostic.util import magnitude_autosense_v1
 from cerebralcortex.data_processor.data_diagnostic.util import merge_consective_windows
 from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
-from cerebralcortex.data_processor.data_diagnostic.sensor_unavailable_marker import filter_battery_off_windows
-from cerebralcortex.data_processor.data_diagnostic.util import magnitude_autosense_v1
+
 
 def wireless_disconnection(stream_id: uuid, stream_name: str, owner_id: uuid, CC_obj: CerebralCortex, config: dict):
     """

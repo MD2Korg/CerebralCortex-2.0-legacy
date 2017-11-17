@@ -22,17 +22,14 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import json
 from collections import OrderedDict
 
 from cerebralcortex.CerebralCortex import CerebralCortex
-from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 from cerebralcortex.kernel.datatypes.datastream import DataStream
-from cerebralcortex.kernel.schema_builder.data_descriptor import data_descriptor
 from cerebralcortex.kernel.schema_builder.execution_context import execution_context
 
 
-def store(data: OrderedDict, input_streams: dict, output_streams: dict, metadata, CC_obj: CerebralCortex, config:dict):
+def store(data: OrderedDict, input_streams: dict, output_streams: dict, metadata, CC_obj: CerebralCortex, config: dict):
     """
     Store diagnostic results with its metadata in the data-store
     :param input_streams:
@@ -42,7 +39,7 @@ def store(data: OrderedDict, input_streams: dict, output_streams: dict, metadata
     :param algo_type:
     """
     if data:
-        #basic output stream info
+        # basic output stream info
         owner = input_streams[0]["owner_id"]
         dd_stream_id = output_streams["id"]
         dd_stream_name = output_streams["name"]
@@ -56,7 +53,7 @@ def store(data: OrderedDict, input_streams: dict, output_streams: dict, metadata
                         execution_context=execution_context, annotations=annotations,
                         stream_type=stream_type, data=data)
 
-        CC_obj.save_datastream(ds,"datastream")
+        CC_obj.save_datastream(ds, "datastream")
 
 
 def get_execution_context(name: str, input_param: dict, input_streams: dict, method: str,

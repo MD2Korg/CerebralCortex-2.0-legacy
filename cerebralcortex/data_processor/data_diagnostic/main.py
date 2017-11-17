@@ -23,8 +23,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-from typing import List
 import uuid
+
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.configuration import Configuration
 from cerebralcortex.data_processor.data_diagnostic.analysis.phone_screen_touch import phone_screen_touch_marker
@@ -33,9 +33,9 @@ from cerebralcortex.data_processor.data_diagnostic.attachment_marker.motionsense
     attachment_marker as ms_attachment_marker
 from cerebralcortex.data_processor.data_diagnostic.battery_data_marker import battery_marker
 from cerebralcortex.data_processor.data_diagnostic.packet_loss_marker import packet_loss_marker
-from cerebralcortex.data_processor.data_diagnostic.sensor_failure_marker.motionsense import sensor_failure_marker
 from cerebralcortex.data_processor.data_diagnostic.sensor_availablity_marker.motionsense import \
     sensor_availability as ms_wd
+from cerebralcortex.data_processor.data_diagnostic.sensor_failure_marker.motionsense import sensor_failure_marker
 
 # create and load CerebralCortex object and configs
 configuration_file = os.path.join(os.path.dirname(__file__), '../../../cerebralcortex.yml')
@@ -75,7 +75,7 @@ def all_participants_data(study_name: str):
             lambda participant: diagnose_pipeline(participant["identifier"], CC_worker, config))
         results.count()
     else:
-        print(study_name,"- Study contains no participant.")
+        print(study_name, "- Study contains no participant.")
 
 
 def diagnose_pipeline(participant_id: uuid, CC: CerebralCortex, config: dict):
@@ -86,7 +86,7 @@ def diagnose_pipeline(participant_id: uuid, CC: CerebralCortex, config: dict):
     :param config:
     """
 
-    #get all the streams belong to a participant
+    # get all the streams belong to a participant
     streams = CC.get_participant_streams(participant_id)
     if streams and len(streams) > 0:
 
@@ -122,11 +122,12 @@ def diagnose_pipeline(participant_id: uuid, CC: CerebralCortex, config: dict):
 
         if config["stream_names"]["motionsense_hrv_accel_right"] in streams:
             if config["stream_names"]["motionsense_hrv_gyro_right"]:
-                sensor_failure_marker(streams[config["stream_names"]["motionsense_hrv_right_attachment_marker"]]["identifier"],
-                                      streams[config["stream_names"]["motionsense_hrv_accel_right"]]["identifier"],
-                                      streams[config["stream_names"]["motionsense_hrv_gyro_right"]]["identifier"],
-                                      "right",participant_id,
-                                      config["stream_names"]["motionsense_hrv_right_sensor_failure_marker"], CC, config)
+                sensor_failure_marker(
+                    streams[config["stream_names"]["motionsense_hrv_right_attachment_marker"]]["identifier"],
+                    streams[config["stream_names"]["motionsense_hrv_accel_right"]]["identifier"],
+                    streams[config["stream_names"]["motionsense_hrv_gyro_right"]]["identifier"],
+                    "right", participant_id,
+                    config["stream_names"]["motionsense_hrv_right_sensor_failure_marker"], CC, config)
 
             ms_wd(streams[config["stream_names"]["motionsense_hrv_accel_right"]]["identifier"],
                   streams[config["stream_names"]["motionsense_hrv_accel_right"]]["name"], participant_id,
@@ -134,11 +135,12 @@ def diagnose_pipeline(participant_id: uuid, CC: CerebralCortex, config: dict):
 
         if config["stream_names"]["motionsense_hrv_accel_left"] in streams:
             if config["stream_names"]["motionsense_hrv_gyro_left"]:
-                sensor_failure_marker(streams[config["stream_names"]["motionsense_hrv_left_attachment_marker"]]["identifier"],
-                                      streams[config["stream_names"]["motionsense_hrv_accel_left"]]["identifier"],
-                                      streams[config["stream_names"]["motionsense_hrv_gyro_left"]]["identifier"],
-                                      "left",participant_id,
-                                      config["stream_names"]["motionsense_hrv_left_sensor_failure_marker"], CC, config)
+                sensor_failure_marker(
+                    streams[config["stream_names"]["motionsense_hrv_left_attachment_marker"]]["identifier"],
+                    streams[config["stream_names"]["motionsense_hrv_accel_left"]]["identifier"],
+                    streams[config["stream_names"]["motionsense_hrv_gyro_left"]]["identifier"],
+                    "left", participant_id,
+                    config["stream_names"]["motionsense_hrv_left_sensor_failure_marker"], CC, config)
 
             ms_wd(streams[config["stream_names"]["motionsense_hrv_accel_left"]]["identifier"],
                   streams[config["stream_names"]["motionsense_hrv_accel_left"]]["name"], participant_id,
