@@ -27,7 +27,7 @@ from collections import OrderedDict
 from cerebralcortex.data_processor.signalprocessing.window import window
 import numpy as np
 from cerebralcortex.data_processor.data_diagnostic.util import get_stream_days
-from cerebralcortex.data_processor.data_diagnostic.util import magnitude_datapoints, magnitude_list
+from cerebralcortex.data_processor.data_diagnostic.util import magnitude_datapoints
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.data_processor.data_diagnostic.post_processing import store
 from cerebralcortex.data_processor.data_diagnostic.util import merge_consective_windows

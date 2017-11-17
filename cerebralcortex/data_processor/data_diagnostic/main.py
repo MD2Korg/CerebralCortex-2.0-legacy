@@ -115,6 +115,11 @@ def diagnose_pipeline(participant_id: uuid, CC: CerebralCortex, config: dict):
         #     battery_marker(streams[config["stream_names"]["motionsense_hrv_battery_left"]]["identifier"], streams[config["stream_names"]["motionsense_hrv_battery_left"]]["name"], participant_id,  config["stream_names"]["motionsense_hrv_battery_left_marker"], CC, config)
 
         ### Sensor unavailable - wireless disconnection
+        if config["stream_names"]["phone_physical_activity"] in streams:
+            phone_physical_activity = streams[config["stream_names"]["phone_physical_activity"]]["identifier"]
+        else:
+            phone_physical_activity = None
+
         if config["stream_names"]["motionsense_hrv_accel_right"] in streams:
             if config["stream_names"]["motionsense_hrv_gyro_right"]:
                 sensor_failure_marker(streams[config["stream_names"]["motionsense_hrv_right_attachment_marker"]]["identifier"],
@@ -123,10 +128,6 @@ def diagnose_pipeline(participant_id: uuid, CC: CerebralCortex, config: dict):
                                       "right",participant_id,
                                       config["stream_names"]["motionsense_hrv_right_sensor_failure_marker"], CC, config)
 
-            if config["stream_names"]["phone_physical_activity"] in streams:
-                phone_physical_activity = streams[config["stream_names"]["phone_physical_activity"]]["identifier"]
-            else:
-                phone_physical_activity = None
             ms_wd(streams[config["stream_names"]["motionsense_hrv_accel_right"]]["identifier"],
                   streams[config["stream_names"]["motionsense_hrv_accel_right"]]["name"], participant_id,
                   config["stream_names"]["motionsense_hrv_right_wireless_marker"], phone_physical_activity, CC, config)
@@ -139,10 +140,6 @@ def diagnose_pipeline(participant_id: uuid, CC: CerebralCortex, config: dict):
                                       "left",participant_id,
                                       config["stream_names"]["motionsense_hrv_left_sensor_failure_marker"], CC, config)
 
-            if config["stream_names"]["phone_accel"] in streams:
-                phone_physical_activity = streams[config["stream_names"]["phone_accel"]]["identifier"]
-            else:
-                phone_physical_activity = None
             ms_wd(streams[config["stream_names"]["motionsense_hrv_accel_left"]]["identifier"],
                   streams[config["stream_names"]["motionsense_hrv_accel_left"]]["name"], participant_id,
                   config["stream_names"]["motionsense_hrv_left_wireless_marker"], phone_physical_activity, CC, config)

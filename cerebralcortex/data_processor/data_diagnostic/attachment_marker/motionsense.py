@@ -23,16 +23,15 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import uuid
-import numpy as np
+from cerebralcortex.data_processor.data_diagnostic.util import get_stream_days
 from collections import OrderedDict
-from datetime import timedelta
 from cerebralcortex.CerebralCortex import CerebralCortex
 from cerebralcortex.data_processor.data_diagnostic.post_processing import store
 from cerebralcortex.data_processor.data_diagnostic.util import merge_consective_windows, outlier_detection
 from cerebralcortex.data_processor.signalprocessing.window import window
 from cerebralcortex.kernel.DataStoreEngine.dataset import DataSet
 
-def attachment_marker(stream_id: uuid, stream_name: str, owner_id: uuid, dd_stream_name, CC: CerebralCortex, config: dict):
+def attachment_marker(raw_stream_id: uuid, stream_name: str, owner_id: uuid, dd_stream_name, CC: CerebralCortex, config: dict):
     """
     Label sensor data as sensor-on-body, sensor-off-body, or improper-attachment.
     All the labeled data (st, et, label) with its metadata are then stored in a datastore
@@ -40,35 +39,30 @@ def attachment_marker(stream_id: uuid, stream_name: str, owner_id: uuid, dd_stre
     """
     # TODO: quality streams could be multiple so find the one computed with CC
     #using stream_id, data-diagnostic-stream-id, and owner id to generate a unique stream ID for battery-marker
-    attachment_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(stream_id+dd_stream_name+owner_id))
+    attachment_marker_stream_id = uuid.uuid3(uuid.NAMESPACE_DNS, str(raw_stream_id + dd_stream_name + owner_id))
 
-    stream_end_days = CC.get_stream_start_end_time(attachment_marker_stream_id)["end_time"]
+    stream_days = get_stream_days(raw_stream_id, attachment_marker_stream_id, CC)
 
-    if not stream_end_days:
-        stream_end_days = []
-        stream_days = CC.get_stream_start_end_time(stream_id)
-        days = stream_days["end_time"]-stream_days["start_time"]
-        for day in range(days.days+1):
-            stream_end_days.append((stream_days["start_time"]+timedelta(days=day)).strftime('%Y%m%d'))
-    else:
-        stream_end_days = [(stream_end_days+timedelta(days=1)).strftime('%Y%m%d')]
-
-    for day in stream_end_days:
+    for day in stream_days:
         #load stream data to be diagnosed
-        stream = CC.get_datastream(stream_id, day, data_type=DataSet.COMPLETE)
+        raw_stream = CC.get_datastream(raw_stream_id, day, data_type=DataSet.COMPLETE)
 
-        if len(stream.data)>0:
-            windowed_data = window(stream.data, config['general']['window_size'], True)
+        if len(raw_stream.data)>0:
+            windowed_data = window(raw_stream.data, config['general']['window_size'], True)
             results = process_windows(windowed_data, config)
             merged_windows = merge_consective_windows(results)
 
-            input_streams = [{"owner_id":owner_id, "id": str(stream_id), "name": stream_name}]
+            input_streams = [{"owner_id":owner_id, "id": str(raw_stream_id), "name": stream_name}]
             output_stream = {"id":attachment_marker_stream_id, "name": dd_stream_name, "algo_type": config["algo_type"]["attachment_marker"]}
             store(merged_windows, input_streams, output_stream, CC, config)
 
 
-def process_windows(windowed_data, config):
-
+def process_windows(windowed_data: OrderedDict, config: dict) -> OrderedDict:
+    """
+    :param windowed_data:
+    :param config:
+    :return:
+    """
     results = OrderedDict()
 
     threshold_improper_attachment = config['attachment_marker']['motionsense_improper_attachment']
