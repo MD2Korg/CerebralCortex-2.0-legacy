@@ -46,6 +46,7 @@ def run():
     testConfigFile = os.path.join(os.path.dirname(__file__), '../../cerebralcortex.yml')
     CC_obj = CerebralCortex(testConfigFile, master="local[*]", name="Cerebral Cortex Data Importer and Exporter",
                         time_zone="US/Central", load_spark=True)
+    CC_obj.sc.setLogLevel("warn")
 
     if args["owner_ids"]:
         DataExporter(CC_obj, args["output_dir"], owner_ids=args["owner_ids"].split(",")).start()

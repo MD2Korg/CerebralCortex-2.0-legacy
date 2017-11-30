@@ -137,8 +137,8 @@ class DataExporter():
             where_clause += " and start_time>=cast('" + str(self.start_time) + "' as timestamp)"
         elif not self.start_time and self.end_time:
             where_clause += " start_time<=cast('" + str(self.end_time) + "' as timestamp)"
-
-        df = self.streamData.load_data_from_cassandra(self.streamData.datapointTable, where_clause, 1)
+        print("Exporting Stream ID: ", stream_id)
+        df = self.streamData.load_data_from_cassandra(self.streamData.datapointTable, where_clause, 0)
         df.write \
             .format("csv") \
             .option("codec", "org.apache.hadoop.io.compress.GzipCodec") \

@@ -33,7 +33,10 @@ class Data(LoadData, StoreData):
         :param configuration:
         :param sqlContext:
         """
-        self.CC_obj = CC_obj
+        # google proto buf
+        # julia lang
+
+        self.CC_obprj = CC_obj
         self.configuration = CC_obj.configuration
 
         if hasattr(CC_obj, "sqlContext"):
